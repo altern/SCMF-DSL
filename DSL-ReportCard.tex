@@ -1,0 +1,287 @@
+\documentclass[11pt]{article}
+
+\usepackage{mathptmx,amssymb,amsmath}
+\usepackage{fullpage}
+\usepackage{enumerate}
+\usepackage{fancyvrb}
+
+
+%%%
+%%% Formatting details
+%%%
+\sloppy
+\sloppypar
+\widowpenalty=0
+\clubpenalty=0
+\displaywidowpenalty=0
+\raggedbottom
+\pagestyle{plain}
+
+
+% \topskip0pt
+% \parskip0pt
+% \partopsep0pt
+
+\DefineVerbatimEnvironment{program}{Verbatim}
+  {baselinestretch=1.0,xleftmargin=5mm,fontsize=\small,samepage=true}
+
+\def\denseitems{
+    \itemsep1pt plus1pt minus1pt
+    \parsep0pt plus0pt
+    \parskip0pt\topsep0pt}
+
+
+%%%
+%%% A few macros
+%%%
+\newcommand{\RevisionNeeded}{\bigskip\noindent\fbox{
+\textbf{Be prepared to revise this section \emph{many} times!}}}
+
+\newcommand{\prog}[1]{{\small\texttt{#1}}}
+% \newcommand{\bs}{\texttt{\symbol{92}}}
+
+
+
+\begin{document}
+
+\title{\textbf{DSL Name}
+\\ DSL Report Card}
+
+\author{Author \\
+School of EECS \\ 
+Oregon State University
+}
+
+\maketitle
+
+
+\section{Introduction}
+\label{sec:intro}
+
+Provide a brief summary and some background of the domain. Why is a DSL
+needed, and how would it be useful?  What notations/languages, if any, are
+currently used? What are their strengths and limitations?
+
+
+\section{Users}
+\label{sec:users}
+
+How is the DSL going to be used, and what specifically is it used for?  
+% 
+What kind of users are affected by the DSL and in which way? Who is writing
+programs and who is using them? What is known or can be reasonably assumed
+about the (technical/domain) background of users? (Usually, it is safe to
+assume that users are domain experts.)
+
+Specifically, what are the limitations of the DSL? What cannot be expressed?
+If different kinds of users are involved, what are there limitations of for
+the different user groups?
+
+
+
+\section{Outcomes}
+\label{sec:outcomes}
+
+What is (are) the outcome(s) of executing a DSL program? What analyses of DSL
+programs are conceivable?  Note that, in general, a DSL program can produce a
+variety of results. In fact, this aspect makes the use of a DSL very attractive, and this
+questions is an important part of the analysis of the DSL's purpose.
+
+Consider, for example, a DSL for describing vacation plans (including
+alternatives).  We can imagine that a vacation plan can be analyzed to yield a
+set of \emph{date/time ranges} for the vacation (based on the availability of
+flights, hotels, etc.), or a set of \emph{cost estimates} (based on travel and
+date options). Moreover, we can imagine deriving \emph{to-do lists} from the
+travel plan (making reservations, buying tickets, etc.) or \emph{entertainment
+suggestions} (parks, museums, events, etc.). 
+
+The outcomes should be made more precise in Section \ref{sec:analysis} in the
+form of function signatures once the basic objects and combinators have been
+identified in Sections \ref{sec:objects} and \ref{sec:comb}.
+
+
+
+\section{Use Cases / Scenarios}
+\label{sec:examples}
+
+Describe several typical example problems or use cases that can be expressed
+in the DSL. For each example, give a summary of what the example is about, and
+explain how important and representative it is for the domain.
+
+Then describe in more detail the steps involved in solving the problem (either
+by hand or with existing tools). This process can be very helpful in shedding
+light on what kind of basic objects, types, and combinators the DSL will have
+to offer.
+
+
+
+\section{Basic Objects}
+\label{sec:objects}
+
+What are the basic objects that are manipulated and used by the DSL? Basic
+objects are those that are not composed out of other objects. 
+
+As a general rule, the fewer basic objects one needs, the better, because the
+resulting DSL design will be more concise and elegant.
+%
+The basic objects should be described by a set of Haskell \prog{type} and
+\prog{data} definitions. Use the \prog{program} environment to show code, as
+illustrated below.
+
+\begin{program}
+type Point = (Int,Int)
+\end{program}
+%
+Show how (some (parts) of) the examples from Section \ref{sec:examples} will be
+represented by values of the envisioned types. For example:
+
+\begin{program}
+home :: Point
+home = (10,13)
+\end{program}
+%
+Also, list current limitations that you expect in a future iterations to overcome.
+
+\RevisionNeeded
+
+
+
+\section{Operators and Combinators}
+\label{sec:comb}
+
+Identify operators that either transform objects into one another or
+build more complex objects out of simpler (and ultimately basic) ones.
+%
+Depending on what implementation or form of embedding will be chosen,
+operators may be given as constructors of data types or functions.
+
+Combinators are higher-order functions that encode control structures of the
+DSL. The function \prog{map} is a combinator that realizes a looping construct
+for lists. The operations of the parser library Parsec are called \emph{parser
+combinators} since parsers themselves are represented as functions.
+%
+The identification of the right set of combinators is a key step in the design
+of the DSL.
+
+With basic objects, operators, and combinators, you should be able to
+demonstrate how the examples from Section \ref{sec:examples} can be
+represented. All limitations encountered here should be classified as either:
+
+\begin{enumerate}[(1)]\denseitems
+\item Temporary
+\item Fundamental
+\end{enumerate}
+%
+Temporary limitations should be noted in this section and in  Section
+\ref{sec:objects} as \emph{TO DO} items for future revisions of the design.
+%
+Fundamental limitations should be reported and listed in detail in Section
+\ref{sec:users}.
+
+\RevisionNeeded
+
+
+
+\section{Interpretation and Analyses}
+\label{sec:analysis}
+
+Provide a precise description of the different outcomes of the DSL. This
+information is typically provided by Haskell function signatures (that is,
+function names and their types).
+
+One kind of ``outcome'' is the result of executing a DSL program. For example,
+for a scheduling DSL, an outcome would typically consist of a set of possible
+schedules. But it could also be only one schedule (the best according to some
+criterion).
+%
+However, in addition to such primary outcomes, there could be other results.
+In the case of the scheduling DSL, one could imagine sending emails to
+participants asking for priorities in case several optimal schedules exist.
+
+
+
+\section{Cognitive Dimension Evaluation}
+\label{sec:cogdim}
+
+An assessment of cognitive dimension of your notation, such as closeness of
+mapping, viscosity, hidden dependencies, and others, will help you with the
+re-design of the DSL.
+
+Note that it is advisable to think about the cognitive dimensions constantly
+during the design of your DSL. Cognitive dimensions are, in fact, a language
+design tool, and not so much intended to evaluate languages after the fact.
+
+
+\section{Implementation Strategy}
+\label{sec:implementation}
+
+Discuss how the advantages and disadvantages of a deep or shallow embedding
+play out in your DSL.
+
+What dvantages would an implementation in a language workbench have? Is it
+worth the effort?
+
+
+
+\section{Find Similar/Related DSLs}
+\label{sec:related}
+
+Try to find DSLs that are similar to the one described here and compare your
+DSL with those. Note that similarity can be understood as \emph{topical} as
+well as \emph{technical} similarity .
+
+\emph{Topically similar} DSLs are DSLs for the same or a closely related
+domain. They have in principle the same or slightly different outcomes, but
+they may be implemented quite differently. These DSLs help you refine the
+design of the DSL requirements described in Sections \ref{sec:users} and
+\ref{sec:outcomes}.
+
+\emph{Technically similar} DSLs are Haskell DSLs whose types and functions are
+similar to the ones used in Sections \ref{sec:objects} and \ref{sec:comb}.
+They can help sharpen the DSL modeling and implementation described in those
+sections.
+
+Ideally, you can find both, topically and technically similar DSLs. Be sure to
+properly cite the DSLs as references.
+
+\bigskip\noindent\fbox{
+\textbf{You will have to present these DSLs in a class presentation.}}
+
+
+
+\section{Design Evolution}
+\label{sec:evol}
+
+As you iterate over different designs of your DSL, it is quite instructive to
+document some of the old, obsolete designs, that is, show the type definitions
+and function signatures, explain why this design seemed attractive at first
+and then what motivated you to change it.
+
+This part may seem like an unnecessary burden to you, but it helps you and
+others to understand your current design, and it probably answers questions
+that users (or reviewers) of the DSL might have about the design, because they
+may have thought of your initial design also and are wondering why it has not
+been adopted.
+
+
+
+\section{Future Work}
+\label{sec:future}
+
+A speculation about what it takes to remove some of the limitations and
+whether it seems worth the effort.
+
+Moreover, what would be the concrete benefits to extend a shallow DSL into a
+deep DSL? Or, would it be helpful to create an external DSL? What role could a
+visual syntax or a GUI interface play?
+
+
+
+\section*{References}
+
+List references to similar DSLs identified in Section \ref{sec:related} and
+potentially other related work.
+
+
+\end{document}
+
