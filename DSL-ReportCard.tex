@@ -58,89 +58,155 @@ Oregon State University
 \section{Introduction}
 \label{sec:intro}
 
-Provide a brief summary and some background of the domain. Why is a DSL
-needed, and how would it be useful?  What notations/languages, if any, are
-currently used? What are their strengths and limitations?
+\textbf{Domain}: Software Configuration Management (SCM). SCM domain includes such activities as \textit{version control}, \textit{build management}, \textit{deployment management}, \textit{continuous integration}, \textit{release management}, \textit{dependencies management}, \textit{branch management} and \textit{merge management}. Mentioned activities have one important thing in common - they use version numbers as unique references to software artifacts. Even though version numbers are widely used, there are numerous problems with version numbering approaches that inhibit development of general purpose tools for SCM. Most common problems with version numbering:
+\begin{enumerate}
+ \item Version numbers if created using existing common practices may not necessarily be unique. 
+ \item Version numbering approaches are not formalized to an extent that would allow embedding automatic version numbering into commonly used SCM tools (for example, version control systems).
+ \item Very often there is an attempt to use version numbers to represent different kinds of changes between different artifacts, but existing practices of assigning meaning to version numbers are far from consistent (change depending on context and different situations) and cannot be reliably used to represent meaning of version numbers.
+\end{enumerate}
 
+Main goals of DSL for Software Configuration Management is to solve aforementioned problems by:
+\begin{itemize}
+ \item Introducing unambiguous formalization of version numbering approach.
+ \item Extending formalized version numbering approach with additional constructs (such as maturity levels, version filters, etc) to cover common use cases related to Software Configuration Management.
+ \item Providing interface for mapping "old style" version numbering to consistent version numbering implemented as a DSL for SCM.
+ \item Generate verbal description of software artifact based on its version number and its context in a tree of version numbers. 
+ \end{itemize} 
+
+One of the most advanced version numbering approaches is SemVer \cite{semver}. While strength of this approach is simplicity, there are also serious limitations of SemVer, such as:
+\begin{itemize}
+\item Lack of formalization. There is only verbal description of SemVer approach available online. 
+\item As long as there is no formal definition of version numbering approach by SemVer, there is no way to detect whether version number of specific artifact already exists. This often leads to assignment of ambiguous version numbers when one version number represents several different artifacts.
+\item It introduces ambiguous rules (for example, composition of version numbers) that, if applied, result it unreliable references to software artifacts.
+\end{itemize}
+
+There is another approach that is similar to version numbering - \textit{document sections numbering approach}. TODO: describe advantages and limitations.
 
 \section{Users}
 \label{sec:users}
 
-How is the DSL going to be used, and what specifically is it used for?  
-% 
-What kind of users are affected by the DSL and in which way? Who is writing
-programs and who is using them? What is known or can be reasonably assumed
-about the (technical/domain) background of users? (Usually, it is safe to
-assume that users are domain experts.)
+% How is the DSL going to be used, and what specifically is it used for?  
+Primary audience of DSL for SCM is Release and Build Engineers. DSL for SCM can also be used by Software Engineers, Software Testing Engineers and Support Engineers given that users have enough knowledge about SCM domain and about DSL for SCM. 
 
-Specifically, what are the limitations of the DSL? What cannot be expressed?
-If different kinds of users are involved, what are there limitations of for
-the different user groups?
+Release and Build Engineers are considered to be domain experts. Typical operations that Release and Build Engineers are able to perform using DSL for SCM are:
+\begin{itemize}
+\item Building \textit{trees of software versions} in order to track history of software releases and releases of software components 
+\item Generating \textit{new version numbers} for upcoming software releases
+\item Creating, applying and reusing \textit{filters of version numbers}
+\item Managing \textit{dependencies} between different versions of software applications and software components. Building \textit{dependency graphs}.
+\item Building abstractions on top of DSL for SCM that represent \textit{Software Product Lines} (SPL).
+\item \textit{Development, testing and deployment of upgrades} for different software versions. 
+\item Refactor version numbers (map inconsistent and ambiguous version numbers to formalized version numbering) to get rid of limitations of version numbering approaches that were used previously.
+\end{itemize}
 
+% What kind of users are affected by the DSL and in which way? Who is writing programs and who is using them? What is known or can be reasonably assumed about the (technical/domain) background of users? (Usually, it is safe to assume that users are domain experts.)
 
+% Specifically, what are the limitations of the DSL? What cannot be expressed? If different kinds of users are involved, what are there limitations of for the different user groups?
+
+The most serious limitation of DSL for SCM is that it can be used only by users with domain expertise with proper training that ensures their understanding of basic principles of DSL for SCM. We left high-level abstraction on top of DSL for SCM that enables users with SQL-like declarative language for selection and manipulation on version number set for future work.
 
 \section{Outcomes}
 \label{sec:outcomes}
 
-What is (are) the outcome(s) of executing a DSL program? What analyses of DSL
-programs are conceivable?  Note that, in general, a DSL program can produce a
-variety of results. In fact, this aspect makes the use of a DSL very attractive, and this
-questions is an important part of the analysis of the DSL's purpose.
+% What is (are) the outcome(s) of executing a DSL program? What analyses of DSL programs are conceivable?  Note that, in general, a DSL program can produce a variety of results. In fact, this aspect makes the use of a DSL very attractive, and this questions is an important part of the analysis of the DSL's purpose.
 
-Consider, for example, a DSL for describing vacation plans (including
-alternatives).  We can imagine that a vacation plan can be analyzed to yield a
-set of \emph{date/time ranges} for the vacation (based on the availability of
-flights, hotels, etc.), or a set of \emph{cost estimates} (based on travel and
-date options). Moreover, we can imagine deriving \emph{to-do lists} from the
-travel plan (making reservations, buying tickets, etc.) or \emph{entertainment
-suggestions} (parks, museums, events, etc.). 
+Typical output of DSL for SCM is \textit{tree of versions} that can be built given arbitrary list of version numbers using version inheritance rules. 
 
-The outcomes should be made more precise in Section \ref{sec:analysis} in the
-form of function signatures once the basic objects and combinators have been
-identified in Sections \ref{sec:objects} and \ref{sec:comb}.
+Another example of output that DSL for SCM can produce is a subset of version numbers created based on filters of version numbers.
 
+Also new version numbers generated by DSL for SCM can be considered to be typical output of the program.
 
+% Consider, for example, a DSL for describing vacation plans (including
+% alternatives).  We can imagine that a vacation plan can be analyzed to yield a
+% set of \emph{date/time ranges} for the vacation (based on the availability of
+% flights, hotels, etc.), or a set of \emph{cost estimates} (based on travel and
+% date options). Moreover, we can imagine deriving \emph{to-do lists} from the
+% travel plan (making reservations, buying tickets, etc.) or \emph{entertainment
+% suggestions} (parks, museums, events, etc.). 
+
+% The outcomes should be made more precise in Section \ref{sec:analysis} in the form of function signatures once the basic objects and combinators have been identified in Sections \ref{sec:objects} and \ref{sec:comb}.
 
 \section{Use Cases / Scenarios}
 \label{sec:examples}
 
-Describe several typical example problems or use cases that can be expressed
-in the DSL. For each example, give a summary of what the example is about, and
-explain how important and representative it is for the domain.
+% Describe several typical example problems or use cases that can be expressed in the DSL. For each example, give a summary of what the example is about, and explain how important and representative it is for the domain.
 
-Then describe in more detail the steps involved in solving the problem (either
-by hand or with existing tools). This process can be very helpful in shedding
-light on what kind of basic objects, types, and combinators the DSL will have
-to offer.
+There is very common problem of ambiguous reference to the latest version of software application or library. TODO: describe this use case
+
+Another use case is deployment and redeployment of the web-site (TODO: use class page management as a motivating example)
+
+% Then describe in more detail the steps involved in solving the problem (either
+% by hand or with existing tools). This process can be very helpful in shedding
+% light on what kind of basic objects, types, and combinators the DSL will have
+% to offer.
 
 
 
 \section{Basic Objects}
 \label{sec:objects}
 
-What are the basic objects that are manipulated and used by the DSL? Basic
-objects are those that are not composed out of other objects. 
-
-As a general rule, the fewer basic objects one needs, the better, because the
-resulting DSL design will be more concise and elegant.
-%
-The basic objects should be described by a set of Haskell \prog{type} and
-\prog{data} definitions. Use the \prog{program} environment to show code, as
-illustrated below.
-
+% What are the basic objects that are manipulated and used by the DSL? Basic
+% objects are those that are not composed out of other objects. 
+\textbf{Basic objects}:
 \begin{program}
-type Point = (Int,Int)
+VersionCompound ::= X
+				 | Int
 \end{program}
-%
-Show how (some (parts) of) the examples from Section \ref{sec:examples} will be
-represented by values of the envisioned types. For example:
-
 \begin{program}
-home :: Point
-home = (10,13)
+Version ::= VersionCompound
+		 | Version VersionCompound
+\end{program}		 
+\begin{program}
+MaturityLevelBuild ::= PA
+				    |  A
+				    |  B		 
+\end{program}			
+\begin{program}	    
+MaturityLevelRelease ::= AR
+				    |  BR
+				    |  RC
+				    |  ST	
+\end{program}	
+\begin{program}			    
+MaturityLevel ::= MaturityLevelBuild
+				| MaturityLevelRelease	 
+\end{program}	
+\begin{program}			
+VersionFilterCompound ::= Int
+						| x
+						| ?
+						| A
 \end{program}
+\begin{program}							
+VersionFilter ::= VersionFilterCompound
+			   | VersionFilter VersionFilterCompound
+\end{program}
+\begin{program}			   
+VersionRange ::= VersionFilter
+			  |  Version "-" Version
+			  | ">=" Version
+ 			  | "<=" Version
+ 			  | VersionRange "+" VersionRange
+\end{program}				    
+% As a general rule, the fewer basic objects one needs, the better, because the resulting DSL design will be more concise and elegant.
 %
-Also, list current limitations that you expect in a future iterations to overcome.
+% The basic objects should be described by a set of Haskell \prog{type} and
+% \prog{data} definitions. Use the \prog{program} environment to show code, as
+% illustrated below.
+
+% \begin{program}
+% type Point = (Int,Int)
+% \end{program}
+%
+% Show how (some (parts) of) the examples from Section \ref{sec:examples} will be
+% represented by values of the envisioned types. For example:
+
+% \begin{program}
+% home :: Point
+% home = (10,13)
+% \end{program}
+%
+% Also, list current limitations that you expect in a future iterations to overcome.
 
 \RevisionNeeded
 
@@ -149,23 +215,23 @@ Also, list current limitations that you expect in a future iterations to overcom
 \section{Operators and Combinators}
 \label{sec:comb}
 
-Identify operators that either transform objects into one another or
-build more complex objects out of simpler (and ultimately basic) ones.
+%Identify operators that either transform objects into one another or
+% build more complex objects out of simpler (and ultimately basic) ones.
 %
-Depending on what implementation or form of embedding will be chosen,
-operators may be given as constructors of data types or functions.
+% Depending on what implementation or form of embedding will be chosen,
+% operators may be given as constructors of data types or functions.
 
-Combinators are higher-order functions that encode control structures of the
-DSL. The function \prog{map} is a combinator that realizes a looping construct
-for lists. The operations of the parser library Parsec are called \emph{parser
-combinators} since parsers themselves are represented as functions.
+% Combinators are higher-order functions that encode control structures of the
+% DSL. The function \prog{map} is a combinator that realizes a looping construct
+% for lists. The operations of the parser library Parsec are called \emph{parser
+% combinators} since parsers themselves are represented as functions.
 %
-The identification of the right set of combinators is a key step in the design
-of the DSL.
+% The identification of the right set of combinators is a key step in the design
+% of the DSL.
 
-With basic objects, operators, and combinators, you should be able to
-demonstrate how the examples from Section \ref{sec:examples} can be
-represented. All limitations encountered here should be classified as either:
+% With basic objects, operators, and combinators, you should be able to
+% demonstrate how the examples from Section \ref{sec:examples} can be
+% represented. All limitations encountered here should be classified as either:
 
 \begin{enumerate}[(1)]\denseitems
 \item Temporary
@@ -185,68 +251,64 @@ Fundamental limitations should be reported and listed in detail in Section
 \section{Interpretation and Analyses}
 \label{sec:analysis}
 
-Provide a precise description of the different outcomes of the DSL. This
-information is typically provided by Haskell function signatures (that is,
-function names and their types).
+% Provide a precise description of the different outcomes of the DSL. This
+% information is typically provided by Haskell function signatures (that is,
+% function names and their types).
 
-One kind of ``outcome'' is the result of executing a DSL program. For example,
-for a scheduling DSL, an outcome would typically consist of a set of possible
-schedules. But it could also be only one schedule (the best according to some
-criterion).
+% One kind of ``outcome'' is the result of executing a DSL program. For example,
+% for a scheduling DSL, an outcome would typically consist of a set of possible
+% schedules. But it could also be only one schedule (the best according to some
+% criterion).
 %
-However, in addition to such primary outcomes, there could be other results.
-In the case of the scheduling DSL, one could imagine sending emails to
-participants asking for priorities in case several optimal schedules exist.
-
-
+% However, in addition to such primary outcomes, there could be other results.
+% In the case of the scheduling DSL, one could imagine sending emails to
+% participants asking for priorities in case several optimal schedules exist.
 
 \section{Cognitive Dimension Evaluation}
 \label{sec:cogdim}
 
-An assessment of cognitive dimension of your notation, such as closeness of
-mapping, viscosity, hidden dependencies, and others, will help you with the
-re-design of the DSL.
+% An assessment of cognitive dimension of your notation, such as closeness of
+% mapping, viscosity, hidden dependencies, and others, will help you with the
+% re-design of the DSL.
 
-Note that it is advisable to think about the cognitive dimensions constantly
-during the design of your DSL. Cognitive dimensions are, in fact, a language
-design tool, and not so much intended to evaluate languages after the fact.
+% Note that it is advisable to think about the cognitive dimensions constantly
+% during the design of your DSL. Cognitive dimensions are, in fact, a language
+% design tool, and not so much intended to evaluate languages after the fact.
 
 
 \section{Implementation Strategy}
 \label{sec:implementation}
 
-Discuss how the advantages and disadvantages of a deep or shallow embedding
-play out in your DSL.
+% Discuss how the advantages and disadvantages of a deep or shallow embedding
+% play out in your DSL.
 
-What dvantages would an implementation in a language workbench have? Is it
-worth the effort?
-
+% What dvantages would an implementation in a language workbench have? Is it
+% worth the effort?
 
 
 \section{Find Similar/Related DSLs}
 \label{sec:related}
 
-Try to find DSLs that are similar to the one described here and compare your
-DSL with those. Note that similarity can be understood as \emph{topical} as
-well as \emph{technical} similarity .
+%Try to find DSLs that are similar to the one described here and compare your
+% DSL with those. Note that similarity can be understood as \emph{topical} as
+% well as \emph{technical} similarity .
 
-\emph{Topically similar} DSLs are DSLs for the same or a closely related
-domain. They have in principle the same or slightly different outcomes, but
-they may be implemented quite differently. These DSLs help you refine the
-design of the DSL requirements described in Sections \ref{sec:users} and
-\ref{sec:outcomes}.
+% \emph{Topically similar} DSLs are DSLs for the same or a closely related
+% domain. They have in principle the same or slightly different outcomes, but
+% they may be implemented quite differently. These DSLs help you refine the
+% design of the DSL requirements described in Sections \ref{sec:users} and
+% \ref{sec:outcomes}.
 
-\emph{Technically similar} DSLs are Haskell DSLs whose types and functions are
-similar to the ones used in Sections \ref{sec:objects} and \ref{sec:comb}.
-They can help sharpen the DSL modeling and implementation described in those
-sections.
+% \emph{Technically similar} DSLs are Haskell DSLs whose types and functions are
+% similar to the ones used in Sections \ref{sec:objects} and \ref{sec:comb}.
+% They can help sharpen the DSL modeling and implementation described in those
+% sections.
 
-Ideally, you can find both, topically and technically similar DSLs. Be sure to
-properly cite the DSLs as references.
+% Ideally, you can find both, topically and technically similar DSLs. Be sure to
+% properly cite the DSLs as references.
 
-\bigskip\noindent\fbox{
-\textbf{You will have to present these DSLs in a class presentation.}}
-
+% \bigskip\noindent\fbox{
+% \textbf{You will have to present these DSLs in a class presentation.}}
 
 
 \section{Design Evolution}
@@ -282,6 +344,9 @@ visual syntax or a GUI interface play?
 List references to similar DSLs identified in Section \ref{sec:related} and
 potentially other related work.
 
+% argument is your BibTeX string definitions and bibliography database(s)
+\bibliographystyle{plain}
+%\bibliography{dsl_reportcard}
 
 \end{document}
 
