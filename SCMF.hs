@@ -18,6 +18,9 @@ data MaturityLevel = Dev
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
                 deriving (Show)
 
+--- VERSION TREE data types (Semantic Domain) ---
+-- TODO: implement VersionTree data type
+
 ---- VERSION FILTER data types ----
 
 data VersionNumberFilterCompound = FilterNumberPlaceholder
@@ -30,10 +33,17 @@ data VersionNumberFilter = VersionNumberFilterCompound VersionNumberFilterCompou
                    | SubFilter VersionNumberFilter VersionNumberFilterCompound
                    deriving (Show)
 
-data VersionFilter = MaturityVersionFilter MaturityLevel VersionNumberFilter
+-- TODO: implement data VersionRange 
+
+data VersionFilter = SingleVersionFilter Version
+                   | MaturityLevelFilter MaturityLevel
+                   | MaturityLevelVersionFilter MaturityLevel Version
+                   | PatternVersionFilter VersionNumberFilter
+                   | MaturityLevelPatternFilter MaturityLevel VersionNumberFilter
+        --         | RangeVersionFilter VersionRange
+        --         | MaturityLevelRangeVersionFilter MaturityLevel VersionRange
                    deriving (Show)
 
--- TODO: implement data VersionRange 
 
 ---- PLATFORM data types ----
 
@@ -85,4 +95,7 @@ data Repository = Repository RepositoryType [RepositoryProperty]
                 
 data Project = Project String Repository
               deriving (Show)
-              
+
+--- DEPLOYMENT data types ----
+
+data DeploymentRule = DeploymentRule VersionFilter Platform
