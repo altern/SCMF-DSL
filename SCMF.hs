@@ -1,9 +1,11 @@
+---- VERSION data types ----
+
 data VersionCompound = NumberPlaceholder                    -- X
                      | Number Int                           -- 1, 2, 3, ..., 45, ... 
                      deriving (Show)
                      
-data VersionNumber = VersionCompound VersionCompound
-             | SubVersion VersionNumber VersionCompound
+data VersionNumber = VersionCompound VersionCompound        -- X, 1, 2, 3, ... , 45, ...
+             | SubVersion VersionNumber VersionCompound     -- X, X.X, X.X.X, X.X.X.X, ... , X.1, X.2, ..., X.45, ..., 1.X.23,
              deriving (Show)
                         
 data MaturityLevel = Dev
@@ -13,8 +15,10 @@ data MaturityLevel = Dev
                    | Stable
                    deriving (Show)
 
-data Version = MaturityVersion MaturityLevel VersionNumber
+data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
                 deriving (Show)
+
+---- VERSION FILTER data types ----
 
 data VersionNumberFilterCompound = FilterNumberPlaceholder
                            | FilterNumber Int
@@ -29,7 +33,9 @@ data VersionNumberFilter = VersionNumberFilterCompound VersionNumberFilterCompou
 data VersionFilter = MaturityVersionFilter MaturityLevel VersionNumberFilter
                    deriving (Show)
 
--- data VersionRange
+-- TODO: implement data VersionRange 
+
+---- PLATFORM data types ----
 
 data ConnectionType = FTP
                     | LOCAL
@@ -50,6 +56,8 @@ data Connection = Connection ConnectionType [ConnectionProperty]
 
 data Platform = PlatformName String Connection
                 deriving (Show)
+
+---- PROJECT data types ----
 
 data RepositoryType = SVN
                     | GIT
@@ -77,3 +85,4 @@ data Repository = Repository RepositoryType [RepositoryProperty]
                 
 data Project = Project String Repository
               deriving (Show)
+              
