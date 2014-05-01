@@ -1,101 +1,43 @@
----- VERSION data types ----
+module SCMF where
 
-data VersionCompound = NumberPlaceholder                    -- X
-                     | Number Int                           -- 1, 2, 3, ..., 45, ... 
-                     deriving (Show)
-                     
-data VersionNumber = VersionCompound VersionCompound        -- X, 1, 2, 3, ... , 45, ...
-             | SubVersion VersionNumber VersionCompound     -- X, X.X, X.X.X, X.X.X.X, ... , X.1, X.2, ..., X.45, ..., 1.X.23,
-             deriving (Show)
-                        
-data MaturityLevel = Dev
-                   | Test
-                   | User
-                   | ReleaseCandidate
-                   | Stable
-                   deriving (Show)
+import Version
+import VersionTree
+import Artifact
+import ArtifactTree
+import Data.List.Split
+import Data.List
 
-data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
-                deriving (Show)
+-- appendLine :: String -> Change
+-- appendLine line documentContent = documentContent ++ "\n" ++ line
 
---- VERSION TREE data types (Semantic Domain) ---
--- TODO: implement VersionTree data type
+-- deleteNth :: Integer -> [a] -> [a]
+-- deleteNth n = foldr step [] . zip [1..]
+    --where step (i,x) acc = if (i `mod` n) == 0 then acc else x:acc
 
----- VERSION FILTER data types ----
+-- deleteLine :: Integer -> Change
+-- deleteLine lineNumber documentContent = intercalate "\n" (deleteNth lineNumber (splitOn "\n" documentContent))
 
-data VersionNumberFilterCompound = FilterNumberPlaceholder
-                           | FilterNumber Int
-                           | EitherPlaceholderOrNumber
-                           | AllNumbers
-                           deriving (Show)
+-- Takes current version of the document, document content and produces new version for a document
+-- produceNewVersion :: Document -> Document -> VersionNumber
+-- produceNewVersion = undefined
 
-data VersionNumberFilter = VersionNumberFilterCompound VersionNumberFilterCompound
-                   | SubFilter VersionNumberFilter VersionNumberFilterCompound
-                   deriving (Show)
-
--- TODO: implement data VersionRange 
-
-data VersionFilter = SingleVersionFilter Version
-                   | MaturityLevelFilter MaturityLevel
-                   | MaturityLevelVersionFilter MaturityLevel Version
-                   | PatternVersionFilter VersionNumberFilter
-                   | MaturityLevelPatternFilter MaturityLevel VersionNumberFilter
-        --         | RangeVersionFilter VersionRange
-        --         | MaturityLevelRangeVersionFilter MaturityLevel VersionRange
-                   deriving (Show)
-
-
----- PLATFORM data types ----
-
-data ConnectionType = FTP
-                    | LOCAL
-                    | SFTP
-                    | SSH
-                    | RSYNC
-                    deriving (Show)
-
-data ConnectionProperty = Host String
-                        | Port Int
-                        | Username String
-                        | Password String
-                        | RemoteDirectory String
-                        deriving (Show)
-
-data Connection = Connection ConnectionType [ConnectionProperty]
-                deriving (Show)
-
-data Platform = PlatformName String Connection
-                deriving (Show)
-
----- PROJECT data types ----
-
-data RepositoryType = SVN
-                    | GIT
-                    | HG
-                    | DARCS
-                    | CVS
-                    | P4
-                    | ACCUREV
-                    | BAZAAR
-                    | TFS
-                    | VSS
-                    | SCCS
-                    | RCS
-                    | FILESYSTEM
-                    deriving (Show)
-                    
-data RepositoryProperty = RepositoryHost String
-                         | RepositoryPort Int
-                         | RepositoryUsername String
-                         | RepositoryPassword String
-                        deriving (Show)
-                        
-data Repository = Repository RepositoryType [RepositoryProperty]
-                deriving (Show)
-                
-data Project = Project String Repository
-              deriving (Show)
-
---- DEPLOYMENT data types ----
-
-data DeploymentRule = DeploymentRule VersionFilter Platform
+main :: IO ()
+main = do 
+    displayRepresentationsOfArtifactTree artifactTree3
+    print ("Searching artifact tree for version " ++ (show v1) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 v1)
+    print ("")
+    print ("Searching artifact tree for version " ++ (show v2) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 v2)
+    print ("")
+    print ("Searching artifact tree for version " ++ (show v3) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 v3)
+    print ("")
+    print ("Searching artifact tree for artifact " ++ (show artifact1) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 artifact1)
+    print ("")
+    print ("Searching artifact tree for artifact " ++ (show artifact2) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 artifact2)
+    print ("")
+    print ("Searching artifact tree for artifact " ++ (show artifact3) ++ "... Result: ")
+    print (searchArtifactTree artifactTree3 artifact3)
