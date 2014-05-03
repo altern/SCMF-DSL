@@ -29,13 +29,21 @@ listInsert (x:xs) b
     | x < b = (x:(listInsert xs b))
     | x > b = (b:x:xs) 
 
--- treeInsert :: (Ord a) => RoseTree a -> a -> a -> RoseTree a
--- treeInsert (RoseTree elem (x:xs)) find insert
-    -- | x == find = ( RoseTree elem ( [x] ++ [ RoseTree insert [] ] ++ xs ) )
-    -- | x == find = ( RoseTree elem [] )
---    | (treeContains x elem) = treeInsert x find insert
---    | (listContains xs elem) = (RoseTree elem (listInsert xs (RoseTree insert [])))
---    | otherwise = error "Cannot find node to append after"
+treeInsert :: (Eq a) => RoseTree a -> a -> a -> RoseTree a
+treeInsert (RoseTree a []) find insert
+    | (a == find) = (RoseTree a [RoseTree insert []])
+    | otherwise = (RoseTree a [])
+treeInsert aTree@(RoseTree a l@(x:xs)) find insert 
+    | (a == find) = (RoseTree a ( l ++ [RoseTree insert []] ) )
+    | (treeContains x find) = (RoseTree a ( [treeInsert x find insert] ++ xs ) )
+    | (listContains xs find) = (RoseTree a ( [x] ++ (treeListInsert xs find insert ) ) )
+    | otherwise = aTree
+
+treeListInsert :: (Eq a) => [RoseTree a] -> a -> a -> [RoseTree a]
+treeListInsert [] _ insert = [ RoseTree insert [] ]
+treeListInsert (x:xs) find insert
+    | ( treeContains x find ) = [treeInsert x find insert] ++ xs
+    | ( listContains xs find ) = [x] ++ ( treeListInsert xs find insert )
 
 treeAppend :: (Ord a) => RoseTree a -> a -> RoseTree a
 treeAppend (RoseTree a []) b = RoseTree a [ RoseTree b [] ]

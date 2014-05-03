@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module Artifact where
 
 import Version
@@ -21,14 +23,16 @@ instance Show DocumentOrDirectory where
 data Artifact = Branch BranchName Version DocumentOrDirectory
             | Snapshot Timestamp Version DocumentOrDirectory
 
+type ArtifactList = [Artifact]
+
 instance  Eq Artifact where
     (Branch nameA versionA _ ) == (Branch nameB versionB _ )                = (nameA == nameB) && (versionA == versionB)
     (Snapshot timestampA versionA _ ) == (Snapshot timestampB versionB _ )    = (timestampA == timestampB) && (versionA == versionB)
     _ == _                                                                  = False
 
 instance Show Artifact where
-    show (Branch branchName version contents ) = ("Branch '" ++ branchName ++ "', Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "\n")
-    show (Snapshot timestamp version contents ) = ("Snapshot taken at " ++ (show timestamp) ++ ", Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "\n")
+    show (Branch branchName version contents ) = ("Branch '" ++ branchName ++ "', Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
+    show (Snapshot timestamp version contents ) = ("Snapshot taken at " ++ (show timestamp) ++ ", Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
 
 artifactToString :: Artifact -> String
 artifactToString (Branch branchName version _) = (branchName ++ " (" ++ ( versionToString version ) ++ ")")
@@ -37,6 +41,18 @@ artifactToString (Snapshot timestamp version _) = (versionToString version)
 artifactToVersion :: Artifact -> Version
 artifactToVersion (Branch branchName version _) = version
 artifactToVersion (Snapshot timestamp version _) = version
+
+getArtifactVersion = artifactToVersion
+
+artifactListToVersionList :: ArtifactList -> VersionList
+artifactListToVersionList [] = []
+artifactListToVersionList (x:xs) = (artifactListToVersionList xs) ++ [artifactToVersion x]
+
+artifactToDocument :: Artifact -> DocumentOrDirectory
+artifactToDocument (Branch _ _ document) = document
+artifactToDocument (Snapshot _ _ document) = document
+
+getArtifactDocument = artifactToDocument
 
 data AllowedChanges = Any
                     | None
@@ -64,6 +80,10 @@ allowedChangesToString Any = "Any"
 artifactHasVersion :: Artifact -> Version -> Bool
 artifactHasVersion (Branch _ v1 _) v2 = (v1 == v2)
 artifactHasVersion (Snapshot _ v1 _) v2 = (v1 == v2)
+
+getArtifactTimestamp :: Artifact -> Timestamp
+getArtifactTimestamp (Snapshot timestamp _ _) = timestamp
+getArtifactTimestamp (Branch _ _ _) = 0
 
 data DocumentOperation = Edit Artifact DocumentContent
                     -- | Save DocumentName Artifact -- Use CreateSnapshot instead
@@ -116,5 +136,6 @@ artifact2 = Branch "branch3" ( Version NumberPlaceholder ) ( Document "document1
 artifact3 :: Artifact
 artifact3 = Branch "branch22" ( Version NumberPlaceholder ) ( Document "document22" "content_branch22" )
 
-
+artifact4 :: Artifact
+artifact4 = Snapshot 12372 ( Version ( Number 11 ) ) ( Document "document1" "content11" )
 

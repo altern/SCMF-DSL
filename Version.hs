@@ -6,6 +6,8 @@ import MaturityLevel
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
              | Version VersionNumber
 
+type VersionList = [Version]
+
 instance Show Version where
     show version = versionToString version
 
@@ -18,6 +20,12 @@ generateNewVersion (Version NumberPlaceholder) = Version NumberPlaceholder
 generateNewVersion (Version (Number n)) = Version (Number (n + 1))
 generateNewVersion (MaturityVersion level NumberPlaceholder) = MaturityVersion level NumberPlaceholder
 generateNewVersion (MaturityVersion level (Number n)) = MaturityVersion level (Number (n + 1))
+
+initialVersion :: Version
+initialVersion = Version (Number 0)
+
+isInitialVersion :: Version -> Bool
+isInitialVersion ( Version ( Number 0 ) ) = True
 
 instance Eq Version where
     (Version vn1) == (Version vn2) = (vn1 == vn2)

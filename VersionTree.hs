@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module VersionTree where
 
 import Data.Tree
@@ -45,15 +47,19 @@ versionTreeToAllowedChangesTree (RoseTree num []) = Node (allowedChangesToString
 versionTreeToAllowedChangesTree (RoseTree num (x:[])) = Node (allowedChangesToString ( detectAllowedChanges num)) [ versionTreeToAllowedChangesTree x ]
 versionTreeToAllowedChangesTree (RoseTree num (x:xs)) = Node (allowedChangesToString ( detectAllowedChanges num)) ( (versionTreeToAllowedChangesTree x) : (versionListToAllowedChangesList xs) )
 
-versionTreeListAppend :: VersionTreeList -> VersionTreeList
-versionTreeListAppend [] = [RoseTree (Version (Number 0)) []]
-versionTreeListAppend v@((RoseTree (Version (Number n)) []):[]) = v ++ [(RoseTree (Version (Number (n + 1))) [] )]
-versionTreeListAppend v@((RoseTree (Version NumberPlaceholder) []):[]) = v
-versionTreeListAppend ((RoseTree (Version NumberPlaceholder) x):[]) = ((RoseTree (Version NumberPlaceholder) (versionTreeListAppend x)):[])
-versionTreeListAppend (x:xs) = [x] ++ (versionTreeListAppend xs)
+class VersionTreeAppend structure where
+    versionTreeAppend :: structure -> structure
 
-versionTreeAppend :: VersionTree -> VersionTree
-versionTreeAppend = undefined
+instance VersionTreeAppend VersionTreeList where 
+    versionTreeAppend [] = [RoseTree (Version (Number 0)) []]
+    versionTreeAppend v@((RoseTree (Version (Number n)) []):[]) = v ++ [(RoseTree (Version (Number (n + 1))) [] )]
+    versionTreeAppend v@((RoseTree (Version NumberPlaceholder) []):[]) = v
+    versionTreeAppend ((RoseTree (Version NumberPlaceholder) x):[]) = ((RoseTree (Version NumberPlaceholder) (versionTreeAppend x)):[])
+    versionTreeAppend (x:xs) = [x] ++ (versionTreeAppend xs)
+
+instance VersionTreeAppend VersionTree where 
+    versionTreeAppend (RoseTree (Version NumberPlaceholder) list) = (RoseTree (Version NumberPlaceholder) (versionTreeAppend list))
+    versionTreeAppend a@(RoseTree (Version (Number n)) list) = a
 
 -- versionTreeInsert :: (Ord a) => VersionTree -> Version -> VersionTree
 -- versionTreeInsert RoseTree NumberPlaceholder [] = 

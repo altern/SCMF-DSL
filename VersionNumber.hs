@@ -3,7 +3,7 @@ module VersionNumber where
 data VersionNumber = NumberPlaceholder                      -- X
                      | Number Int                           -- 1, 2, 3, ..., 45, ... 
                      deriving (Show)
- 
+
 versionNumberToString :: VersionNumber -> String
 versionNumberToString (Number n) = (show n)
 versionNumberToString NumberPlaceholder = "X"
