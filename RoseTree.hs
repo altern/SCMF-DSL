@@ -49,6 +49,21 @@ treeAppend :: (Ord a) => RoseTree a -> a -> RoseTree a
 treeAppend (RoseTree a []) b = RoseTree a [ RoseTree b [] ]
 treeAppend (RoseTree a list) b = (RoseTree a (list ++ [ RoseTree b [] ] ))
 
+treeUpdate :: (Eq a) => RoseTree a -> a -> a -> RoseTree a
+treeUpdate (RoseTree a []) find replace 
+    | a == find = (RoseTree replace [])
+    | otherwise = (RoseTree a [])
+treeUpdate (RoseTree a list) find replace 
+    | a == find = (RoseTree replace (treeListUpdate list find replace) )
+    | otherwise = (RoseTree a (treeListUpdate list find replace) )
+
+treeListUpdate :: (Eq a) => [RoseTree a] -> a -> a -> [RoseTree a]
+treeListUpdate [] _ _ = []
+treeListUpdate (x:xs) find replace
+    | ( treeContains x find ) = [treeUpdate x find replace] ++ xs
+    | ( listContains xs find ) = [x] ++ ( treeListUpdate xs find replace )
+    | otherwise = (x:xs)
+    
 -- HELPER FUNCTIONS
 
 -- data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Eq, Show)

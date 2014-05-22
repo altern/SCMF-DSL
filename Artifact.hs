@@ -16,6 +16,8 @@ type DocumentContent = String
 data DocumentOrDirectory = Document DocumentName DocumentContent 
                          | Directory DirectoryName [DocumentOrDirectory]
                          
+emptyDocument = ( Document "" "" )
+
 instance Show DocumentOrDirectory where
     show (Document name content ) = "Document: " ++ name ++ ", Content: " ++ content ++ ""
     show (Directory dirName content ) = "Directory: " ++ dirName ++ ", Content: " ++ (show content) ++ ""
@@ -27,7 +29,7 @@ type ArtifactList = [Artifact]
 
 instance  Eq Artifact where
     (Branch nameA versionA _ ) == (Branch nameB versionB _ )                = (nameA == nameB) && (versionA == versionB)
-    (Snapshot timestampA versionA _ ) == (Snapshot timestampB versionB _ )    = (timestampA == timestampB) && (versionA == versionB)
+    (Snapshot timestampA versionA _ ) == (Snapshot timestampB versionB _ )  = (timestampA == timestampB) && (versionA == versionB)
     _ == _                                                                  = False
 
 instance Show Artifact where
@@ -47,6 +49,10 @@ getArtifactVersion = artifactToVersion
 artifactListToVersionList :: ArtifactList -> VersionList
 artifactListToVersionList [] = []
 artifactListToVersionList (x:xs) = (artifactListToVersionList xs) ++ [artifactToVersion x]
+
+artifactListToString :: ArtifactList -> [String]
+artifactListToString [] = []
+artifactListToString (x:xs) = (artifactListToString xs) ++ [artifactToString x]
 
 artifactToDocument :: Artifact -> DocumentOrDirectory
 artifactToDocument (Branch _ _ document) = document
@@ -85,12 +91,17 @@ getArtifactTimestamp :: Artifact -> Timestamp
 getArtifactTimestamp (Snapshot timestamp _ _) = timestamp
 getArtifactTimestamp (Branch _ _ _) = 0
 
-data DocumentOperation = Edit Artifact DocumentContent
+getArtifactName :: Artifact -> String
+getArtifactName (Snapshot _ _ _) = ""
+getArtifactName (Branch name _ _) = name
+
+data DocumentOperation = Edit Artifact DocumentOrDirectory
                     -- | Save DocumentName Artifact -- Use CreateSnapshot instead
                     -- | Copy DocumentName Artifact -- Use CreateBranch instead
                        | CreateSnapshot Artifact 
-                       | CreateBranch Artifact 
+                       | CreateBranch Artifact BranchName
                     -- | Share   
+                       deriving (Show)
 
 data DocumentChangeType = Add
                         | Delete

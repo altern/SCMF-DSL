@@ -11,7 +11,9 @@ import Data.List
 
 main :: IO ()
 main = do 
+    let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     displayRepresentationsOfArtifactTree artifactTree3
+    displayArtifactTree t
     print ("Searching artifact tree for version " ++ (show v1) ++ "... Result: ")
     print (searchArtifactTree artifactTree3 v1)
     print ("")
@@ -29,3 +31,4 @@ main = do
     print ("")
     print ("Searching artifact tree for artifact " ++ (show artifact3) ++ "... Result: ")
     print (searchArtifactTree artifactTree3 artifact3)
+    
