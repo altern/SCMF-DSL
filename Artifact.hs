@@ -27,7 +27,7 @@ data Artifact = Branch BranchName Version DocumentOrDirectory
 
 type ArtifactList = [Artifact]
 
-instance  Eq Artifact where
+instance Eq Artifact where
     (Branch nameA versionA _ ) == (Branch nameB versionB _ )                = (nameA == nameB) && (versionA == versionB)
     (Snapshot timestampA versionA _ ) == (Snapshot timestampB versionB _ )  = (timestampA == timestampB) && (versionA == versionB)
     _ == _                                                                  = False
@@ -59,6 +59,7 @@ artifactToDocument (Branch _ _ document) = document
 artifactToDocument (Snapshot _ _ document) = document
 
 getArtifactDocument = artifactToDocument
+getArtifactContents = artifactToDocument
 
 data AllowedChanges = Any
                     | None

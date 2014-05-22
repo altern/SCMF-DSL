@@ -311,4 +311,7 @@ sArtifactTree3 = Node "0" [ Node "trunk (X) "
 displayArtifactTree t = putStrLn $ drawVerticalTree (artifactTreeToStringTree t)
 
 displayRepresentationsOfArtifactTree :: ArtifactTree -> IO ()
-displayRepresentationsOfArtifactTree aTree = putStrLn $ (drawVerticalTree (artifactTreeToStringTree aTree) ++ "\n" ++ drawVerticalTree ( versionTreeToStringTree (artifactTreeToVersionTree aTree)) ++ "\n" ++ drawVerticalTree ( artifactTreeToAllowedChangesTree ( aTree)))
+displayRepresentationsOfArtifactTree aTree = putStrLn $ (drawVerticalTree (artifactTreeToStringTree aTree) ++ "\n" 
+    ++ drawVerticalTree ( versionTreeToStringTree (artifactTreeToVersionTree aTree)) ++ "\n" 
+    ++ drawVerticalTree ( artifactTreeToAllowedChangesTree ( aTree))) ++ "\n"
+--    ++ drawVerticalTree ( artifactListToPlatformsTree ( aTree ) (deploy aTree deploymentRules platformDB ) ) ++ "\n"

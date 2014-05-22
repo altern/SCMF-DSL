@@ -8,12 +8,19 @@ import Artifact
 import ArtifactTree
 import Data.List.Split
 import Data.List
+import Platform
 
 main :: IO ()
 main = do 
     let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
-    displayRepresentationsOfArtifactTree artifactTree3
-    displayArtifactTree t
+    let db = (deploy t deploymentRules platformDB )
+    displayRepresentationsOfArtifactTree t
+    displayPlatformsForArtifactTree t
+    putStrLn $ show deploymentRules
+    putStrLn ""
+    putStrLn $ show db
+    putStrLn ""
+    -- displayArtifactTree t
     print ("Searching artifact tree for version " ++ (show v1) ++ "... Result: ")
     print (searchArtifactTree artifactTree3 v1)
     print ("")
