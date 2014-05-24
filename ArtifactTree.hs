@@ -237,13 +237,13 @@ instance GenerateSnapshot ArtifactList where
 
 -- ARTIFACT TREE: APPLICATION OF DOCUMENT OPERATIONS -- 
 
-updateArtifactTree :: ArtifactTree -> DocumentOperation -> ArtifactTree
-updateArtifactTree aTree ( Edit artifact@(Snapshot _ _ _) documentContent ) = aTree -- error "Snapshots are not editable"
-updateArtifactTree aTree ( Edit artifact@(Branch branchName version contents ) documentContent ) = treeUpdate aTree artifact ( Branch branchName version documentContent )
-updateArtifactTree aTree ( CreateSnapshot artifact@(Snapshot _ _ _) ) = aTree
-updateArtifactTree aTree ( CreateSnapshot artifact@(Branch _ _ _) ) = generateSnapshot aTree artifact
-updateArtifactTree aTree ( CreateBranch artifact@(Snapshot _ _ document) branchName ) = treeInsert aTree artifact ( Branch branchName (generateNewVersion ( getArtifactVersion ( findParentArtifact aTree artifact ) ) ) document ) 
-updateArtifactTree aTree ( CreateBranch artifact@(Branch _ _ document ) branchName ) = treeInsert newTree ( getArtifactOfLatestSnapshot newTree ) ( Branch branchName (generateNewVersion ( getArtifactVersion artifact ) ) document ) where newTree = (generateSnapshot aTree artifact) 
+updateArtifactTree :: ArtifactTree -> ArtifactTreeOperation -> ArtifactTree
+updateArtifactTree aTree ( ArtifactTreeEdit artifact@(Snapshot _ _ _) documentContent ) = aTree -- error "Snapshots are not editable"
+updateArtifactTree aTree ( ArtifactTreeEdit artifact@(Branch branchName version contents ) documentContent ) = treeUpdate aTree artifact ( Branch branchName version documentContent )
+updateArtifactTree aTree ( ArtifactTreeCreateSnapshot artifact@(Snapshot _ _ _) ) = aTree
+updateArtifactTree aTree ( ArtifactTreeCreateSnapshot artifact@(Branch _ _ _) ) = generateSnapshot aTree artifact
+updateArtifactTree aTree ( ArtifactTreeCreateBranch artifact@(Snapshot _ _ document) branchName ) = treeInsert aTree artifact ( Branch branchName (generateNewVersion ( getArtifactVersion ( findParentArtifact aTree artifact ) ) ) document ) 
+updateArtifactTree aTree ( ArtifactTreeCreateBranch artifact@(Branch _ _ document ) branchName ) = treeInsert newTree ( getArtifactOfLatestSnapshot newTree ) ( Branch branchName (generateNewVersion ( getArtifactVersion artifact ) ) document ) where newTree = (generateSnapshot aTree artifact) 
 
 -- EXAMPLES
 

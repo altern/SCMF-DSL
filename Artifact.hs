@@ -120,18 +120,18 @@ getArtifactName :: Artifact -> String
 getArtifactName (Snapshot _ _ _) = ""
 getArtifactName (Branch name _ _) = name
 
-data DocumentOperation = Edit Artifact DocumentOrDirectory
+data ArtifactTreeOperation = ArtifactTreeEdit Artifact DocumentOrDirectory
                     -- | Save DocumentName Artifact -- Use CreateSnapshot instead
                     -- | Copy DocumentName Artifact -- Use CreateBranch instead
-                       | CreateSnapshot Artifact 
-                       | CreateBranch Artifact BranchName
+                       | ArtifactTreeCreateSnapshot Artifact 
+                       | ArtifactTreeCreateBranch Artifact BranchName
                     -- | Share   
                        deriving (Show)
 
-data DocumentChangeType = Add
-                        | Delete
-                        | Update
-                        | Rename
+data DocumentChangeType = DocumentChangeAdd
+                        | DocumentChangeDelete
+                        | DocumentChangeUpdate
+                        | DocumentChangeRename
                         deriving (Show)
                         
 -- type Change = DocumentContent -> DocumentContent

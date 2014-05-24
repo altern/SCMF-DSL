@@ -23,6 +23,15 @@ type VersionTreeList = [VersionTree]
                             -- | Children -- do we really need it here?
                             -- | Merge -- ?
 
+initialVersionTree :: VersionTree
+initialVersionTree = RoseTree (Version (Number 0))  
+    [ RoseTree ( Version NumberPlaceholder ) [] ]
+
+isInitialVersionTree :: VersionTree -> Bool
+isInitialVersionTree vTree = case vTree of 
+    ( RoseTree (Version (Number 0)) [ RoseTree ( Version NumberPlaceholder ) [] ] ) -> True
+    _ -> False
+
 -- VERSION TREE CONVERSION TO STRING --
 
 versionListToStringTreeList :: VersionTreeList -> StringTreeList
@@ -61,14 +70,46 @@ instance VersionTreeAppend VersionTree where
     versionTreeAppend (RoseTree (Version NumberPlaceholder) list) = (RoseTree (Version NumberPlaceholder) (versionTreeAppend list))
     versionTreeAppend a@(RoseTree (Version (Number n)) list) = a
 
--- versionTreeInsert :: (Ord a) => VersionTree -> Version -> VersionTree
--- versionTreeInsert RoseTree NumberPlaceholder [] = 
--- treeInsert (RoseTree elem (x:xs)) find insert
-    -- | x == find = ( RoseTree elem ( [x] ++ [ RoseTree insert [] ] ++ xs ) )
-    -- | x == find = ( RoseTree elem [] )
---    | (treeContains x elem) = treeInsert x find insert
---    | (listContains xs elem) = (RoseTree elem (listInsert xs (RoseTree insert [])))
---    | otherwise = error "Cannot find node to append after"
+class FindLatestVersion a where 
+    findLatestVersion :: a -> Version
+
+instance FindLatestVersion VersionTree where    
+    findLatestVersion ( RoseTree version [] ) = version
+    findLatestVersion ( RoseTree version1 list ) = case ( version1 > ( findLatestVersion list ) ) of
+        True -> version1
+        False -> findLatestVersion list
+
+instance FindLatestVersion VersionTreeList where
+    findLatestVersion [] = initialVersion
+    findLatestVersion (x:[]) = findLatestVersion x
+    findLatestVersion (x:xs) = case ((findLatestVersion x) > (findLatestVersion xs)) of
+        True -> (findLatestVersion x)
+        False -> (findLatestVersion xs)
+
+class FindParentVersion a where 
+    findParentVersion :: a -> Version -> Version
+
+instance FindParentVersion VersionTree where
+    findParentVersion ( RoseTree _ [] ) _ = initialVersion
+    findParentVersion ( RoseTree parentVersion list ) version = case (searchVersionTreeChildren list version) of
+        True -> parentVersion
+        False -> findParentVersion list version
+        
+instance FindParentVersion VersionTreeList where
+    findParentVersion [] _ = initialVersion
+    findParentVersion (x:xs) version = case ( isInitialVersion (findParentVersion x version) ) of
+        True -> findParentVersion xs version
+        False -> findParentVersion x version
+
+class SearchVersionTreeChildren a where
+    searchVersionTreeChildren :: VersionTreeList -> a -> Bool    
+    
+instance SearchVersionTreeChildren Version where
+    searchVersionTreeChildren [] _ = False
+    searchVersionTreeChildren ((RoseTree version1 _):xs) version2 = (version1 == version2) || (searchVersionTreeChildren xs version2)
+
+appendNewVersion :: VersionTree -> Version -> VersionTree 
+appendNewVersion vTree version = treeInsert vTree version ( generateNewVersion version ) 
 
 -- EXAMPLES --
 

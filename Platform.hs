@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, OverloadedStrings #-}
 
 module Platform where 
 
@@ -6,11 +6,15 @@ import Version
 import VersionNumber
 import Artifact
 import ArtifactTree 
+import RoseTree
+
 import Data.Tree
 import Data.Tree.Pretty
-import RoseTree
 import Text.Show
 import Text.PrettyPrint.HughesPJ
+import qualified Data.Text as T
+import qualified Data.Aeson as JSON
+
 
 class Pretty a where
     prettyPrint :: a -> IO ()
@@ -52,8 +56,21 @@ type PlatformName = String
 
 data PlatformContents = PlatformContents DocumentOrDirectory Version BranchName
                 deriving (Show)
+                
+instance JSON.ToJSON PlatformContents where
+    toJSON (PlatformContents document version branchName) = JSON.object 
+        [ "version" JSON..= (T.pack $ show version)
+        , "branchName" JSON..= (T.pack $ id branchName)
+        , "document" JSON..= JSON.toJSON document
+        ]
 
 data Platform = Platform PlatformName PlatformContents -- Connection 
+
+instance JSON.ToJSON Platform where
+    toJSON (Platform name contents) = JSON.object 
+        [ "name" JSON..= ( T.pack $ id name )
+        , "contents" JSON..= JSON.toJSON contents
+        ]
 
 initialPlatform = Platform "" (PlatformContents emptyDocument initialVersion "")
 
@@ -83,9 +100,22 @@ type PlatformDB = [Platform]
 data DeploymentRule = DeploymentRuleVersion Version PlatformName
                     | DeploymentRuleArtifact Artifact PlatformName
                     deriving (Show)
-                    
+
+instance JSON.ToJSON DeploymentRule where
+    toJSON (DeploymentRuleVersion version platformName) = JSON.object 
+        [ "platformName" JSON..= ( T.pack $ id platformName )
+        , "version" JSON..= ( T.pack $ show version)
+        ]
+    toJSON (DeploymentRuleArtifact artifact platformName) = JSON.object 
+        [ "platformName" JSON..= ( T.pack $ id platformName )
+        , "artifact" JSON..= JSON.toJSON artifact
+        ]
+
 type DeploymentRules = [DeploymentRule]
     
+displayDeploymentRules :: DeploymentRules -> IO ()
+displayDeploymentRules rules = mapM_ print rules 
+
 class ApplyDeploymentRules a where
     applyDeploymentRules :: DeploymentRules -> a -> Artifact -> a
     applyDeploymentRule :: DeploymentRule -> a -> Artifact -> a

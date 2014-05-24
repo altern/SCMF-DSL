@@ -1,4 +1,4 @@
-module SCMF where
+module Main where
 
 import RoseTree
 import Version

@@ -6,6 +6,7 @@ import Artifact
 import ArtifactTree
 import Version
 import VersionTree
+import Platform
 import FileOperation
 
 data UserOperation = LoadHistoryFromFile
@@ -41,26 +42,97 @@ class ActionWithInput a i b where
                             -- | Next
                             -- | Parent -- do we really need it here?
                             -- | Children -- do we really need it here?
-
+                            
+instance EmptyAction ArtifactTree where
+    emptyAction Init = initialArtifactTree
+    emptyAction Flush = initialArtifactTree
+    emptyAction New = initialArtifactTree
+    emptyAction Create = initialArtifactTree
+    emptyAction Generate = initialArtifactTree
+    emptyAction Empty = initialArtifactTree
+    
+instance EmptyAction VersionTree where
+    emptyAction Init = initialVersionTree
+    emptyAction Flush = initialVersionTree
+    emptyAction New = initialVersionTree
+    emptyAction Create = initialVersionTree
+    emptyAction Generate = initialVersionTree
+    emptyAction Empty = initialVersionTree
+    
+instance EmptyAction Version where
+    emptyAction Init = initialVersion
+    emptyAction Flush = initialVersion
+    emptyAction New = initialVersion
+    emptyAction Create = initialVersion
+    emptyAction Generate = initialVersion
+    emptyAction Empty = initialVersion
+    
 instance Action ArtifactTree ArtifactList where
     action First aTree = (searchArtifactTree aTree initialVersion)
     action Last aTree = (searchArtifactTree aTree (findVersionOfLatestSnapshot aTree))
 
 instance Action ArtifactTree ( IO () ) where
     action Save aTree = saveToFile aTree 
+    action Store aTree = saveToFile aTree 
+    
     action Describe aTree = displayArtifactTree aTree 
     action Display aTree = displayArtifactTree aTree 
     action Show aTree = displayArtifactTree aTree 
-                -- | Output
-                -- | List
-                -- | Describe
-                -- | Explain
+    action Output aTree = displayArtifactTree aTree 
+    action List aTree = displayArtifactTree aTree 
+    action Explain aTree = displayArtifactTree aTree 
 
 instance Action VersionTree ( IO () ) where
     action Save vTree = saveToFile vTree
+    action Store vTree = saveToFile vTree
+
+    action Describe aTree = displayVersionTree aTree 
+    action Display aTree = displayVersionTree aTree 
+    action Show aTree = displayVersionTree aTree 
+    action Output aTree = displayVersionTree aTree 
+    action List aTree = displayVersionTree aTree 
+    action Explain aTree = displayVersionTree aTree
+    
+instance Action PlatformDB ( IO () ) where
+    action Save db = saveToFile db
+    action Store db = saveToFile db
+
+    action Describe db = displayPlatformDB db 
+    action Display db = displayPlatformDB db 
+    action Show db = displayPlatformDB db 
+    action Output db = displayPlatformDB db 
+    action List db = displayPlatformDB db 
+    action Explain db = displayPlatformDB db  
+    
+instance Action DeploymentRules ( IO () ) where
+    action Save rules = saveToFile rules
+    action Store rules = saveToFile rules
+
+    action Describe rules = displayDeploymentRules rules 
+    action Display rules = displayDeploymentRules rules 
+    action Show rules = displayDeploymentRules rules 
+    action Output rules = displayDeploymentRules rules 
+    action List rules = displayDeploymentRules rules 
+    action Explain rules = displayDeploymentRules rules 
 
 instance ActionWithInput ArtifactTree BranchName ArtifactTree where
     actionWithInput Append aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
+    actionWithInput Add aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
+    actionWithInput Generate aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
+    
+instance ActionWithInput ArtifactTree (BranchName, DocumentName, DocumentContent) ArtifactTree where
+    actionWithInput Edit aTree (branchName, documentName, documentContent) = updateArtifactTree aTree ( ArtifactTreeEdit (searchArtifactTree aTree branchName !! 0 ) (Document documentName documentContent) ) 
+    actionWithInput Update aTree (branchName, documentName, documentContent) = updateArtifactTree aTree ( ArtifactTreeEdit (searchArtifactTree aTree branchName !! 0 ) (Document documentName documentContent) ) 
+    
+instance ActionWithInput ArtifactTree Artifact ArtifactTree where
+    actionWithInput Append aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact
+    actionWithInput Add aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact
+    actionWithInput Generate aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact    
+    
+instance ActionWithInput VersionTree Version VersionTree where
+    actionWithInput Append vTree version = appendNewVersion vTree version
+    actionWithInput Add vTree version = appendNewVersion vTree version
+    actionWithInput Generate vTree version = appendNewVersion vTree version
 
 data UserAction = Load
                 | Restore
@@ -73,6 +145,7 @@ data UserAction = Load
                 | Append
                 | Generate
                 | Edit
+                | Rename
                 | Delete
                 | Empty
                 | Flush
