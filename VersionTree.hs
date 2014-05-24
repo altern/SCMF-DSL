@@ -15,13 +15,13 @@ type VersionTreeList = [VersionTree]
 
 -- VERSION TREE OPERATIONS --
 
-data VersionTreeOperation  = First
-                            | Last
-                            | Previous
-                            | Next
-                            | Parent -- do we really need it here?
-                            | Children -- do we really need it here?
-                            | Merge -- ?
+-- data VersionTreeOperation  = First
+                            -- | Last
+                            -- | Previous
+                            -- | Next
+                            -- | Parent -- do we really need it here?
+                            -- | Children -- do we really need it here?
+                            -- | Merge -- ?
 
 -- VERSION TREE CONVERSION TO STRING --
 

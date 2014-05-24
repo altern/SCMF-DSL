@@ -60,6 +60,9 @@ initialPlatform = Platform "" (PlatformContents emptyDocument initialVersion "")
 instance Show Platform where
     show (Platform name ( PlatformContents document version branchName) ) = (show name) ++ ": " ++ (show version) ++ " (" ++  branchName ++ ")"
 
+displayPlatformDB :: PlatformDB -> IO ()
+displayPlatformDB db = mapM_ print db 
+
 instance Eq Platform where 
     ( Platform nameA _ ) == ( Platform nameB _ ) = ( nameA == nameB )
 

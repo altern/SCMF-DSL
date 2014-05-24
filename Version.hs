@@ -1,10 +1,26 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Version where 
 
 import VersionNumber
 import MaturityLevel
+import qualified Data.Aeson as JSON
+import qualified Data.Text as T
 
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
              | Version VersionNumber
+
+instance JSON.ToJSON Version where
+    toJSON version = 
+        JSON.object [ "version" JSON..= (T.pack $ show version)]
+
+-- instance JSON.FromJSON Version where
+    -- parseJSON (Object v) =
+        -- Version <$> v .: "firstName"
+               -- <*> v .: "lastName"
+               -- <*> v .: "age"
+               -- <*> v .: "likesPizza"
+    -- parseJSON _ = mzero
 
 type VersionList = [Version]
 

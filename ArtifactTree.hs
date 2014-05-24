@@ -1,5 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
-
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
 module ArtifactTree where
 
 import Data.Tree
@@ -13,17 +12,20 @@ import Version
 import VersionNumber
 import VersionTree
 
+import qualified Data.Aeson as JSON
+import qualified Data.Text as T
+
 type ArtifactTree = RoseTree Artifact
 type ArtifactTreeList = [ArtifactTree]
 
 -- ARTIFACT TREE OPERATIONS --
 
-data ArtifactTreeOperation  = First
-                            | Last
-                            | Previous
-                            | Next
-                            | Parent -- do we really need it here?
-                            | Children -- do we really need it here?
+-- data ArtifactTreeOperation  = First
+                            -- | Last
+                            -- | Previous
+                            -- | Next
+                            -- | Parent -- do we really need it here?
+                            -- | Children -- do we really need it here?
 
 -- INITIAL ARTIFACT DEFINITIONS --
 
@@ -137,8 +139,8 @@ instance SearchArtifactTree BranchName where
 
 -- FIRST DEPTH SEARCH --
 
-class SearchArtifactTreeChildren searchEntity where
-    searchArtifactTreeChildren :: ArtifactTreeList -> searchEntity -> Bool    
+class SearchArtifactTreeChildren a where
+    searchArtifactTreeChildren :: ArtifactTreeList -> a -> Bool    
 
 instance SearchArtifactTreeChildren Artifact where
     searchArtifactTreeChildren [] _ = False

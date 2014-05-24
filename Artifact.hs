@@ -1,10 +1,12 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, OverloadedStrings, TypeFamilies #-}
 
 module Artifact where
 
 import Version
 import VersionNumber
 import MaturityLevel
+import qualified Data.Aeson as JSON
+import qualified Data.Text as T
 
 type BranchName = String
 type Timestamp = Integer
@@ -24,6 +26,28 @@ instance Show DocumentOrDirectory where
 
 data Artifact = Branch BranchName Version DocumentOrDirectory
             | Snapshot Timestamp Version DocumentOrDirectory
+
+instance JSON.ToJSON DocumentOrDirectory where
+    toJSON (Document documentName documentContent) = JSON.object
+        [ "name" JSON..= (T.pack $ id documentName)
+        , "content" JSON..= (T.pack $ id documentContent)
+        ]
+    toJSON (Directory dirName dirContent) = JSON.object
+        [ "name" JSON..= (T.pack $ id dirName)
+        , "content" JSON..= JSON.toJSON dirContent
+        ]
+
+instance JSON.ToJSON Artifact where
+    toJSON (Branch branchName version document) = JSON.object
+        [ "version"  JSON..= (T.pack $ show version)
+        , "name" JSON..= (T.pack $ id branchName) 
+        , "document"  JSON..= JSON.toJSON document
+        ] 
+    toJSON (Snapshot timestamp version document) = JSON.object
+        [ "version"  JSON..= (T.pack $ show version)
+        , "timestamp" JSON..= (T.pack $ show timestamp) 
+        , "document"  JSON..= JSON.toJSON document
+        ]
 
 type ArtifactList = [Artifact]
 

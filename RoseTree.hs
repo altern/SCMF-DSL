@@ -1,12 +1,16 @@
 module RoseTree where
 
 import Data.Tree
+import qualified Data.Aeson as JSON
 
 data RoseTree a = RoseTree a [RoseTree a]
                    deriving (Show)
                    
 type StringTree = Tree String
 type StringTreeList = [StringTree]
+
+instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
+    toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
 
 instance (Eq a) => Eq (RoseTree a) where
     (RoseTree nodeA []) == (RoseTree nodeB [])              = nodeA == nodeB 
@@ -64,23 +68,3 @@ treeListUpdate (x:xs) find replace
     | ( listContains xs find ) = [x] ++ ( treeListUpdate xs find replace )
     | otherwise = (x:xs)
     
--- HELPER FUNCTIONS
-
--- data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Eq, Show)
--- type IntTree = Tree Integer
-
--- fl :: Tree a -> [a]
--- fl (Node n st) = n : concat (map fl st)
--- fl (Node n st) = n : concat [fl t | t <- st]
-
--- leaf :: a -> Tree a
--- leaf x = Node x Empty Empty
-
--- insert :: (Ord a) => Tree a -> a -> Tree a
--- insert Empty x = leaf x
--- insert (Node x l r) y = case compare y x of
---  GT -> Node x l (insert r y)
---  _  -> Node x (insert l y) r
-
--- intTree :: IntTree
--- intTree = Node 0 ( Node 1 Empty Empty ) ( Node 2 Empty Empty )
