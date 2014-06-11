@@ -13,6 +13,17 @@ import Artifact
 type VersionTree = RoseTree Version
 type VersionTreeList = [VersionTree]
 
+-- data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
+             -- | Version VersionNumber
+
+-- data VersionCompound = NumberPlaceholder                    
+                     -- | Number Int                           
+                     -- deriving (Show)
+
+-- data VersionNumber = VersionCompound VersionCompound
+       -- | VersionNumber VersionCompound VersionNumber
+       -- deriving (Show)
+
 -- VERSION TREE OPERATIONS --
 
 -- data VersionTreeOperation  = First
@@ -23,14 +34,14 @@ type VersionTreeList = [VersionTree]
                             -- | Children -- do we really need it here?
                             -- | Merge -- ?
 
-initialVersionTree :: VersionTree
-initialVersionTree = RoseTree (Version (Number 0))  
-    [ RoseTree ( Version NumberPlaceholder ) [] ]
+-- initialVersionTree :: VersionTree
+-- initialVersionTree = RoseTree (Version (Number 0))  
+--    [ RoseTree ( Version NumberPlaceholder ) [] ]
 
-isInitialVersionTree :: VersionTree -> Bool
-isInitialVersionTree vTree = case vTree of 
-    ( RoseTree (Version (Number 0)) [ RoseTree ( Version NumberPlaceholder ) [] ] ) -> True
-    _ -> False
+-- isInitialVersionTree :: VersionTree -> Bool
+-- isInitialVersionTree vTree = case vTree of 
+--    ( RoseTree (Version (Number 0)) [ RoseTree ( Version NumberPlaceholder ) [] ] ) -> True
+--    _ -> False
 
 -- VERSION TREE CONVERSION TO STRING --
 

@@ -6,6 +6,7 @@ import VersionNumber
 import MaturityLevel
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BS
 import Data.Attoparsec.Char8
 import Data.Attoparsec.Combinator
 import Control.Monad
@@ -56,28 +57,17 @@ generateNewVersion ( MaturityVersion level vn ) = MaturityVersion level ( genera
 
 -- initialVersionNumber :: VersionNumber
 
-initialVersionCompound :: VersionCompound
-initialVersionCompound = NumberPlaceholder
-
-isInitialVersionCompound :: VersionCompound -> Bool
-isInitialVersionCompound NumberPlaceholder = True
-isInitialVersionCompound (Number 0) = True
-
-initialVersionNumber :: NumberOfDimensions -> VersionNumber
-initialVersionNumber dim = (createVersionNumberByNumberOfDimensions dim)
-
-isInitialVersionNumber :: NumberOfDimensions -> VersionNumber -> Bool
-isInitialVersionNumber (NumberPlaceholder) (VersionCompound NumberPlaceholder ) = True
-isInitialVersionNumber (Number 0) (VersionCompound NumberPlaceholder ) = True
-isInitialVersionNumber (Number 1) (VersionCompound NumberPlaceholder ) = True
-isInitialVersionNumber dim (VersionNumber NumberPlaceholder vn) = isInitialVersionNumber (decrement dim) vn
-
 initialVersion :: NumberOfDimensions -> Version
 initialVersion dim = Version ( initialVersionNumber dim )
 
-isInitialVersion :: NumberOfDimensions -> Version -> Bool
-isInitialVersion dim (Version v) = isInitialVersionNumber dim v
-isInitialVersion dim (MaturityVersion _ v) = isInitialVersionNumber dim v
+-- isInitialVersionN :: NumberOfDimensions -> Version -> Bool
+-- isInitialVersionN dim (Version v) = isInitialVersionNumberN dim v
+-- isInitialVersionN dim (MaturityVersion _ v) = isInitialVersionNumberN dim v
+
+isInitialVersion :: Version -> Bool
+isInitialVersion (Version v) = isInitialVersionNumber v
+isInitialVersion (MaturityVersion _ v) = isInitialVersionNumber v
+
 
 instance Eq Version where
     (Version vn1) == (Version vn2) = (vn1 == vn2)
@@ -93,21 +83,31 @@ instance Ord Version where
     (Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
 
 
-stringToMaturity :: Parser MaturityLevel
-stringToMaturity =
+parseMaturity :: Parser MaturityLevel
+parseMaturity =
      ( string "Dev" >> return Dev)
  <|> ( string "Test" >> return Test)
  <|> ( string "User" >> return User)
  <|> ( string "ReleaseCandidate" >> return ReleaseCandidate)
  <|> ( string "Prod" >> return Prod)
 
-stringToVersion :: Parser Version
-stringToVersion = do
-    maturity <- stringToMaturity
+stringToMaturity :: String -> MaturityLevel
+stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
+    Right a -> a
+    Left _ -> Dev
+
+parseVersion :: Parser Version
+parseVersion = do
+    maturity <- parseMaturity
     char '/'
-    version <- stringToVersionNumber
+    version <- parseVersionNumber
     return $ MaturityVersion maturity version
 
+stringToVersion :: String -> Version
+stringToVersion str = case (parseOnly parseVersion $ BS.pack str) of
+    Right a -> a
+    Left _ -> Version ( initialVersionNumber (Number 0) )
+    
 -- EXAMPLES
 
 vc1 :: VersionCompound

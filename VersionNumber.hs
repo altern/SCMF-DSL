@@ -7,6 +7,7 @@ import Data.Attoparsec.Char8
 import Control.Applicative
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BS
 -- import System.Directory
 
 type NumberOfDimensions = VersionCompound
@@ -56,13 +57,9 @@ createVersionNumberByNumberOfDimensions ( Number 0 ) = VersionCompound NumberPla
 createVersionNumberByNumberOfDimensions ( Number 1 ) = VersionCompound NumberPlaceholder
 createVersionNumberByNumberOfDimensions num = VersionNumber NumberPlaceholder ( createVersionNumberByNumberOfDimensions (decrement num) )
 
--- instance Monad VersionNumber  where
-    -- return x = stringToVersionCompound x
-    -- x >>= f = f $ x
-
 versionCompoundToString :: VersionCompound -> String
 versionCompoundToString (Number n) = (show n)
-versionCompoundToString NumberPlaceholder = "X"
+versionCompoundToString NumberPlaceholder = "x"
 
 versionNumberToString :: VersionNumber -> String
 versionNumberToString (VersionNumber vc vn) = (versionCompoundToString vc) ++ "." ++ (versionNumberToString vn)
@@ -72,19 +69,53 @@ versionNumberToString (VersionCompound vc) = (versionCompoundToString vc)
     -- show (Number n) = (show n)
     -- show NumberPlaceholder = "X" 
 
-stringToVersionCompound :: Parser VersionCompound
-stringToVersionCompound =
-     ( string "X"    >> return NumberPlaceholder)
+
+initialVersionCompound :: VersionCompound
+initialVersionCompound = NumberPlaceholder
+
+isInitialVersionCompound :: VersionCompound -> Bool
+isInitialVersionCompound NumberPlaceholder = True
+isInitialVersionCompound _ = False
+
+initialVersionNumber :: NumberOfDimensions -> VersionNumber
+initialVersionNumber dim = (createVersionNumberByNumberOfDimensions dim)
+
+-- isInitialVersionNumberN :: NumberOfDimensions -> VersionNumber -> Bool
+-- isInitialVersionNumberN (NumberPlaceholder) (VersionCompound NumberPlaceholder ) = True
+-- isInitialVersionNumberN (Number 0) (VersionCompound NumberPlaceholder ) = True
+-- isInitialVersionNumberN (Number 1) (VersionCompound NumberPlaceholder ) = True
+-- isInitialVersionNumberN dim (VersionNumber NumberPlaceholder vn) = isInitialVersionNumberN (decrement dim) vn
+-- isInitialVersionNumberN _ _ = False
+
+isInitialVersionNumber :: VersionNumber -> Bool
+isInitialVersionNumber ( VersionCompound NumberPlaceholder ) = True
+isInitialVersionNumber ( VersionCompound ( Number _ ) ) = False
+isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc ) && ( isInitialVersionNumber vn )
+
+parseVersionCompound :: Parser VersionCompound
+parseVersionCompound =
+     ( string "x"    >> return NumberPlaceholder)
+ <|> ( string "X"    >> return NumberPlaceholder)
  <|> ( decimal >>= \num -> return (Number num) )
       
-stringToVersionNumber :: Parser VersionNumber
-stringToVersionNumber = do
-    ds <- sepBy1 stringToVersionCompound (char '.')
+stringToVersionCompound :: String -> VersionCompound
+stringToVersionCompound str = case (parseOnly parseVersionCompound $ BS.pack str) of
+    Right a -> a
+    Left _ -> initialVersionCompound
+
+parseVersionNumber :: Parser VersionNumber
+parseVersionNumber = do
+    ds <- sepBy1 parseVersionCompound (char '.')
     let vs = map VersionCompound ds
     return (foldr1 (\(VersionCompound vc) -> VersionNumber vc) vs )
-    
+
+stringToVersionNumber :: String -> VersionNumber
+stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
+    Right a -> a
+    Left _ -> createVersionNumberByNumberOfDimensions (Number 0)
+
 -- instance JSON.FromJSON VersionCompound where
-    -- parseJSON (JSON.Object v) = (parse stringToVersionCompound v)
+    -- parseJSON (JSON.Object v) = (parse parseVersionCompound v)
     -- parseJSON _ = mzero
     
 instance Eq VersionCompound where
