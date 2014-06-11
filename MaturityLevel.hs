@@ -4,6 +4,6 @@ data MaturityLevel = Dev
                    | Test
                    | User
                    | ReleaseCandidate
-                   | Stable
+                   | Prod
                    deriving (Show, Enum, Ord, Eq)
                    

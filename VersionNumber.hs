@@ -9,22 +9,54 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 -- import System.Directory
 
-type NumberOfDimensions = Int
+type NumberOfDimensions = VersionCompound
 
 data VersionCompound = NumberPlaceholder                      -- X
                      | Number Int                           -- 1, 2, 3, ..., 45, ... 
                      deriving (Show)
 
+class VersionOperations a where
+    decrement :: a -> a
+    decrementDimension :: NumberOfDimensions -> a -> a
+    increment :: a -> a
+    incrementDimension :: NumberOfDimensions -> a -> a
+
+instance VersionOperations VersionCompound where 
+    decrement NumberPlaceholder = NumberPlaceholder
+    decrement (Number 0) = Number 0
+    decrement (Number num) = Number (num - 1)
+    decrementDimension _ a = decrement a
+    increment NumberPlaceholder = NumberPlaceholder
+    increment (Number num) = Number (num + 1)
+    incrementDimension _ a = increment a
+
 data VersionNumber = VersionCompound VersionCompound
        | VersionNumber VersionCompound VersionNumber
        deriving (Show)
 
-createVersionNumberByDimensionNumber :: NumberOfDimensions -> VersionNumber
-createVersionNumberByDimensionNumber 0 = VersionCompound NumberPlaceholder
-createVersionNumberByDimensionNumber 1 = VersionCompound NumberPlaceholder
-createVersionNumberByDimensionNumber num = VersionNumber NumberPlaceholder ( createVersionNumberByDimensionNumber (num - 1) )
+instance VersionOperations VersionNumber where 
+    decrement ( VersionCompound vc ) = VersionCompound (decrement vc)
+    decrement ( VersionNumber vc vn ) = VersionNumber vc (decrement vn)
+    decrementDimension (Number 0) ( VersionCompound vc ) = VersionCompound (decrement vc)
+    decrementDimension dim ( VersionCompound vc ) = VersionCompound (decrementDimension ( decrement dim ) vc)
+    decrementDimension (Number 0) ( VersionNumber vc vn) = VersionNumber vc (decrement vn)
+    decrementDimension dim ( VersionNumber vc vn) = VersionNumber vc (decrementDimension ( decrement dim ) vn)
+    increment ( VersionCompound vc ) = VersionCompound (increment vc)
+    increment ( VersionNumber vc vn ) = VersionNumber vc (increment vn)
+    incrementDimension (Number 0) ( VersionCompound vc ) = VersionCompound (increment vc)
+    incrementDimension (NumberPlaceholder) ( VersionCompound vc ) = VersionCompound (increment vc)
+    incrementDimension dim ( VersionCompound vc ) = VersionCompound (incrementDimension ( decrement dim ) vc)
+    incrementDimension (Number 0) ( VersionNumber vc vn ) = VersionNumber vc (increment vn)
+    incrementDimension (NumberPlaceholder) ( VersionNumber vc vn ) = VersionNumber vc (increment vn)
+    incrementDimension dim ( VersionNumber vc vn ) = VersionNumber vc (incrementDimension ( decrement dim ) vn)
 
--- instance Monad VersionCompound where
+createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
+createVersionNumberByNumberOfDimensions ( NumberPlaceholder ) = VersionCompound NumberPlaceholder
+createVersionNumberByNumberOfDimensions ( Number 0 ) = VersionCompound NumberPlaceholder
+createVersionNumberByNumberOfDimensions ( Number 1 ) = VersionCompound NumberPlaceholder
+createVersionNumberByNumberOfDimensions num = VersionNumber NumberPlaceholder ( createVersionNumberByNumberOfDimensions (decrement num) )
+
+-- instance Monad VersionNumber  where
     -- return x = stringToVersionCompound x
     -- x >>= f = f $ x
 
@@ -45,6 +77,12 @@ stringToVersionCompound =
      ( string "X"    >> return NumberPlaceholder)
  <|> ( decimal >>= \num -> return (Number num) )
       
+stringToVersionNumber :: Parser VersionNumber
+stringToVersionNumber = do
+    ds <- sepBy1 stringToVersionCompound (char '.')
+    let vs = map VersionCompound ds
+    return (foldr1 (\(VersionCompound vc) -> VersionNumber vc) vs )
+    
 -- instance JSON.FromJSON VersionCompound where
     -- parseJSON (JSON.Object v) = (parse stringToVersionCompound v)
     -- parseJSON _ = mzero
