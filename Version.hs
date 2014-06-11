@@ -27,21 +27,39 @@ type VersionList = [Version]
 instance Show Version where
     show version = versionToString version
 
+-- data VersionCompound = NumberPlaceholder 
+                     -- | Number Int          
+                     -- deriving (Show)
+
+-- data VersionNumber = VersionCompound VersionCompound
+       -- | VersionNumber VersionCompound VersionNumber
+       -- deriving (Show)
+
 versionToString :: Version -> String
 versionToString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (versionNumberToString versionNumber)
 versionToString (Version versionNumber) = (versionNumberToString versionNumber)
 
+generateNewVersionCompound :: VersionCompound -> VersionCompound
+generateNewVersionCompound NumberPlaceholder = NumberPlaceholder
+generateNewVersionCompound (Number n) = (Number (n + 1))
+
+generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
+generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber (generateNewVersionCompound vc) vn )
+
 generateNewVersion :: Version -> Version
-generateNewVersion (Version NumberPlaceholder) = Version NumberPlaceholder
-generateNewVersion (Version (Number n)) = Version (Number (n + 1))
-generateNewVersion (MaturityVersion level NumberPlaceholder) = MaturityVersion level NumberPlaceholder
-generateNewVersion (MaturityVersion level (Number n)) = MaturityVersion level (Number (n + 1))
+generateNewVersion ( Version vn ) = Version ( generateNewVersionNumber vn )
+generateNewVersion ( MaturityVersion level vn ) = MaturityVersion level ( generateNewVersionNumber vn )
 
-initialVersion :: Version
-initialVersion = Version (Number 0)
+-- initialVersionNumber :: VersionNumber
 
-isInitialVersion :: Version -> Bool
-isInitialVersion ( Version ( Number 0 ) ) = True
+initialVersionCompound :: VersionCompound
+initialVersionCompound = Number 0
+
+-- initialVersion :: Version
+-- initialVersion = Version (Number 0)
+
+isInitialVersionCompound :: VersionCompound -> Bool
+isInitialVersionCompound ( Number 0 ) = True
 
 instance Eq Version where
     (Version vn1) == (Version vn2) = (vn1 == vn2)
@@ -58,17 +76,17 @@ instance Ord Version where
 
 -- EXAMPLES
 
-v1 :: Version
-v1 = Version NumberPlaceholder
+vc1 :: VersionCompound
+vc1 = NumberPlaceholder
 
-v2 :: Version
-v2 = Version (Number 1)
+vc2 :: VersionCompound
+vc2 = (Number 1)
 
-v3 :: Version
-v3 = Version (Number 2)
+vc3 :: VersionCompound
+vc3 = (Number 2)
 
 v4 :: Version
-v4 = MaturityVersion Dev (Number 3)
+v4 = MaturityVersion Dev ( VersionCompound ( Number 3 ) )
 
 v5 :: Version
-v5 = MaturityVersion ReleaseCandidate (Number 50)
+v5 = MaturityVersion ReleaseCandidate ( VersionCompound ( Number 50 ) )

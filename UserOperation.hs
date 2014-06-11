@@ -156,6 +156,7 @@ data UserAction = Load
                 | Describe
                 | Explain
                 | Perform
+                | Apply
                 | Do
                 | Update
                 | Find 
@@ -167,3 +168,19 @@ data UserAction = Load
                 | Parent 
                 | Children
                 | Cancel
+                
+-- EXAMPLE 1 of SCMF DSL PROGRAM: 
+-- LoadArtifactTree "artifactTree.json"
+-- Edit "trunk" "new file content"
+-- Create Snapshot "trunk"
+-- Show Latest Version "trunk"
+-- Show Latest Artifact "trunk"
+-- Save ArtifactTree "artifactTree.json"
+
+-- EXAMPLE 2 of SCMF DSL PROGRAM: 
+-- Load PlatformDB "platforms.json"
+-- Load DeploymentRules "deploymentRules.json"
+-- Load ArtifactTree "artifactTree.json"
+-- Apply DeploymentRules 
+-- Show PlatformDB
+-- Save PlatformDB "platforms.json"

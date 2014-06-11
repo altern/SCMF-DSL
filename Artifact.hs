@@ -85,6 +85,14 @@ artifactToDocument (Snapshot _ _ document) = document
 getArtifactDocument = artifactToDocument
 getArtifactContents = artifactToDocument
 
+-- data VersionCompound = NumberPlaceholder 
+                     -- | Number Int          
+                     -- deriving (Show)
+
+-- data VersionNumber = VersionCompound VersionCompound
+       -- | VersionNumber VersionCompound VersionNumber
+       -- deriving (Show)
+
 data AllowedChanges = Any
                     | None
                     deriving (Show)
@@ -92,9 +100,13 @@ data AllowedChanges = Any
 class DetectAllowedChanges entity where
     detectAllowedChanges :: entity -> AllowedChanges
 
-instance DetectAllowedChanges VersionNumber where
+instance DetectAllowedChanges VersionCompound where
     detectAllowedChanges NumberPlaceholder  = Any
     detectAllowedChanges (Number n)         = None 
+
+instance DetectAllowedChanges VersionNumber where
+    detectAllowedChanges (VersionCompound vc)  = detectAllowedChanges vc
+    detectAllowedChanges (VersionNumber vc vn) = detectAllowedChanges vn 
     
 instance DetectAllowedChanges Version where
     detectAllowedChanges (Version num) = detectAllowedChanges num
@@ -164,14 +176,14 @@ data BranchType = Mainline
 -- EXAMPLES --
 
 artifact1 :: Artifact
-artifact1 = Snapshot 12372 ( Version ( Number 10 ) ) ( Document "document1" "content10" )
+artifact1 = Snapshot 12372 ( Version ( VersionCompound ( Number 10 ) ) ) ( Document "document1" "content10" )
 
 artifact2 :: Artifact
-artifact2 = Branch "branch3" ( Version NumberPlaceholder ) ( Document "document1" "content_branch3" )
+artifact2 = Branch "branch3" ( Version ( VersionCompound NumberPlaceholder ) ) ( Document "document1" "content_branch3" )
 
 artifact3 :: Artifact
-artifact3 = Branch "branch22" ( Version NumberPlaceholder ) ( Document "document22" "content_branch22" )
+artifact3 = Branch "branch22" ( Version ( VersionCompound NumberPlaceholder ) ) ( Document "document22" "content_branch22" )
 
 artifact4 :: Artifact
-artifact4 = Snapshot 12372 ( Version ( Number 11 ) ) ( Document "document1" "content11" )
+artifact4 = Snapshot 12372 ( Version ( VersionCompound ( Number 11 ) ) ) ( Document "document1" "content11" )
 

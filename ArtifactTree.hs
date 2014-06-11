@@ -31,7 +31,7 @@ type ArtifactTreeList = [ArtifactTree]
 
 initialArtifactTree :: ArtifactTree
 initialArtifactTree = RoseTree ( Snapshot 0 (Version (Number 0) ) ( Document "" "") ) 
-    [ RoseTree (Branch "" ( Version NumberPlaceholder ) ( Document "" "") ) [] ]
+    [ RoseTree ( Branch "" ( Version NumberPlaceholder ) ( Document "" "") ) [] ]
     
 initialArtifact :: Artifact
 initialArtifact = Snapshot 0 ( initialVersion ) ( Document "" "" )

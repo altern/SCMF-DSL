@@ -49,6 +49,9 @@ parseInput inp
   
   | inp =~ "^\\:show" = do
     -- outputStrLn $ action Show t :: IO ()
+    -- tree <- loadArtifactTreeFromFile
+    -- displayRepresentationsOfArtifactTree tree
+    liftIO $ displayRepresentationsOfArtifactTree artifactTree3
     mainLoop 
                                                    
   | inp =~ ":" = do
@@ -82,7 +85,7 @@ main = do
     -- tree <- loadArtifactTreeFromFile
     -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     -- let db = (deploy t deploymentRules platformDB )
-    -- displayRepresentationsOfArtifactTree t
+    -- displayRepresentationsOfArtifactTree tree
     -- displayPlatformsForArtifactTree t
     -- putStrLn $ show deploymentRules
     -- putStrLn ""
