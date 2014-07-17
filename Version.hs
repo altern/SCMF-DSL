@@ -44,10 +44,6 @@ versionToString :: Version -> String
 versionToString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (versionNumberToString versionNumber)
 versionToString (Version versionNumber) = (versionNumberToString versionNumber)
 
-generateNewVersionCompound :: VersionCompound -> VersionCompound
-generateNewVersionCompound NumberPlaceholder = NumberPlaceholder
-generateNewVersionCompound (Number n) = (Number (n + 1))
-
 generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
 generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber (generateNewVersionCompound vc) vn )
 
