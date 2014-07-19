@@ -13,32 +13,24 @@ import Control.Monad
 import Control.Applicative
 
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
-             | Version VersionNumber
+			| Version VersionNumber
 
 instance JSON.ToJSON Version where
-    toJSON version = 
-        JSON.object [ "version" JSON..= (T.pack $ show version)]
+	toJSON version = 
+		JSON.object [ "version" JSON..= (T.pack $ show version)]
 
 -- instance JSON.FromJSON Version where
-    -- parseJSON (Object v) =
-        -- Version <$> v .: "firstName"
-               -- <*> v .: "lastName"
-               -- <*> v .: "age"
-               -- <*> v .: "likesPizza"
-    -- parseJSON _ = mzero
+	-- parseJSON (Object v) =
+		-- Version <$> v .: "firstName"
+				-- <*> v .: "lastName"
+				-- <*> v .: "age"
+				-- <*> v .: "likesPizza"
+	-- parseJSON _ = mzero
 
 type VersionList = [Version]
 
 instance Show Version where
-    show version = versionToString version
-
--- data VersionCompound = NumberPlaceholder 
-                     -- | Number Int          
-                     -- deriving (Show)
-
--- data VersionNumber = VersionCompound VersionCompound
-       -- | VersionNumber VersionCompound VersionNumber
-       -- deriving (Show)
+	show version = versionToString version
 
 versionToString :: Version -> String
 versionToString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (versionNumberToString versionNumber)
@@ -51,59 +43,70 @@ generateNewVersion :: Version -> Version
 generateNewVersion ( Version vn ) = Version ( generateNewVersionNumber vn )
 generateNewVersion ( MaturityVersion level vn ) = MaturityVersion level ( generateNewVersionNumber vn )
 
+instance VersionOperations Version where 
+	decrement           (Version vn)                        = Version (decrement vn)
+	decrement           (MaturityVersion ml vn)             = MaturityVersion ml (decrement vn)
+	decrementDimension  num (Version vn)                    = Version (decrementDimension num vn)
+	decrementDimension  (Number 0) (MaturityVersion ml vn)  = MaturityVersion (decrementMaturityLevel ml) vn
+	decrementDimension  num (MaturityVersion ml vn)         = MaturityVersion ml (decrementDimension num vn)
+	increment           (Version vn)                        = Version (increment vn)
+	increment           (MaturityVersion ml vn)             = MaturityVersion ml (increment vn)
+	incrementDimension  num (Version vn)                    = Version (incrementDimension num vn)
+	incrementDimension  (Number 0) (MaturityVersion ml vn)  = MaturityVersion (incrementMaturityLevel ml) vn
+	incrementDimension  num (MaturityVersion ml vn)         = MaturityVersion ml (incrementDimension num vn)
+
 -- initialVersionNumber :: VersionNumber
 
 initialVersion :: NumberOfDimensions -> Version
 initialVersion dim = Version ( initialVersionNumber dim )
 
--- isInitialVersionN :: NumberOfDimensions -> Version -> Bool
--- isInitialVersionN dim (Version v) = isInitialVersionNumberN dim v
--- isInitialVersionN dim (MaturityVersion _ v) = isInitialVersionNumberN dim v
-
 isInitialVersion :: Version -> Bool
 isInitialVersion (Version v) = isInitialVersionNumber v
 isInitialVersion (MaturityVersion _ v) = isInitialVersionNumber v
 
-
 instance Eq Version where
-    (Version vn1) == (Version vn2) = (vn1 == vn2)
-    (MaturityVersion level1 vn1) == (MaturityVersion level2 vn2)             = (level1 == level2) && (vn1 == vn2)
-    _ == _                                                     = False
-    
+	(Version vn1) == (Version vn2) = (vn1 == vn2)
+	(MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2)      = (ml1 == ml2) && (vn1 == vn2)
+	_ == _                                                      = False
+	
 instance Ord Version where
-    (MaturityVersion level1 vn1) `compare` (MaturityVersion level2 vn2) = case vn1 == vn2 of 
-        True -> level1 `compare` level2
-        False -> vn1 `compare` vn2
-    (MaturityVersion _ vn1) `compare` (Version vn2) = vn1 `compare` vn2
-    (Version vn1) `compare` (MaturityVersion _ vn2) = vn1 `compare` vn2
-    (Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
-
+	(MaturityVersion ml1 vn1) `compare` (MaturityVersion ml2 vn2) = case vn1 == vn2 of 
+		True -> ml1 `compare` ml2
+		False -> vn1 `compare` vn2
+	(MaturityVersion _ vn1) `compare` (Version vn2) = vn1 `compare` vn2
+	(Version vn1) `compare` (MaturityVersion _ vn2) = vn1 `compare` vn2
+	(Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
 
 parseMaturity :: Parser MaturityLevel
-parseMaturity =
-     ( string "Dev" >> return Dev)
- <|> ( string "Test" >> return Test)
- <|> ( string "User" >> return User)
- <|> ( string "ReleaseCandidate" >> return ReleaseCandidate)
- <|> ( string "Prod" >> return Prod)
-
+parseMaturity = 
+		( string "Dev" >> return Dev)
+	<|> ( string "Test" >> return Test)
+	<|> ( string "User" >> return User)
+	<|> ( string "ReleaseCandidate" >> return ReleaseCandidate)
+	<|> ( string "Prod" >> return Prod)
+	
 stringToMaturity :: String -> MaturityLevel
 stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
-    Right a -> a
-    Left _ -> Dev
+	Right a -> a
+	Left _ -> Dev
 
 parseVersion :: Parser Version
-parseVersion = do
-    maturity <- parseMaturity
-    char '/'
-    version <- parseVersionNumber
-    return $ MaturityVersion maturity version
+parseVersion = do { 
+        maturity <- parseMaturity
+      ; char '/'
+      ; version <- parseVersionNumber
+      ; return $ MaturityVersion maturity version
+    } 
+    <|> do { 
+        version <- parseVersionNumber
+      ; return $ Version version
+    } 
 
 stringToVersion :: String -> Version
 stringToVersion str = case (parseOnly parseVersion $ BS.pack str) of
-    Right a -> a
-    Left _ -> Version ( initialVersionNumber (Number 0) )
-    
+	Right a -> a
+	Left _ -> Version ( initialVersionNumber (Number 0) )
+
 -- EXAMPLES
 
 vc1 :: VersionCompound
