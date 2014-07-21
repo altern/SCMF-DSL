@@ -5,8 +5,10 @@ module Version where
 import VersionNumber
 import MaturityLevel
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as AT
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Attoparsec.Char8
 import Data.Attoparsec.Combinator
 import Control.Monad
@@ -20,12 +22,21 @@ instance JSON.ToJSON Version where
 		JSON.object [ "version" JSON..= (T.pack $ show version)]
 
 -- instance JSON.FromJSON Version where
-	-- parseJSON (Object v) =
-		-- Version <$> v .: "firstName"
-				-- <*> v .: "lastName"
-				-- <*> v .: "age"
-				-- <*> v .: "likesPizza"
+	-- parseJSON (JSON.Object v) =
+		-- Version <$> v JSON..: "version"
 	-- parseJSON _ = mzero
+
+instance JSON.FromJSON Version where
+    parseJSON (JSON.Object v) = liftM stringToVersion ( v JSON..: "version" )
+    parseJSON _ = mzero
+ 
+parseVersionFromString :: String -> Version
+parseVersionFromString s = 
+    let bs = BS.pack s in case parse JSON.json bs of
+               (Done rest r) -> case AT.parseMaybe JSON.parseJSON r of
+                    (Just x) -> x
+                    Nothing -> initialVersion (NumberPlaceholder)
+               _             -> initialVersion (NumberPlaceholder)
 
 type VersionList = [Version]
 
