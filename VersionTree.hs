@@ -71,15 +71,15 @@ class VersionTreeAppend structure where
     versionTreeAppend :: structure -> structure
 
 instance VersionTreeAppend VersionTreeList where 
-    versionTreeAppend [] = [RoseTree (Version (Number 0)) []]
-    versionTreeAppend v@((RoseTree (Version (Number n)) []):[]) = v ++ [(RoseTree (Version (Number (n + 1))) [] )]
-    versionTreeAppend v@((RoseTree (Version NumberPlaceholder) []):[]) = v
-    versionTreeAppend ((RoseTree (Version NumberPlaceholder) x):[]) = ((RoseTree (Version NumberPlaceholder) (versionTreeAppend x)):[])
+    versionTreeAppend [] = [RoseTree (Version (VersionCompound (Number 0))) []]
+    versionTreeAppend v@((RoseTree (Version (VersionCompound (Number n))) []):[]) = v ++ [(RoseTree (Version (VersionCompound (Number (n + 1)))) [] )]
+    versionTreeAppend v@((RoseTree (Version (VersionCompound NumberPlaceholder)) []):[]) = v
+    versionTreeAppend ((RoseTree (Version (VersionCompound NumberPlaceholder)) x):[]) = ((RoseTree (Version (VersionCompound NumberPlaceholder)) (versionTreeAppend x)):[])
     versionTreeAppend (x:xs) = [x] ++ (versionTreeAppend xs)
 
 instance VersionTreeAppend VersionTree where 
-    versionTreeAppend (RoseTree (Version NumberPlaceholder) list) = (RoseTree (Version NumberPlaceholder) (versionTreeAppend list))
-    versionTreeAppend a@(RoseTree (Version (Number n)) list) = a
+    versionTreeAppend (RoseTree (Version (VersionCompound NumberPlaceholder)) list) = (RoseTree (Version (VersionCompound NumberPlaceholder)) (versionTreeAppend list))
+    versionTreeAppend a@(RoseTree (Version (VersionCompound (Number n))) list) = a
 
 class FindLatestVersion a where 
     findLatestVersion :: a -> Version
@@ -91,7 +91,7 @@ instance FindLatestVersion VersionTree where
         False -> findLatestVersion list
 
 instance FindLatestVersion VersionTreeList where
-    findLatestVersion [] = initialVersion
+    findLatestVersion [] = initialVersion (Number 0)
     findLatestVersion (x:[]) = findLatestVersion x
     findLatestVersion (x:xs) = case ((findLatestVersion x) > (findLatestVersion xs)) of
         True -> (findLatestVersion x)
@@ -101,13 +101,13 @@ class FindParentVersion a where
     findParentVersion :: a -> Version -> Version
 
 instance FindParentVersion VersionTree where
-    findParentVersion ( RoseTree _ [] ) _ = initialVersion
+    findParentVersion ( RoseTree _ [] ) _ = initialVersion (Number 0)
     findParentVersion ( RoseTree parentVersion list ) version = case (searchVersionTreeChildren list version) of
         True -> parentVersion
         False -> findParentVersion list version
         
 instance FindParentVersion VersionTreeList where
-    findParentVersion [] _ = initialVersion
+    findParentVersion [] _ = initialVersion (Number 0)
     findParentVersion (x:xs) version = case ( isInitialVersion (findParentVersion x version) ) of
         True -> findParentVersion xs version
         False -> findParentVersion x version
@@ -125,25 +125,25 @@ appendNewVersion vTree version = treeInsert vTree version ( generateNewVersion v
 -- EXAMPLES --
 
 vTree1 :: VersionTree
-vTree1 = RoseTree (Version (NumberPlaceholder)) []
+vTree1 = RoseTree (Version (VersionCompound NumberPlaceholder)) []
 
 strTree1 :: StringTree
 strTree1 = Node "X" []
 
 vTree2 :: VersionTree
-vTree2 = RoseTree (Version NumberPlaceholder) [RoseTree (Version (Number 1)) []]
+vTree2 = RoseTree (Version (VersionCompound NumberPlaceholder)) [RoseTree (Version (VersionCompound (Number 1)) ) []]
 
 strTree2 :: StringTree
 strTree2 = Node "X" [Node "1" []]
 
 vTree3 :: VersionTree
-vTree3 = RoseTree (Version NumberPlaceholder) [RoseTree (Version (Number 1)) [], RoseTree ((Version (Number 2))) []]
+vTree3 = RoseTree (Version (VersionCompound NumberPlaceholder ) )  [RoseTree (Version ( VersionCompound (Number 1))) [], RoseTree ((Version (VersionCompound (Number 2)))) []]
 
 strTree3 :: StringTree
 strTree3 = Node "X" [Node "1" [], Node "2" []]
 
 vTree4 :: VersionTree
-vTree4 = RoseTree (Version NumberPlaceholder) [RoseTree (Version (Number 1)) [], RoseTree ((Version (Number 2))) [], RoseTree ((Version (Number 3))) [], RoseTree ((Version (Number 4))) []]
+vTree4 = RoseTree (Version (VersionCompound NumberPlaceholder)) [RoseTree (Version (VersionCompound (Number 1))) [], RoseTree ((Version (VersionCompound (Number 2)))) [], RoseTree ((Version (VersionCompound (Number 3)))) [], RoseTree ((Version (VersionCompound (Number 4)))) []]
 
 -- HELPER FUNCTIONS --
 
