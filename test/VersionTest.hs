@@ -14,8 +14,14 @@ lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
 
 tests = test [ 
-	"test Z01"	~: "generateNewVersion Dev/1.x.0"			~: "Dev/1.x.1"													~=? ( versionToString ( generateNewVersion $ stringToVersion "Dev/1.x.0" ) ),
-	"test Z02"	~: "generateNewVersion Prod/1.3"			~: "Prod/1.4"													~=? ( versionToString ( generateNewVersion $ stringToVersion "Prod/1.3" ) ),
+	"test Z01"	~: "generateNewVersion Dev/1.x.0"			~: "Dev/1.x.1"												~=? ( versionToString ( generateNewVersion $ stringToVersion "Dev/1.x.0" ) ),
+	"test Z02"	~: "generateNewVersion Prod/1.3"			~: "Prod/1.4"												~=? ( versionToString ( generateNewVersion $ stringToVersion "Prod/1.3" ) ),
+	"test Y01"	~: "initialVersion 1"						~: "x"														~=? ( versionToString ( initialVersion (Number 1)) ),
+	"test Y02"	~: "initialVersion 2"						~: "x.x"													~=? ( versionToString ( initialVersion (Number 2)) ),
+	"test Y03"	~: "isInitialVersion x.x"					~: True														~=? ( isInitialVersion (stringToVersion "x.x") ),
+	"test Y04"	~: "isInitialVersion x.1"					~: False													~=? ( isInitialVersion (stringToVersion "x.1") ),
+	"test Y05"	~: "isInitialVersion Dev/x.x"				~: True														~=? ( isInitialVersion (stringToVersion "Dev/x.x") ),
+	"test Y06"	~: "isInitialVersion Dev/x.1"				~: False													~=? ( isInitialVersion (stringToVersion "Dev/x.1") ),
 	"test A01"	~: "versionToString x"						~: "x"														~=? ( versionToString (Version ( VersionCompound NumberPlaceholder ) ) ),
 	"test A02"	~: "versionToString x.x.x"					~: "x.x.x"													~=? ( versionToString (Version ( VersionNumber (NumberPlaceholder) ( VersionNumber (NumberPlaceholder) ( VersionCompound NumberPlaceholder ) ) ) ) ),
 	"test A03"	~: "versionToString Dev/x.x.x"				~: "Dev/x.x.x"												~=? ( versionToString (MaturityVersion Dev ( VersionNumber (NumberPlaceholder) ( VersionNumber (NumberPlaceholder) ( VersionCompound NumberPlaceholder ) ) ) ) ),
@@ -51,6 +57,7 @@ tests = test [
 	"test J02"	~: "Prod/4 == Prod/4"						~: True 													~=? ( stringToVersion "Prod/4" == stringToVersion "Prod/4" ),
 	"test J03"	~: "3 == 3"									~: True 													~=? ( stringToVersion "3" == stringToVersion "3" ),
 	"test J04"	~: "1.0 == 1.1"								~: False 													~=? ( stringToVersion "1.0" == stringToVersion "1.1" ),
+	"test J05"	~: "1.0 == Dev/1.0"							~: True 													~=? ( stringToVersion "1.0" == stringToVersion "Dev/1.0" ),
 	"test _"	~: "empty test"								~: True														~=? True
 	]
 

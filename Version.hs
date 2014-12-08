@@ -74,8 +74,9 @@ isInitialVersion (MaturityVersion _ v) = isInitialVersionNumber v
 
 instance Eq Version where
 	(Version vn1) == (Version vn2) = (vn1 == vn2)
-	(MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2)      = (ml1 == ml2) && (vn1 == vn2)
-	_ == _                                                      = False
+	(Version vn1) == (MaturityVersion ml vn2) = (ml == Dev) && vn1 == vn2
+	(MaturityVersion ml vn1) == (Version vn2) = (ml == Dev) && vn1 == vn2
+	(MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2)      = ( ml1 == ml2 ) && (vn1 == vn2)
 	
 instance Ord Version where
 	(MaturityVersion ml1 vn1) `compare` (MaturityVersion ml2 vn2) = case vn1 == vn2 of 
@@ -84,19 +85,6 @@ instance Ord Version where
 	(MaturityVersion _ vn1) `compare` (Version vn2) = vn1 `compare` vn2
 	(Version vn1) `compare` (MaturityVersion _ vn2) = vn1 `compare` vn2
 	(Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
-
-parseMaturity :: Parser MaturityLevel
-parseMaturity = 
-		( string "Dev" >> return Dev)
-	<|> ( string "Test" >> return Test)
-	<|> ( string "User" >> return User)
-	<|> ( string "ReleaseCandidate" >> return ReleaseCandidate)
-	<|> ( string "Prod" >> return Prod)
-	
-stringToMaturity :: String -> MaturityLevel
-stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
-	Right a -> a
-	Left _ -> Dev
 
 parseVersion :: Parser Version
 parseVersion = do { 
