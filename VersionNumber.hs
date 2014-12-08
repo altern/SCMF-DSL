@@ -39,6 +39,10 @@ data VersionNumber = VersionCompound VersionCompound
        | VersionNumber VersionCompound VersionNumber
        deriving (Show)
 
+generateNewVersionNumber :: VersionNumber -> VersionNumber
+generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
+generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber vc (generateNewVersionNumber vn) )
+
 instance VersionOperations VersionNumber where 
     decrement                              ( VersionCompound vc )                           = VersionCompound ( decrement vc )
     decrement                              ( VersionNumber vc vn )                          = VersionNumber vc (decrement vn)

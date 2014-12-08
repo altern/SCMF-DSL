@@ -47,12 +47,9 @@ versionToString :: Version -> String
 versionToString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (versionNumberToString versionNumber)
 versionToString (Version versionNumber) = (versionNumberToString versionNumber)
 
-generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
-generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber (generateNewVersionCompound vc) vn )
-
 generateNewVersion :: Version -> Version
-generateNewVersion ( Version vn ) = Version ( generateNewVersionNumber vn )
-generateNewVersion ( MaturityVersion level vn ) = MaturityVersion level ( generateNewVersionNumber vn )
+generateNewVersion ( Version vn ) = Version ( increment vn )
+generateNewVersion ( MaturityVersion level vn ) = MaturityVersion level ( increment vn )
 
 instance VersionOperations Version where 
 	decrement           (Version vn)                        = Version (decrement vn)

@@ -14,6 +14,8 @@ lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
 
 tests = test [ 
+	"test Z01"	~: "generateNewVersion Dev/1.x.0"			~: "Dev/1.x.1"													~=? ( versionToString ( generateNewVersion $ stringToVersion "Dev/1.x.0" ) ),
+	"test Z02"	~: "generateNewVersion Prod/1.3"			~: "Prod/1.4"													~=? ( versionToString ( generateNewVersion $ stringToVersion "Prod/1.3" ) ),
 	"test A01"	~: "versionToString x"						~: "x"														~=? ( versionToString (Version ( VersionCompound NumberPlaceholder ) ) ),
 	"test A02"	~: "versionToString x.x.x"					~: "x.x.x"													~=? ( versionToString (Version ( VersionNumber (NumberPlaceholder) ( VersionNumber (NumberPlaceholder) ( VersionCompound NumberPlaceholder ) ) ) ) ),
 	"test A03"	~: "versionToString Dev/x.x.x"				~: "Dev/x.x.x"												~=? ( versionToString (MaturityVersion Dev ( VersionNumber (NumberPlaceholder) ( VersionNumber (NumberPlaceholder) ( VersionCompound NumberPlaceholder ) ) ) ) ),
