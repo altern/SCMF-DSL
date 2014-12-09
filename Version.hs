@@ -21,11 +21,6 @@ instance JSON.ToJSON Version where
 	toJSON version = 
 		JSON.object [ "version" JSON..= (T.pack $ show version)]
 
--- instance JSON.FromJSON Version where
-	-- parseJSON (JSON.Object v) =
-		-- Version <$> v JSON..: "version"
-	-- parseJSON _ = mzero
-
 instance JSON.FromJSON Version where
     parseJSON (JSON.Object v) = liftM stringToVersion ( v JSON..: "version" )
     parseJSON _ = mzero

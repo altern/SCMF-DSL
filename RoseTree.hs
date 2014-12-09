@@ -1,16 +1,30 @@
+{-# LANGUAGE FlexibleInstances #-}
 module RoseTree where
 
 import Data.Tree
 import qualified Data.Aeson as JSON
+import qualified Data.Text as T
 
 data RoseTree a = RoseTree a [RoseTree a]
                    deriving (Show)
-                   
+
+type RoseTreeList a = [RoseTree a]
+
 type StringTree = Tree String
 type StringTreeList = [StringTree]
 
-instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
-    toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
+-- instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
+    -- toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
+
+-- instance JSON.ToJSON (RoseTree v) where
+-- toJSON (RoseTree root children) = 
+    -- JSON.object [T.pack "value" JSON..= show root
+               -- , T.pack "children" JSON..= JSON.toJSON children]
+
+-- instance JSON.ToJSON RoseTreeList where
+-- toJSON (x:xs) = JSON.toJSON (x, xs)
+-- toJSON (x:[]) = JSON.toJSON (x)
+-- toJSON [] = []
 
 instance (Eq a) => Eq (RoseTree a) where
     (RoseTree nodeA []) == (RoseTree nodeB [])              = nodeA == nodeB 

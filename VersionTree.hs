@@ -9,9 +9,24 @@ import RoseTree
 import VersionNumber
 import Version
 import Artifact
+import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as AT
+import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import Data.Attoparsec.Char8
+import Data.Attoparsec.Combinator
+import Control.Monad
+import Control.Applicative
 
 type VersionTree = RoseTree Version
 type VersionTreeList = [VersionTree]
+
+instance JSON.ToJSON VersionTree where
+	toJSON (RoseTree n cs) =
+		JSON.object [T.pack "value" JSON..= JSON.toJSON n
+                   , T.pack "children" JSON..= JSON.toJSON cs]
+
 
 -- data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
              -- | Version VersionNumber
@@ -54,6 +69,16 @@ versionTreeToStringTree :: VersionTree -> StringTree
 versionTreeToStringTree (RoseTree num []) = Node (versionToString num) []
 versionTreeToStringTree (RoseTree num (x:[])) = Node (versionToString num) [ versionTreeToStringTree x ]
 versionTreeToStringTree (RoseTree num (x:xs)) = Node (versionToString num) ( (versionTreeToStringTree x) : (versionListToStringTreeList xs) )
+
+-- TODO: implement toJSON and FromJSON for versionTrees
+-- instance JSON.ToJSON VersionTree where
+	-- toJSON (RoseTree version children) = 
+		-- JSON.object [ T.pack "version" JSON..= (T.pack $ show version)]
+		-- JSON.object [ T.pack "children" JSON..= (JSON.toJSON children)]
+
+-- instance JSON.FromJSON VersionTree where
+    -- parseJSON (JSON.Object vTree) = liftM stringToVersion ( vTree JSON..: T.pack "versionTree" )
+    -- parseJSON _ = mzero
 
 -- VERSION TREE CONVERSION TO ALLOWED CHANGES --
 
