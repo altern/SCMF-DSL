@@ -1,10 +1,12 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 module RoseTree where
 
 import Data.Tree
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import Control.Applicative
+
+import qualified Data.ByteString.Char8 as BS
 
 data RoseTree a = RoseTree a [RoseTree a]
                    deriving (Show)
@@ -20,7 +22,7 @@ type StringTreeList = [StringTree]
 instance (Show a) => JSON.ToJSON (RoseTree a) where
 	toJSON (RoseTree n cs) =
 		JSON.object [T.pack "value" JSON..= show n
-		, T.pack "children" JSON..= show cs] 
+		, T.pack "children" JSON..= JSON.toJSON cs] 
 
 instance (Show a, JSON.FromJSON a) => JSON.FromJSON (RoseTree a) where
 	parseJSON (JSON.Object o) =

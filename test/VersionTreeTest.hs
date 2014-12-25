@@ -2,19 +2,23 @@ module VersionTreeTest where
 
 import Test.HUnit
 import Version
+-- import RoseTree
+-- import VersionNumber
 import VersionTree
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import Test.AssertError
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
 
 tests = test [ 
-	"test A01"	~: "vTree2" 								~: "{\"children\":[{\"children\":[],\"value\":{\"version\":\"1\"}}],\"value\":{\"version\":\"x\"}}"		~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON vTree2 ),
-	"test A02"	~: "vTree4" 								~: "{\"children\":[{\"children\":[],\"value\":{\"version\":\"1\"}},{\"children\":[],\"value\":{\"version\":\"2\"}},{\"children\":[],\"value\":{\"version\":\"3\"}},{\"children\":[],\"value\":{\"version\":\"4\"}}],\"value\":{\"version\":\"x\"}}"		~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON vTree4 ),
+	"test A01"	~: "vTree2" 								~: "{\"children\":[{\"children\":[],\"value\":\"1\"}],\"value\":\"x\"}"		~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON vTree2 ),
+	"test A02"	~: "vTree4" 								~: "{\"children\":[{\"children\":[],\"value\":\"1\"},{\"children\":[],\"value\":\"2\"},{\"children\":[],\"value\":\"3\"},{\"children\":[],\"value\":\"4\"}],\"value\":\"x\"}"		~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON vTree4 ),
+--	"test A03"	~: "JSON decode" 	~: Just( RoseTree (Version (VersionCompound NumberPlaceholder)) [RoseTree ( Version (VersionCompound (Number 1))) [] ]) ~=? ((JSON.decode $ BSL.pack"{\"children\":[{\"children\":[],\"value\":{\"version\":\"1\"}}],\"value\":{\"version\":\"x\"}}") :: Maybe (RoseTree Version)),
 	"test _"	~: "empty test"								~: True														~=? True
 	]
 

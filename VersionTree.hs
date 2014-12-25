@@ -22,11 +22,9 @@ import Control.Applicative
 type VersionTree = RoseTree Version
 type VersionTreeList = [VersionTree]
 
-instance JSON.ToJSON VersionTree where
-	toJSON (RoseTree n cs) =
-		JSON.object [T.pack "value" JSON..= JSON.toJSON n
-                   , T.pack "children" JSON..= JSON.toJSON cs]
-
+-- instance JSON.FromJSON VersionTree where
+    -- JSON.parseJSON (JSON.Object o) = VersionTree <$> AT.: "value"
+             -- <?> AT.: "children"
 
 -- data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
              -- | Version VersionNumber
