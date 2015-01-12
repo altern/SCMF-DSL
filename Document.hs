@@ -14,15 +14,19 @@ type DocumentName = String
 type DirectoryName = String
 type DocumentContent = String
 
-data Document = Document DocumentName DocumentContent deriving (Show, Eq)
-data Directory = Directory DirectoryName [DocumentOrDirectory] deriving (Show, Eq)
-newtype DocumentOrDirectory = DocumentOrDirectory (Either Document Directory) deriving (Show, Eq)
+data Document = Document DocumentName DocumentContent deriving (Eq)
+data Directory = Directory DirectoryName [DocumentOrDirectory] deriving (Eq)
+newtype DocumentOrDirectory = DocumentOrDirectory (Either Document Directory) deriving (Eq)
 
 emptyDocument = ( Document "" "" )
 
--- instance Show DocumentOrDirectory where
-    -- show (Document name content ) = "Document: " ++ name ++ ", Content: " ++ content ++ ""
-    -- show (Directory dirName content ) = "Directory: " ++ dirName ++ ", Content: " ++ (show content) ++ ""
+instance Show Document where
+    show (Document name content) = "Document name: " ++ name ++ ", Content: " ++ content ++ ""
+instance Show Directory where
+    show (Directory dirName content ) = "Directory name: " ++ dirName ++ ", Content: " ++ (show content) ++ ""
+instance Show DocumentOrDirectory where
+    show ( DocumentOrDirectory (Left doc)) = show doc
+    show ( DocumentOrDirectory (Right dir)) = show dir
                          
 liftDocument :: Document -> DocumentOrDirectory
 liftDocument = DocumentOrDirectory . Left
