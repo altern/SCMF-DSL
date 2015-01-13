@@ -20,7 +20,8 @@ type Timestamp = Integer
 data Branch = Branch BranchName Version DocumentOrDirectory
 instance Eq Branch where
     (Branch nameA versionA _ ) == (Branch nameB versionB _ )                = (nameA == nameB) && (versionA == versionB)
-    _ == _                                                                  = False
+--    _ == _                                                                  = False
+
 instance Show Branch where
     show (Branch branchName version contents ) = ("Branch '" ++ branchName ++ "', Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
 
@@ -29,7 +30,7 @@ data Snapshot2 = Snapshot2 Timestamp DocumentOrDirectory deriving (Show, Eq)
 
 instance Eq Snapshot where
     (Snapshot timestampA versionA _ ) == (Snapshot timestampB versionB _ )  = (timestampA == timestampB) && (versionA == versionB)
-    _ == _                                                                  = False
+--    _ == _                                                                  = False
 
 instance Show Snapshot where
     show (Snapshot timestamp version contents ) = ("Snapshot taken at " ++ (show timestamp) ++ ", Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
@@ -92,34 +93,46 @@ instance JSON.FromJSON Artifact where
 
 type ArtifactList = [Artifact]
 
--- artifactToString :: Artifact -> String
--- artifactToString (Branch branchName version _) = (branchName ++ " (" ++ ( versionToString version ) ++ ")")
--- artifactToString (Snapshot timestamp version _) = (versionToString version)
+artifactToString :: Artifact -> String
+artifactToString (Artifact (Left (Branch branchName version _))) = (branchName ++ " (" ++ ( versionToString version ) ++ ")")
+artifactToString (Artifact (Right (Snapshot timestamp version _))) = (versionToString version)
 
--- artifactToVersion :: Artifact -> Version
--- artifactToVersion (Branch branchName version _) = version
--- artifactToVersion (Snapshot timestamp version _) = version
+artifactToVersion :: Artifact -> Version
+artifactToVersion (Artifact (Left (Branch branchName version _))) = version
+artifactToVersion (Artifact (Right (Snapshot timestamp version _))) = version
 
--- getArtifactVersion = artifactToVersion
+getArtifactVersion = artifactToVersion
 
--- artifactListToVersionList :: ArtifactList -> VersionList
--- artifactListToVersionList [] = []
--- artifactListToVersionList (x:xs) = (artifactListToVersionList xs) ++ [artifactToVersion x]
+artifactListToVersionList :: ArtifactList -> VersionList
+artifactListToVersionList [] = []
+artifactListToVersionList (x:xs) = (artifactListToVersionList xs) ++ [artifactToVersion x]
 
--- artifactListToString :: ArtifactList -> [String]
--- artifactListToString [] = []
--- artifactListToString (x:xs) = (artifactListToString xs) ++ [artifactToString x]
+artifactListToString :: ArtifactList -> [String]
+artifactListToString [] = []
+artifactListToString (x:xs) = (artifactListToString xs) ++ [artifactToString x]
 
--- artifactToDocument :: Artifact -> DocumentOrDirectory
--- artifactToDocument (Branch _ _ document) = document
--- artifactToDocument (Snapshot _ _ document) = document
+artifactToDocument :: Artifact -> DocumentOrDirectory
+artifactToDocument (Artifact (Left (Branch _ _ document))) = document
+artifactToDocument (Artifact (Right (Snapshot _ _ document))) = document
 
--- getArtifactDocument = artifactToDocument
--- getArtifactContents = artifactToDocument
+getArtifactDocument = artifactToDocument
+getArtifactContents = artifactToDocument
+
+getArtifactTimestamp :: Artifact -> Timestamp
+getArtifactTimestamp (Artifact (Left (Branch _ _ _))) = 0
+getArtifactTimestamp (Artifact (Right (Snapshot timestamp _ _))) = timestamp
+
+getArtifactName :: Artifact -> String
+getArtifactName (Artifact (Left (Branch name _ _) ) ) = name
+getArtifactName (Artifact (Right (Snapshot _ _ _) ) ) = ""
+
+artifactHasVersion :: Artifact -> Version -> Bool
+artifactHasVersion (Artifact (Left (Branch _ v1 _))) v2 = (v1 == v2)
+artifactHasVersion (Artifact (Right (Snapshot _ v1 _))) v2 = (v1 == v2)
 
 data AllowedChanges = Any
                     | None
-                    deriving (Show)
+                    deriving (Show, Eq)
 
 class DetectAllowedChanges entity where
     detectAllowedChanges :: entity -> AllowedChanges
@@ -136,25 +149,13 @@ instance DetectAllowedChanges Version where
     detectAllowedChanges (Version num) = detectAllowedChanges num
     detectAllowedChanges (MaturityVersion level num) = detectAllowedChanges num
 
--- instance DetectAllowedChanges Artifact where
---     detectAllowedChanges (Branch branchName version _ ) = detectAllowedChanges version
---     detectAllowedChanges (Snapshot timestamp version _ ) = detectAllowedChanges version
+instance DetectAllowedChanges Artifact where
+    detectAllowedChanges (Artifact (Left (Branch branchName version _ ))) = detectAllowedChanges version
+    detectAllowedChanges (Artifact (Right (Snapshot timestamp version _ ))) = detectAllowedChanges version
 
 allowedChangesToString :: AllowedChanges -> String
 allowedChangesToString None = "None"
 allowedChangesToString Any = "Any"
-
--- artifactHasVersion :: Artifact -> Version -> Bool
--- artifactHasVersion (Branch _ v1 _) v2 = (v1 == v2)
--- artifactHasVersion (Snapshot _ v1 _) v2 = (v1 == v2)
-
--- getArtifactTimestamp :: Artifact -> Timestamp
--- getArtifactTimestamp (Snapshot timestamp _ _) = timestamp
--- getArtifactTimestamp (Branch _ _ _) = 0
-
--- getArtifactName :: Artifact -> String
--- getArtifactName (Snapshot _ _ _) = ""
--- getArtifactName (Branch name _ _) = name
 
 data ArtifactTreeOperation = ArtifactTreeEdit Artifact DocumentOrDirectory
                     -- | Save DocumentName Artifact -- Use CreateSnapshot instead
@@ -205,8 +206,14 @@ snapshot1 = Snapshot 12372 ( MaturityVersion Dev ( VersionCompound ( Number 10 )
 snapshot2 :: Snapshot2
 snapshot2 = Snapshot2 12372  ( liftDocument doc1 )
 
+snapshot3 :: Snapshot
+snapshot3 = Snapshot 12372 ( Version ( VersionCompound ( Number 11 ) ) ) ( liftDocument $ Document "document1" "content11" )
+
 branch1 :: Branch
 branch1 = Branch "branch3" ( Version ( VersionCompound NumberPlaceholder ) ) ( liftDocument doc2 )
+
+branch2 :: Branch
+branch2 = Branch "branch22" ( Version ( VersionCompound NumberPlaceholder ) ) ( liftDocument $ Document "document22" "content_branch22" )
 
 artifact1 :: Artifact
 artifact1 = liftSnapshot $ snapshot1
@@ -214,9 +221,9 @@ artifact1 = liftSnapshot $ snapshot1
 artifact2 :: Artifact
 artifact2 = liftBranch $ branch1
 
--- artifact3 :: Artifact
--- artifact3 = Branch "branch22" ( Version ( VersionCompound NumberPlaceholder ) ) ( Document "document22" "content_branch22" )
+artifact3 :: Artifact
+artifact3 = liftBranch $ branch2
 
--- artifact4 :: Artifact
--- artifact4 = Snapshot 12372 ( Version ( VersionCompound ( Number 11 ) ) ) ( Document "document1" "content11" )
+artifact4 :: Artifact
+artifact4 = liftSnapshot $ snapshot3
 
