@@ -4,14 +4,12 @@ import Test.HUnit
 import VersionNumber
 import MaturityLevel
 import Version
+import Util
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Test.AssertError
-
-lazyToStrictBS :: LBS.ByteString -> BS.ByteString
-lazyToStrictBS x = BS.concat $ LBS.toChunks x
 
 tests = test [ 
 	"test Z01"	~: "generateNewVersion Dev/1.x.0"			~: "Dev/1.x.1"												~=? ( versionToString ( generateNewVersion $ stringToVersion "Dev/1.x.0" ) ),

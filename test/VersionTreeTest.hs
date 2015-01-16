@@ -5,15 +5,13 @@ import Version
 -- import RoseTree
 -- import VersionNumber
 import VersionTree
+import Util
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Test.AssertError
-
-lazyToStrictBS :: LBS.ByteString -> BS.ByteString
-lazyToStrictBS x = BS.concat $ LBS.toChunks x
 
 tests = test [ 
 	"test A01"	~: "vTree2" 								~: "{\"children\":[{\"children\":[],\"value\":\"1\"}],\"value\":\"x\"}"		~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON vTree2 ),
