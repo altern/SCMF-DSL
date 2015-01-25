@@ -18,9 +18,12 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 
 type RoseTreeArtifact = RoseTree Artifact
-data ArtifactTree = ArtifactTree RoseTreeArtifact NumberOfDimensions
+data ArtifactTree = ArtifactTree RoseTreeArtifact NumberOfDimensions deriving (Show)
 type RoseTreeArtifactList = [RoseTreeArtifact]
 type ArtifactTreeList = [ArtifactTree]
+
+liftRoseTreeArtifact :: RoseTreeArtifact -> NumberOfDimensions -> ArtifactTree
+liftRoseTreeArtifact x dim = ArtifactTree x dim 
 
 rTreeToATree :: RoseTreeArtifactList -> NumberOfDimensions -> ArtifactTreeList
 rTreeToATree [] _ = [ ]
@@ -155,13 +158,13 @@ instance SearchArtifactTree BranchName where
 class SearchArtifactTreeChildren a where
     searchArtifactTreeChildren :: ArtifactTreeList -> a -> Bool    
 
--- instance SearchArtifactTreeChildren Artifact where
-    -- searchArtifactTreeChildren [] _ = False
-    -- searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact1 _) _ ):xs) artifact2 = (artifact1 == artifact2) || (searchArtifactTreeChildren xs artifact2)
+instance SearchArtifactTreeChildren Artifact where
+    searchArtifactTreeChildren [] _ = False
+    searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact1 _) _ ):xs) artifact2 = (artifact1 == artifact2) || (searchArtifactTreeChildren xs artifact2)
     
--- instance SearchArtifactTreeChildren Version where
-    -- searchArtifactTreeChildren [] _ = False
-    -- searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact _ ) _ ):xs) version = (artifactHasVersion artifact version) || (searchArtifactTreeChildren xs version)
+instance SearchArtifactTreeChildren Version where
+    searchArtifactTreeChildren [] _ = False
+    searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact _ ) _ ):xs) version = (artifactHasVersion artifact version) || (searchArtifactTreeChildren xs version)
 
 -- ARTIFACT TREE LATEST ARTIFACT OPERATIONS --
 
