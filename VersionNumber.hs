@@ -5,6 +5,7 @@ module VersionNumber where
 import Data.Attoparsec.Char8
 -- import Data.ByteString.Char8
 import Control.Applicative
+import Control.Monad
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
@@ -16,6 +17,12 @@ data VersionCompound = NumberPlaceholder                      -- X
                      | Number Int                           -- 1, 2, 3, ..., 45, ... 
                      deriving (Show)
 
+{-instance Monad VersionCompound where
+	return x = Number x
+	NumberPlaceholder >>= f = NumberPlaceholder
+	Number num >>= f = f num
+	fail _ = NumberPlaceholder
+	-}
 generateNewVersionCompound :: VersionCompound -> VersionCompound
 generateNewVersionCompound NumberPlaceholder = NumberPlaceholder
 generateNewVersionCompound (Number num) = Number (num + 1)
@@ -38,6 +45,10 @@ instance VersionOperations VersionCompound where
 data VersionNumber = VersionCompound VersionCompound
        | VersionNumber VersionCompound VersionNumber
        deriving (Show)
+
+data VersionNumberWithMaybe = VC (Maybe Int)
+		| VN (Maybe Int) VersionNumberWithMaybe
+		deriving (Show)
 
 generateNewVersionNumber :: VersionNumber -> VersionNumber
 generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
@@ -79,9 +90,17 @@ versionCompoundToString :: VersionCompound -> String
 versionCompoundToString (Number n) = (show n)
 versionCompoundToString NumberPlaceholder = "x"
 
+maybeToString :: Maybe Int -> String
+maybeToString (Just n) = (show n)
+maybeToString Nothing = "x"
+
 versionNumberToString :: VersionNumber -> String
 versionNumberToString (VersionNumber vc vn) = (versionCompoundToString vc) ++ "." ++ (versionNumberToString vn)
 versionNumberToString (VersionCompound vc) = (versionCompoundToString vc)
+
+versionNumberWithMaybeToString :: VersionNumberWithMaybe -> String
+versionNumberWithMaybeToString (VN vc vn) = (maybeToString vc) ++ "." ++ (versionNumberWithMaybeToString vn)
+versionNumberWithMaybeToString (VC vc) = (maybeToString vc)
 
 -- instance Show VersionCompound where
     -- show (Number n) = (show n)

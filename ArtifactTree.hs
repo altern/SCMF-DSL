@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, OverloadedStrings, TypeFamilies #-}
 module ArtifactTree where
 
 import Data.Tree
@@ -102,7 +102,7 @@ artifactTreeToVersionTree (RoseTree artifact (x:[])) = RoseTree (artifactToVersi
 artifactTreeToVersionTree (RoseTree artifact (x:xs)) = RoseTree (artifactToVersion artifact) ( (artifactTreeToVersionTree x) : (artifactTreeListToVersionTreeList xs) )
 
 -- ARTIFACT TREE SEARCH OPERATIONS --
-
+{-
 class SearchArtifactTreeList searchEntity where
     searchArtifactTreeList :: ArtifactTreeList -> searchEntity -> [Artifact] 
 
@@ -151,10 +151,58 @@ instance SearchArtifactTree BranchName where
     searchArtifactTree ( ArtifactTree (RoseTree artifact [] ) _ ) name = case (getArtifactName artifact == name) of 
         True -> [artifact]
         False -> []
-    searchArtifactTree ( ArtifactTree ( RoseTree artifact (x:xs) ) dim ) name = (searchArtifactTree (ArtifactTree (RoseTree artifact []) dim ) name) ++ (searchArtifactTree ( ArtifactTree x dim ) name) ++ (searchArtifactTreeList ( rTreeToATree xs dim ) name)
+    searchArtifactTree ( ArtifactTree ( RoseTree artifact (x:xs) ) dim ) name = (searchArtifactTree (ArtifactTree (RoseTree artifact []) dim ) name) ++ (searchArtifactTree ( ArtifactTree x dim ) name) ++ (searchArtifactTreeList ( rTreeToATree xs dim ) name)-}
+
+class SearchRoseTreeArtifactList searchEntity where
+    searchRoseTreeArtifactList :: RoseTreeArtifactList -> searchEntity -> [Artifact] 
+
+instance SearchRoseTreeArtifactList Version where
+    searchRoseTreeArtifactList [] _ = []
+    searchRoseTreeArtifactList (artifactTree:[]) version = searchRoseTreeArtifact artifactTree version
+    searchRoseTreeArtifactList (x:xs) version = (searchRoseTreeArtifact x version) ++ (searchRoseTreeArtifactList xs version)
+instance SearchRoseTreeArtifactList Artifact where
+    searchRoseTreeArtifactList [] _ = []
+    searchRoseTreeArtifactList (artifactTree:[]) artifact = searchRoseTreeArtifact artifactTree artifact
+    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
+instance SearchRoseTreeArtifactList Timestamp where
+    searchRoseTreeArtifactList [] _ = []
+    searchRoseTreeArtifactList (artifactTree:[]) timestamp = searchRoseTreeArtifact artifactTree timestamp
+    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
+instance SearchRoseTreeArtifactList BranchName where
+    searchRoseTreeArtifactList [] _ = []
+    searchRoseTreeArtifactList (artifactTree:[]) branchName = searchRoseTreeArtifact artifactTree branchName
+    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
+
+
+class SearchRoseTreeArtifact searchEntity where
+    searchRoseTreeArtifact :: RoseTreeArtifact -> searchEntity -> [Artifact] 
+
+instance SearchRoseTreeArtifact Version where
+    searchRoseTreeArtifact (RoseTree artifact [] ) version = case (artifactHasVersion artifact version) of 
+        True -> [artifact]
+        False -> []
+    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) version = (searchRoseTreeArtifact (RoseTree artifact []) version ) ++ (searchRoseTreeArtifact x version) ++ (searchRoseTreeArtifactList xs version)
+
+instance SearchRoseTreeArtifact Artifact where
+    searchRoseTreeArtifact ( RoseTree artifact1 [] ) artifact2 = case (artifact1 == artifact2) of 
+        True -> [artifact1]
+        False -> []
+    searchRoseTreeArtifact ( RoseTree artifact1 (x:xs) ) artifact2 = (searchRoseTreeArtifact (RoseTree artifact1 []) artifact2) ++ (searchRoseTreeArtifact x artifact2) ++ (searchRoseTreeArtifactList xs artifact2)
+
+instance SearchRoseTreeArtifact Timestamp where
+    searchRoseTreeArtifact ( RoseTree artifact [] ) timestamp = case (getArtifactTimestamp artifact == timestamp) of 
+        True -> [artifact]
+        False -> []
+    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) timestamp = (searchRoseTreeArtifact (RoseTree artifact []) timestamp) ++ (searchRoseTreeArtifact x timestamp) ++ (searchRoseTreeArtifactList xs timestamp)
+
+instance SearchRoseTreeArtifact BranchName where
+    searchRoseTreeArtifact ( RoseTree artifact [] ) name = case (getArtifactName artifact == name) of 
+        True -> [artifact]
+        False -> []
+    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) name = (searchRoseTreeArtifact (RoseTree artifact []) name) ++ (searchRoseTreeArtifact x name) ++ (searchRoseTreeArtifactList xs name)
 
 -- FIRST DEPTH SEARCH --
-
+{-
 class SearchArtifactTreeChildren a where
     searchArtifactTreeChildren :: ArtifactTreeList -> a -> Bool    
 
@@ -165,6 +213,18 @@ instance SearchArtifactTreeChildren Artifact where
 instance SearchArtifactTreeChildren Version where
     searchArtifactTreeChildren [] _ = False
     searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact _ ) _ ):xs) version = (artifactHasVersion artifact version) || (searchArtifactTreeChildren xs version)
+-}
+class SearchRoseTreeArtifactChildren a where
+    searchRoseTreeArtifactChildren :: RoseTreeArtifactList -> a -> Bool    
+
+instance SearchRoseTreeArtifactChildren Artifact where
+    searchRoseTreeArtifactChildren [] _ = False
+    searchRoseTreeArtifactChildren ( ( RoseTree artifact1 _):xs) artifact2 = (artifact1 == artifact2) || (searchRoseTreeArtifactChildren xs artifact2)
+    
+instance SearchRoseTreeArtifactChildren Version where
+    searchRoseTreeArtifactChildren [] _ = False
+    searchRoseTreeArtifactChildren ( ( RoseTree artifact _ ):xs) version = (artifactHasVersion artifact version) || (searchRoseTreeArtifactChildren xs version)
+
 
 -- ARTIFACT TREE LATEST ARTIFACT OPERATIONS --
 
@@ -188,45 +248,43 @@ instance FindTimestampOfLatestSnapshot RoseTreeArtifactList where
 
 class FindVersionOfLatestSnapshot searchStructure where
     findVersionOfLatestSnapshot :: searchStructure -> Version
-
--- instance FindVersionOfLatestSnapshot ArtifactTreeList where
-    -- findVersionOfLatestSnapshot list = case (searchArtifactTreeList list (findTimestampOfLatestSnapshot list)) of
-        -- [] -> initialVersion ( NumberPlaceholder )
-        -- (x:xs) -> artifactToVersion x
+instance FindVersionOfLatestSnapshot RoseTreeArtifactList where
+     findVersionOfLatestSnapshot list = case (searchRoseTreeArtifactList list (findTimestampOfLatestSnapshot list)) of
+         [] -> initialVersion ( NumberPlaceholder )
+         (x:xs) -> artifactToVersion x
+instance FindVersionOfLatestSnapshot RoseTreeArtifact where
+     findVersionOfLatestSnapshot rTree = case (searchRoseTreeArtifact rTree ( findTimestampOfLatestSnapshot rTree ) ) of
+         [] -> initialVersion (NumberPlaceholder) 
+         (x:xs) -> artifactToVersion x
+         
+class GetArtifactOfLatestSnapshot searchStructure where
+     getArtifactOfLatestSnapshot :: searchStructure -> Artifact
     
--- instance FindVersionOfLatestSnapshot ArtifactTree where
-    -- findVersionOfLatestSnapshot rTree@( ArtifactTree aTree dim ) = case (searchArtifactTree rTree ( findTimestampOfLatestSnapshot aTree dim ) ) of
-        -- [] -> initialVersion dim
-        -- (x:xs) -> artifactToVersion x
+instance GetArtifactOfLatestSnapshot RoseTreeArtifactList where
+     getArtifactOfLatestSnapshot list = case (searchRoseTreeArtifactList list (findTimestampOfLatestSnapshot list)) of
+         [] -> initialArtifact(NumberPlaceholder)
+         (x:xs) -> x
 
--- class GetArtifactOfLatestSnapshot searchStructure where
-    -- getArtifactOfLatestSnapshot :: searchStructure -> Artifact
-    
--- instance GetArtifactOfLatestSnapshot ArtifactTreeList where
-    -- getArtifactOfLatestSnapshot list = case (searchArtifactTreeList list (findTimestampOfLatestSnapshot list)) of
-        -- [] -> initialArtifact
-        -- (x:xs) -> x
+instance GetArtifactOfLatestSnapshot RoseTreeArtifact where
+     getArtifactOfLatestSnapshot aTree = case (searchRoseTreeArtifact aTree ( findTimestampOfLatestSnapshot aTree ) ) of
+         [] -> initialArtifact(NumberPlaceholder)
+         (x:xs) -> x
 
--- instance GetArtifactOfLatestSnapshot ArtifactTree where
-    -- getArtifactOfLatestSnapshot ( ArtifactTree aTree _ ) = case (searchArtifactTree aTree ( findTimestampOfLatestSnapshot aTree dim ) ) of
-        -- [] -> initialArtifact
-        -- (x:xs) -> x
-
-class FindParentArtifact a where 
+{-class FindParentArtifact a where 
     findParentArtifact :: a -> Artifact -> Artifact
 
--- instance FindParentArtifact ArtifactTree where
-    -- findParentArtifact ( ArtifactTree ( RoseTree _ [] ) _ ) _ = initialArtifact
-    -- findParentArtifact ( ArtifactTree ( RoseTree parentArtifact list ) _ ) artifact = case (searchArtifactTreeChildren list artifact) of
-        -- True -> parentArtifact
-        -- False -> findParentArtifact list artifact
+instance FindParentArtifact RoseTreeArtifact where
+    findParentArtifact (  RoseTree _ [] )  _ = initialArtifact (NumberPlaceholder)
+    findParentArtifact (  RoseTree parentArtifact list ) artifact = case (searchRoseTreeArtifactChildren list artifact) of
+        True -> parentArtifact
+        False -> findParentArtifact list artifact
         
--- instance FindParentArtifact ArtifactTreeList where
-    -- findParentArtifact [] _ = initialArtifact
-    -- findParentArtifact (x:xs) artifact = case ( isInitialArtifact (findParentArtifact x artifact) ) of
-        -- True -> findParentArtifact xs artifact
-        -- False -> findParentArtifact x artifact
-
+instance FindParentArtifact RoseTreeArtifactList where
+    findParentArtifact [] _ = initialArtifact (NumberPlaceholder)
+    findParentArtifact (x:xs) artifact = case ( isInitialArtifact (findParentArtifact x artifact) ) of
+        True -> findParentArtifact xs artifact
+        False -> findParentArtifact x artifact
+-}
 -- class FindParentArtifacts a where 
     -- findParentArtifacts :: a -> ArtifactList -> ArtifactList
 
