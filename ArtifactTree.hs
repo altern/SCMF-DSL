@@ -298,12 +298,26 @@ instance FindParentArtifact RoseTreeArtifactList where
 
 -- ARTIFACT TREE: GENERATION OF NEW ARTIFACTS --
 
--- class GenerateSnapshot a where 
-    -- generateSnapshot :: ArtifactTree -> a -> ArtifactTree
-
+{-class GenerateSnapshot a where 
+    generateSnapshot :: ArtifactTree -> a -> ArtifactTree
+-}
 -- instance GenerateSnapshot Artifact where
     -- generateSnapshot (ArtifactTree aTree _ ) artifact@(Branch _ _ _) = treeInsert aTree artifact ( Snapshot ( ( getArtifactTimestamp latestArtifact ) + 1 ) (generateNewVersion ( getArtifactVersion latestArtifact ) ) ( artifactToDocument artifact ) ) where latestArtifact = getArtifactOfLatestSnapshot aTree
     -- generateSnapshot (ArtifactTree aTree _ ) artifact@(Snapshot _ _ _) = aTree
+    
+class GenerateSnapshot a where 
+    generateSnapshot :: RoseTreeArtifact -> a -> RoseTreeArtifact
+
+instance GenerateSnapshot Artifact where
+    generateSnapshot aTree artifact@(Artifact (Left (Branch _ _ _ ))) = treeInsert aTree artifact (liftSnapshot $ Snapshot ( (getArtifactTimestamp latestArtifact) + 1 ) (generateNewVersion (getArtifactVersion latestArtifact )) (artifactToDocument artifact)) where latestArtifact = getArtifactOfLatestSnapshot aTree
+    generateSnapshot aTree artifact@(Artifact (Right (Snapshot _ _ _ ))) = aTree
+
+instance GenerateSnapshot BranchName where
+    generateSnapshot aTree branchName = treeInsert aTree artifact (liftSnapshot $ Snapshot ( (getArtifactTimestamp latestArtifact) + 1 ) (generateNewVersion (getArtifactVersion latestArtifact )) (artifactToDocument artifact)) 
+        where 
+           latestArtifact = getArtifactOfLatestSnapshot aTree
+           artifact = searchRoseTreeArtifact aTree branchName !! 0
+    
 
 -- instance GenerateSnapshot ArtifactList where
     -- generateSnapshot (ArtifactTree aTree _ ) [] = aTree
