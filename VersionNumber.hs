@@ -126,7 +126,9 @@ initialVersionNumber dim = (createVersionNumberByNumberOfDimensions dim)
 
 isInitialVersionNumber :: VersionNumber -> Bool
 isInitialVersionNumber ( VersionCompound NumberPlaceholder ) = True
-isInitialVersionNumber ( VersionCompound ( Number _ ) ) = False
+isInitialVersionNumber ( VersionCompound ( Number 0 )) = True
+isInitialVersionNumber ( VersionCompound ( Number 1 )) = True
+isInitialVersionNumber ( VersionCompound ( Number _ )) = False
 isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc ) && ( isInitialVersionNumber vn )
 
 parseVersionCompound :: Parser VersionCompound
