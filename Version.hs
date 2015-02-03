@@ -57,7 +57,9 @@ instance VersionOperations Version where
 	incrementDimension  num (Version vn)                    = Version (incrementDimension num vn)
 	incrementDimension  (Number 0) (MaturityVersion ml vn)  = MaturityVersion (incrementMaturityLevel ml) vn
 	incrementDimension  num (MaturityVersion ml vn)         = MaturityVersion ml (incrementDimension num vn)
-
+        appendDimension     (Version vn)                        = Version (appendDimension vn)
+        appendDimension     (MaturityVersion ml vn)             = MaturityVersion ml (appendDimension vn)
+    
 -- initialVersionNumber :: VersionNumber
 
 initialVersion :: NumberOfDimensions -> Version

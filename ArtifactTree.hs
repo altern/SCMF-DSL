@@ -44,6 +44,11 @@ rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)
 -- initialArtifactTree = RoseTree ( Snapshot 0 (Version (Number 0) ) ( Document "" "") ) 
 -- [ RoseTree ( Branch "" ( Version NumberPlaceholder ) ( Document "" "") ) [] ]
     
+{-instance IsInitialArtifact ArtifactTree where
+    isInitialArtifact (ArtifactTree aTree _ )= case aTree of 
+        ( RoseTree (Artifact ( Right ( Snapshot _ v1 _ ) ) ) [ RoseTree ( Artifact ( Left ( Branch _ v2 _ ) ) ) [] ] ) -> isInitialVersion v1 && isInitialVersion v2
+        _ -> False
+-}
 -- ARTIFACT TREE CONVERSION TO STRING --
 
 class ArtifactTreeToStringTree a where 
@@ -312,6 +317,18 @@ instance GenerateBranch Version where
             parentBranch = findParentArtifact aTree snapshot
             versionOfParentBranch = getArtifactVersion parentBranch
             branch = liftBranch $ Branch branchName ( versionOfParentBranch ) (artifactToDocument snapshot)
+
+instance VersionOperations Artifact where 
+    appendDimension (Artifact (Left (Branch branchName v document ))) = Artifact (Left (Branch branchName (appendDimension v) document ))
+    appendDimension (Artifact (Right (Snapshot timestamp v document ))) = Artifact (Right (Snapshot timestamp (appendDimension v) document ))
+
+instance VersionOperations RoseTreeArtifact where 
+    appendDimension (RoseTree artifact list ) = RoseTree (appendDimension artifact) (appendDimension list)
+    
+instance VersionOperations RoseTreeArtifactList where 
+    appendDimension [] = []
+    appendDimension (x:xs) = ( appendDimension x ) : (appendDimension xs)
+
 
 -- instance GenerateSnapshot ArtifactList where
     -- generateSnapshot (ArtifactTree aTree _ ) [] = aTree

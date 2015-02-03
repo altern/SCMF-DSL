@@ -32,6 +32,7 @@ class VersionOperations a where
     decrementDimension :: NumberOfDimensions -> a -> a
     increment :: a -> a
     incrementDimension :: NumberOfDimensions -> a -> a
+    appendDimension :: a -> a
 
 instance VersionOperations VersionCompound where 
     decrement           NumberPlaceholder       = NumberPlaceholder
@@ -79,6 +80,7 @@ instance VersionOperations VersionNumber where
     incrementDimension (Number 2)          ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 ( increment vc2 )
     incrementDimension dim                 ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 vc2
     incrementDimension dim                 ( VersionNumber vc vn@(VersionNumber _ _ ) )     = VersionNumber vc ( incrementDimension ( decrement dim ) vn )
+    appendDimension vn = VersionNumber NumberPlaceholder vn
 
 createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
 createVersionNumberByNumberOfDimensions ( NumberPlaceholder ) = VersionCompound NumberPlaceholder
