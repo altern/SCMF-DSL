@@ -44,23 +44,6 @@ rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)
 -- initialArtifactTree = RoseTree ( Snapshot 0 (Version (Number 0) ) ( Document "" "") ) 
 -- [ RoseTree ( Branch "" ( Version NumberPlaceholder ) ( Document "" "") ) [] ]
     
-initialArtifact :: NumberOfDimensions -> Artifact
-initialArtifact dim = Artifact ( Left ( Branch "trunk" ( initialVersion dim ) ( liftDocument $ Document "" "" ) ) )
-
-class IsInitialArtifact a where
-    isInitialArtifact :: a -> Bool
-
-instance IsInitialArtifact Artifact where
-    isInitialArtifact a = case a of 
-        (Artifact ( Right ( Snapshot _ ( v ) _ ) ) ) -> isInitialVersion v
-        (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitialVersion v
-        _ -> False
-
-instance IsInitialArtifact ArtifactTree where
-    isInitialArtifact (ArtifactTree aTree _ )= case aTree of 
-        ( RoseTree (Artifact ( Right ( Snapshot _ v1 _ ) ) ) [ RoseTree ( Artifact ( Left ( Branch _ v2 _ ) ) ) [] ] ) -> isInitialVersion v1 && isInitialVersion v2
-        _ -> False
-
 -- ARTIFACT TREE CONVERSION TO STRING --
 
 class ArtifactTreeToStringTree a where 
@@ -326,7 +309,9 @@ instance GenerateBranch Version where
     generateBranch aTree version branchName = treeInsert aTree snapshot branch
         where
             snapshot = searchRoseTreeArtifact aTree version !! 0
-            branch = liftBranch $ Branch branchName (initialVersion ( NumberPlaceholder ) ) (artifactToDocument snapshot)
+            parentBranch = findParentArtifact aTree snapshot
+            versionOfParentBranch = getArtifactVersion parentBranch
+            branch = liftBranch $ Branch branchName ( versionOfParentBranch ) (artifactToDocument snapshot)
 
 -- instance GenerateSnapshot ArtifactList where
     -- generateSnapshot (ArtifactTree aTree _ ) [] = aTree

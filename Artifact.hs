@@ -93,6 +93,18 @@ instance JSON.FromJSON Artifact where
 
 type ArtifactList = [Artifact]
 
+initialArtifact :: NumberOfDimensions -> Artifact
+initialArtifact dim = Artifact ( Left ( Branch "trunk" ( initialVersion dim ) ( liftDocument $ Document "" "" ) ) )
+
+class IsInitialArtifact a where
+    isInitialArtifact :: a -> Bool
+
+instance IsInitialArtifact Artifact where
+    isInitialArtifact a = case a of 
+        (Artifact ( Right ( Snapshot _ ( v ) _ ) ) ) -> isInitialVersion v
+        (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitialVersion v
+        _ -> False
+
 artifactToString :: Artifact -> String
 artifactToString (Artifact (Left (Branch branchName version _))) = (branchName ++ " (" ++ ( versionToString version ) ++ ")")
 artifactToString (Artifact (Right (Snapshot timestamp version _))) = (versionToString version)
