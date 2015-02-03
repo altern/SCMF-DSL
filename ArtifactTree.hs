@@ -45,7 +45,7 @@ rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)
 -- [ RoseTree ( Branch "" ( Version NumberPlaceholder ) ( Document "" "") ) [] ]
     
 initialArtifact :: NumberOfDimensions -> Artifact
-initialArtifact dim = Artifact ( Right ( Snapshot 0 ( initialVersion dim ) ( liftDocument $ Document "" "" ) ) )
+initialArtifact dim = Artifact ( Left ( Branch "trunk" ( initialVersion dim ) ( liftDocument $ Document "" "" ) ) )
 
 class IsInitialArtifact a where
     isInitialArtifact :: a -> Bool
@@ -53,6 +53,7 @@ class IsInitialArtifact a where
 instance IsInitialArtifact Artifact where
     isInitialArtifact a = case a of 
         (Artifact ( Right ( Snapshot _ ( v ) _ ) ) ) -> isInitialVersion v
+        (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitialVersion v
         _ -> False
 
 instance IsInitialArtifact ArtifactTree where
@@ -270,7 +271,7 @@ instance GetArtifactOfLatestSnapshot RoseTreeArtifact where
          [] -> initialArtifact(NumberPlaceholder)
          (x:xs) -> x
 
-{-class FindParentArtifact a where 
+class FindParentArtifact a where 
     findParentArtifact :: a -> Artifact -> Artifact
 
 instance FindParentArtifact RoseTreeArtifact where
@@ -284,7 +285,7 @@ instance FindParentArtifact RoseTreeArtifactList where
     findParentArtifact (x:xs) artifact = case ( isInitialArtifact (findParentArtifact x artifact) ) of
         True -> findParentArtifact xs artifact
         False -> findParentArtifact x artifact
--}
+
 -- class FindParentArtifacts a where 
     -- findParentArtifacts :: a -> ArtifactList -> ArtifactList
 
@@ -317,7 +318,15 @@ instance GenerateSnapshot BranchName where
         where 
            latestArtifact = getArtifactOfLatestSnapshot aTree
            artifact = searchRoseTreeArtifact aTree branchName !! 0
-    
+
+class GenerateBranch a where
+    generateBranch :: RoseTreeArtifact -> a -> BranchName -> RoseTreeArtifact 
+
+instance GenerateBranch Version where
+    generateBranch aTree version branchName = treeInsert aTree snapshot branch
+        where
+            snapshot = searchRoseTreeArtifact aTree version !! 0
+            branch = liftBranch $ Branch branchName (initialVersion ( NumberPlaceholder ) ) (artifactToDocument snapshot)
 
 -- instance GenerateSnapshot ArtifactList where
     -- generateSnapshot (ArtifactTree aTree _ ) [] = aTree
@@ -373,6 +382,23 @@ artifactTree3 = RoseTree (liftSnapshot $ Snapshot 1398980989 (Version $ VersionC
 
 t = artifactTree3
 
+a1 = liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") 
+a5 = liftSnapshot $ Snapshot 1398980994 (Version $ VersionCompound $ Number 5) ( liftDocument $ Document "document1" "content5") 
+a6 = liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6")
+br1 = liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") 
+list = [ RoseTree a1 [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [] ]
+subtree = RoseTree (liftBranch $ Branch "trunk" (Version $ VersionCompound $ NumberPlaceholder ) ( liftDocument $ Document "document1" "latest_content") ) [ 
+        RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [
+            RoseTree (liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") ) [
+                RoseTree (liftSnapshot $ Snapshot 1398980993 (Version $ VersionCompound $ Number 4) ( liftDocument $ Document "document1" "content4") ) [], 
+                RoseTree (liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6") ) [] 
+            ]
+        ]
+    ]
 sArtifactTree3 :: StringTree
 sArtifactTree3 = Node "0" [ Node "trunk (x)" 
     [
