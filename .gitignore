@@ -3,3 +3,6 @@
 *.synctex.gz
 *.log
 *.pdf
+*.o
+*.hi
+*.swp
