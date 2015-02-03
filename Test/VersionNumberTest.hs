@@ -105,6 +105,9 @@ tests = test [
     "test Q01"  ~: "getNumberOfDimensions x" 	        ~: (Number 1) ~=? ( getNumberOfDimensions (stringToVersionNumber "x") ) ,
     "test Q02"  ~: "getNumberOfDimensions x.4" 	        ~: (Number 2) ~=? ( getNumberOfDimensions (stringToVersionNumber "x.4") ) ,
     "test Q03"  ~: "getNumberOfDimensions x.4.x" 	    ~: (Number 3) ~=? ( getNumberOfDimensions (stringToVersionNumber "x.4.x") ) ,
+    "test R01"  ~: "appendDimension x" 	                ~: "x.x"    ~=? ( versionNumberToString $ appendDimension (stringToVersionNumber "x") ) ,
+    "test R02"  ~: "appendDimension x.x"                ~: "x.x.x"  ~=? ( versionNumberToString $ appendDimension (stringToVersionNumber "x.x") ) ,
+    "test R03"  ~: "appendDimension 1"                  ~: "x.1"    ~=? ( versionNumberToString $ appendDimension (stringToVersionNumber "1") ) ,
     "test _"  	~: "empty test"							~: True 	~=? True
     ]
 
