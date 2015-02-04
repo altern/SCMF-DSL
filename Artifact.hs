@@ -142,6 +142,11 @@ artifactHasVersion :: Artifact -> Version -> Bool
 artifactHasVersion (Artifact (Left (Branch _ v1 _))) v2 = (v1 == v2)
 artifactHasVersion (Artifact (Right (Snapshot _ v1 _))) v2 = (v1 == v2)
 
+editArtifact :: DocumentOrDirectory -> Artifact -> Artifact 
+editArtifact newDD (Artifact (Left (Branch branchName version oldDD))) = liftBranch $ Branch branchName version newDD
+editArtifact _     (Artifact (Right snapshot@(Snapshot _ _ _))) = liftSnapshot $ snapshot
+
+
 data AllowedChanges = Any
                     | None
                     deriving (Show, Eq)

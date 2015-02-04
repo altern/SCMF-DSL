@@ -34,6 +34,11 @@ liftDocument = DocumentOrDirectory . Left
 liftDirectory :: Directory -> DocumentOrDirectory
 liftDirectory = DocumentOrDirectory . Right
 
+editDocument :: Document -> DocumentOrDirectory -> DocumentOrDirectory
+editDocument newDoc (DocumentOrDirectory (Left doc)) = DocumentOrDirectory (Left newDoc)
+
+editDirectory :: Directory -> DocumentOrDirectory -> DocumentOrDirectory
+editDirectory newDir (DocumentOrDirectory (Right dir)) = DocumentOrDirectory (Right newDir)
 
 -- ToJSON
 instance JSON.ToJSON Document where
