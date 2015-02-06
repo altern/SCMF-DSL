@@ -311,7 +311,7 @@ instance GenerateSnapshot BranchName where
 
 class GenerateBranch a where
     generateBranchFromSnapshot :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
-    {-generateBranchFromBranch :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact -}
+    generateBranchFromBranch :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
     generateBranch :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
 
 {-instance GenerateBranch Version where-}
@@ -339,8 +339,8 @@ instance GenerateBranch String where
             versionOfParentBranch = getArtifactVersion parentBranch
             branch = liftBranch $ Branch branchName ( versionOfParentBranch ) (artifactToDocument artifact)
 
-generateBranchFromBranch :: BranchName -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
-generateBranchFromBranch fromBranchName toBranchName aTree = treeInsert treeWithArtifact artifact branch
+{-generateBranchFromBranch :: BranchName -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact -}
+    generateBranchFromBranch fromBranchName toBranchName aTree = treeInsert treeWithArtifact artifact branch
         where
             treeWithArtifact = generateSnapshot fromBranchName aTree
             version = findVersionOfLatestSnapshot treeWithArtifact 
@@ -375,6 +375,7 @@ instance VersionOperations Artifact where
 
 instance VersionOperations RoseTreeArtifact where 
     appendDimension (RoseTree artifact list ) = RoseTree (appendDimension artifact) (appendDimension list)
+    getNumberOfDimensions aTree = getNumberOfDimensions (getArtifactVersion (searchRoseTreeArtifact aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0))
     
 instance VersionOperations RoseTreeArtifactList where 
     appendDimension [] = []

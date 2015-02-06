@@ -32,6 +32,7 @@ class VersionOperations a where
     decrementDimension :: NumberOfDimensions -> a -> a
     increment :: a -> a
     incrementDimension :: NumberOfDimensions -> a -> a
+    getNumberOfDimensions :: a -> NumberOfDimensions
     appendDimension :: a -> a
 
 instance VersionOperations VersionCompound where 
@@ -80,6 +81,8 @@ instance VersionOperations VersionNumber where
     incrementDimension (Number 2)          ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 ( increment vc2 )
     incrementDimension dim                 ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 vc2
     incrementDimension dim                 ( VersionNumber vc vn@(VersionNumber _ _ ) )     = VersionNumber vc ( incrementDimension ( decrement dim ) vn )
+    getNumberOfDimensions (VersionCompound _) = (Number 1)
+    getNumberOfDimensions (VersionNumber vc vn ) = increment (getNumberOfDimensions vn)
     appendDimension vn = VersionNumber NumberPlaceholder vn
 
 createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
@@ -159,10 +162,6 @@ stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
     -- parseJSON (JSON.Object v) = (parse parseVersionCompound v)
     -- parseJSON _ = mzero
     
-getNumberOfDimensions :: VersionNumber -> NumberOfDimensions
-getNumberOfDimensions (VersionCompound _) = (Number 1)
-getNumberOfDimensions (VersionNumber vc vn ) = increment (getNumberOfDimensions vn)
-
 instance Eq VersionCompound where
     NumberPlaceholder == NumberPlaceholder = True
     (Number v1) == (Number v2)            = (v1 == v2)
