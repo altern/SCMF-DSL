@@ -146,6 +146,14 @@ editArtifact :: DocumentOrDirectory -> Artifact -> Artifact
 editArtifact newDD (Artifact (Left (Branch branchName version oldDD))) = liftBranch $ Branch branchName version newDD
 editArtifact _     (Artifact (Right snapshot@(Snapshot _ _ _))) = liftSnapshot $ snapshot
 
+isSnapshot :: Artifact -> Bool
+isSnapshot (Artifact (Right (Snapshot _ _ _))) = True
+isSnapshot _ = False
+
+isBranch :: Artifact -> Bool
+isBranch (Artifact (Left (Branch _ _ _))) = True
+isBranch _ = False
+
 
 data AllowedChanges = Any
                     | None
