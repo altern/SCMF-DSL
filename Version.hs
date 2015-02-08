@@ -71,6 +71,14 @@ isInitialVersion :: Version -> Bool
 isInitialVersion (Version v) = isInitialVersionNumber v
 isInitialVersion (MaturityVersion _ v) = isInitialVersionNumber v
 
+isReleaseVersion :: Version -> Bool
+isReleaseVersion (Version v) = isReleaseVersionNumber v
+isReleaseVersion (MaturityVersion _ v) = isReleaseVersionNumber v
+
+isSupportVersion :: Version -> Bool
+isSupportVersion (Version v) = isSupportVersionNumber v
+isSupportVersion (MaturityVersion _ v) = isSupportVersionNumber v
+
 instance Eq Version where
 	(Version vn1) == (Version vn2) = (vn1 == vn2)
 	(Version vn1) == (MaturityVersion ml vn2) = (ml == Dev) && vn1 == vn2
