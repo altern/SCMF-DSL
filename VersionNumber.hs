@@ -147,6 +147,10 @@ isSupportVersionNumber (VersionNumber (Number _) (VersionNumber NumberPlaceholde
 isSupportVersionNumber (VersionNumber vc vn) = isSupportVersionNumber vn 
 isSupportVersionNumber _ = False 
 
+selectLatestVersionNumber :: [VersionNumber] -> VersionNumber
+selectLatestVersionNumber [] = initialVersionNumber (NumberPlaceholder)
+selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)
+
 parseVersionCompound :: Parser VersionCompound
 parseVersionCompound =
      ( string "x"    >> return NumberPlaceholder)
@@ -180,8 +184,8 @@ instance Eq VersionCompound where
     
 instance Ord VersionCompound where
     NumberPlaceholder `compare` NumberPlaceholder = EQ
-    (Number _ ) `compare` NumberPlaceholder = error "Cannot compare numbers and number placeholders"
-    NumberPlaceholder `compare` (Number _ ) = error "Cannot compare number placeholders and numbers"
+    n@(Number _ ) `compare` NumberPlaceholder = GT -- error "Cannot compare numbers and number placeholders"
+    NumberPlaceholder `compare` n@(Number _ ) = LT -- error "Cannot compare number placeholders and numbers"
     (Number v1) `compare` (Number v2) = (v1 `compare` v2)
     
 instance Eq VersionNumber where
@@ -191,17 +195,30 @@ instance Eq VersionNumber where
     ( VersionCompound vc1 ) == ( VersionNumber vc2 vn2) = (vc1 == vc2 && vn2 == (VersionCompound NumberPlaceholder) )
         
 instance Ord VersionNumber where
-    ( VersionCompound vc1 ) `compare` ( VersionCompound vc2 ) = (vc1 `compare` vc2)
-    ( VersionCompound vc1 ) `compare` ( VersionNumber vc2 vn2 ) = case (isInitialVersionNumber vn2) of 
-        False -> (VersionCompound NumberPlaceholder) `compare` vn2
-        True -> (vc1 `compare` vc2) 
-    ( VersionNumber vc1 vn1) `compare` ( VersionCompound vc2 ) = case (isInitialVersionNumber vn1) of 
-        False -> (VersionCompound NumberPlaceholder) `compare` vn1
-        True -> (vc1 `compare` vc2) 
-    ( VersionNumber vc1 vn1 ) `compare` ( VersionNumber vc2 vn2 ) = case (vc1 `compare` vc2) of 
-            EQ -> vn1 `compare` vn2
-            LT -> LT
-            GT -> GT
+    (VersionCompound vc1)   `compare` (VersionCompound vc2)     = (vc1 `compare` vc2)
+    (VersionNumber vc1 vn1) `compare` (VersionCompound vc2)     = case (VersionCompound vc1 `compare` stringToVersionNumber "x") of
+        EQ -> (vn1 `compare` VersionCompound vc2)
+        LT -> LT
+        GT -> GT
+    (VersionCompound vc1)   `compare` (VersionNumber vc2 vn2)   = case (stringToVersionNumber "x" `compare` VersionCompound vc2) of
+        EQ -> (VersionCompound vc1 `compare` vn2)
+        LT -> LT
+        GT -> GT
+    (VersionNumber vc1 vn1) `compare` (VersionNumber vc2 vn2)   = case (vc1 `compare` vc2) of
+        EQ -> (vn1 `compare` vn2)
+        LT -> LT
+        GT -> GT
+
+    {-( VersionCompound vc1 ) `compare` ( VersionNumber vc2 vn2 ) = case (isInitialVersionNumber vn2) of -}
+        {-False -> (VersionCompound NumberPlaceholder) `compare` vn2-}
+        {-True -> (vc1 `compare` vc2) -}
+    {-( VersionNumber vc1 vn1) `compare` ( VersionCompound vc2 ) = case (isInitialVersionNumber vn1) of -}
+        {-False -> (VersionCompound NumberPlaceholder) `compare` vn1-}
+        {-True -> (vc1 `compare` vc2) -}
+    {-( VersionNumber vc1 vn1 ) `compare` ( VersionNumber vc2 vn2 ) = case (vc1 `compare` vc2) of -}
+            {-EQ -> vn1 `compare` vn2-}
+            {-LT -> LT-}
+            {-GT -> GT-}
 
 freezeDimension :: VersionCompound -> VersionCompound
 freezeDimension NumberPlaceholder = (Number 0)

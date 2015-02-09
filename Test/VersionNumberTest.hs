@@ -87,11 +87,14 @@ tests = test [
     "test N06"  ~: "2.0.0 > 2.0.0.x" 					~: False 	~=? ( stringToVersionNumber "2.0.0" > stringToVersionNumber "2.0.0.x" ) ,
     "test N07"  ~: "2.0.0 > 2.0.0.x.x" 					~: False 	~=? ( stringToVersionNumber "2.0.0" > stringToVersionNumber "2.0.0.x.x" ) ,
     "test N08"  ~: "3.x.x > 3.x.x.x.x" 					~: False 	~=? ( stringToVersionNumber "3.x.x" > stringToVersionNumber "3.x.x.x.x" ) ,
-    "test N09"  ~: assertError "Cannot compare numbers and number placeholders" ( (Number 3) > (NumberPlaceholder) ) ,
-    "test N10"  ~: assertError "Cannot compare number placeholders and numbers" ( (NumberPlaceholder) > (Number 4) ) ,
-    "test N11"  ~: assertError "Cannot compare numbers and number placeholders" ( (Number 3) < (NumberPlaceholder) ) ,
-    "test N12"  ~: assertError "Cannot compare number placeholders and numbers" ( (NumberPlaceholder) < (Number 4) ) ,
-    "test N13"  ~: assertError "Cannot compare number placeholders and numbers" ( stringToVersionNumber "2.x.x" < stringToVersionNumber "2.5.1" ) ,
+    "test N09"  ~: "3 > x" 					            ~: True     ~=? ( stringToVersionNumber "3" > stringToVersionNumber "x" ) ,
+    "test N10"  ~: "x > 4" 					            ~: False    ~=? ( stringToVersionNumber "x" > stringToVersionNumber "4" ) ,
+    "test N11"  ~: "2.x.x > 2.5.1" 					    ~: False    ~=? ( stringToVersionNumber "2.x.x" > stringToVersionNumber "2.5.1" ) ,
+    {-"test N09"  ~: assertError "Cannot compare numbers and number placeholders" ( (Number 3) > (NumberPlaceholder) ) ,-}
+    {-"test N10"  ~: assertError "Cannot compare number placeholders and numbers" ( (NumberPlaceholder) > (Number 4) ) ,-}
+    {-"test N11"  ~: assertError "Cannot compare numbers and number placeholders" ( (Number 3) < (NumberPlaceholder) ) ,-}
+    {-"test N12"  ~: assertError "Cannot compare number placeholders and numbers" ( (NumberPlaceholder) < (Number 4) ) ,-}
+    {-"test N13"  ~: assertError "Cannot compare number placeholders and numbers" ( stringToVersionNumber "2.x.x" < stringToVersionNumber "2.5.1" ) ,-}
     "test 001"  ~: "freezeDimension x" 		~: "0" 	~=? ( versionCompoundToString $ freezeDimension (NumberPlaceholder) ) ,
     "test 002"  ~: "freezeDimension 0" 		~: "0" 	~=? ( versionCompoundToString $ freezeDimension (Number 0) ) ,
     "test 003"  ~: "freezeDimension 1" 		~: "1" 	~=? ( versionCompoundToString $ freezeDimension (Number 1) ) ,

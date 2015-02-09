@@ -45,11 +45,14 @@ tests = test [
 	"test H01"	~: "decrementDim x Dev/0.x.1"				~: "Dev/0.x.1"												~=? ( versionToString (decrementDimension (NumberPlaceholder) $ stringToVersion "Dev/0.x.1" ) ),
 	"test H02"	~: "decrementDim 0 Test/1.x.2"				~: "Dev/1.x.2"												~=? ( versionToString (decrementDimension (Number 0) $ stringToVersion "Dev/1.x.2" ) ),
 	"test H03"	~: "decrementDim 2 User/1.3.2"				~: "User/1.2.2"												~=? ( versionToString (decrementDimension (Number 2) $ stringToVersion "User/1.3.2" ) ),
-	"test I01"	~: "x < 1"					~: assertError 	   "Cannot compare number placeholders and numbers" 			( stringToVersion "x" < stringToVersion "1" ),
-	"test I02"	~: "3 > x"					~: assertError 	   "Cannot compare numbers and number placeholders" 			( stringToVersion "3" > stringToVersion "x" ),
+	{-"test I01"	~: "x < 1"					~: assertError 	   "Cannot compare number placeholders and numbers" 			( stringToVersion "x" < stringToVersion "1" ),-}
+	{-"test I02"	~: "3 > x"					~: assertError 	   "Cannot compare numbers and number placeholders" 			( stringToVersion "3" > stringToVersion "x" ),-}
+	"test I01"	~: "x < 1"									~: True                                                     ~=? ( stringToVersion "x" < stringToVersion "1" ),
+	"test I02"	~: "3 > x"									~: True                                                     ~=? ( stringToVersion "3" > stringToVersion "x" ),
 	"test I03"	~: "3 > 4"									~: False 													~=? ( stringToVersion "3" > stringToVersion "4" ),
 	"test I04"	~: "5 > 4"									~: True 													~=? ( stringToVersion "5" > stringToVersion "4" ),
-	"test I05"	~: "Dev/1.x.3 < Prod/1.0.9"	~: assertError	   "Cannot compare number placeholders and numbers" 			( stringToVersion "Dev/1.x.3" > stringToVersion "Prod/1.0.9" ),
+	{-"test I05"	~: "Dev/1.x.3 < Prod/1.0.9"	~: assertError	   "Cannot compare number placeholders and numbers" 			( stringToVersion "Dev/1.x.3" > stringToVersion "Prod/1.0.9" ),-}
+	"test I05"	~: "Dev/1.x.3 < Prod/1.0.9"					~: True 													~=? ( stringToVersion "Dev/1.x.3" < stringToVersion "Prod/1.0.9" ),
 	"test I06"	~: "Dev/1.3.7 < Prod/1.3.7"					~: True 													~=? ( stringToVersion "Dev/1.3.7" < stringToVersion "Prod/1.3.7" ),
 	"test J01"	~: "Test/1.3.4 == Test/1.3.4"				~: True 													~=? ( stringToVersion "Test/1.3.4" == stringToVersion "Test/1.3.4" ),
 	"test J02"	~: "Prod/4 == Prod/4"						~: True 													~=? ( stringToVersion "Prod/4" == stringToVersion "Prod/4" ),
