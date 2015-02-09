@@ -137,15 +137,57 @@ isInitialVersionNumber ( VersionCompound ( Number _ )) = False
 isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc ) && ( isInitialVersionNumber vn )
 isInitialVersionNumber _ = False
 
-isReleaseVersionNumber :: VersionNumber -> Bool
-isReleaseVersionNumber (VersionNumber vc@(Number _) vn@(VersionCompound NumberPlaceholder)) = True
-isReleaseVersionNumber (VersionNumber vc vn) = isReleaseVersionNumber vn 
-isReleaseVersionNumber _ = False 
+-- BRANCH DETECTORS
 
-isSupportVersionNumber :: VersionNumber -> Bool
-isSupportVersionNumber (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))) = True
-isSupportVersionNumber (VersionNumber vc vn) = isSupportVersionNumber vn 
-isSupportVersionNumber _ = False 
+class IsExperimentalBranch a where
+        isExperimentalBranch :: a -> Bool
+
+instance IsExperimentalBranch VersionNumber where
+        isExperimentalBranch (VersionCompound NumberPlaceholder) = True
+        isExperimentalBranch (VersionNumber (NumberPlaceholder) vn) = isExperimentalBranch vn
+        isExperimentalBranch _ = False
+
+class IsReleaseBranch a where 
+        isReleaseBranch :: a -> Bool
+
+instance IsReleaseBranch VersionNumber where
+        isReleaseBranch (VersionNumber vc@(Number _) vn@(VersionCompound NumberPlaceholder)) = True
+        isReleaseBranch (VersionNumber vc vn) = isReleaseBranch vn 
+        isReleaseBranch _ = False 
+
+class IsSupportBranch a where 
+        isSupportBranch :: a -> Bool
+
+instance IsSupportBranch VersionNumber where
+        isSupportBranch (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))) = True
+        isSupportBranch (VersionNumber vc vn) = isSupportBranch vn 
+        isSupportBranch _ = False 
+
+-- SNAPSHOT DETECTORS
+
+class IsExperimentalSnapshot a where 
+        isExperimentalSnapshot :: a -> Bool
+
+instance IsExperimentalSnapshot VersionNumber where
+        isExperimentalSnapshot (VersionCompound (Number _)) = True
+        isExperimentalSnapshot (VersionNumber (NumberPlaceholder) vn) = isExperimentalSnapshot vn
+        isExperimentalSnapshot _ = False
+
+class IsReleaseSnapshot a where 
+        isReleaseSnapshot :: a -> Bool
+
+instance IsReleaseSnapshot VersionNumber where
+        isReleaseSnapshot (VersionNumber (Number _ ) (VersionCompound (Number _))) = True 
+        isReleaseSnapshot (VersionNumber (NumberPlaceholder) vn) = isReleaseSnapshot vn
+        isReleaseSnapshot _ = False
+
+class IsSupportSnapshot a where
+        isSupportSnapshot :: a -> Bool
+
+instance IsSupportSnapshot VersionNumber where
+        isSupportSnapshot (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound (Number _)))) = True
+        isSupportSnapshot (VersionNumber (NumberPlaceholder) vn ) = isSupportSnapshot vn
+        isSupportSnapshot _ = False
 
 selectLatestVersionNumber :: [VersionNumber] -> VersionNumber
 selectLatestVersionNumber [] = initialVersionNumber (NumberPlaceholder)
@@ -223,16 +265,18 @@ instance Ord VersionNumber where
 freezeDimension :: VersionCompound -> VersionCompound
 freezeDimension NumberPlaceholder = (Number 0)
 freezeDimension (Number n) = Number n
+class FreezeDimension a where 
+        freezeDimensionByNum :: NumberOfDimensions -> a -> a
 
-freezeDimensionByNum :: NumberOfDimensions -> VersionNumber -> VersionNumber
-freezeDimensionByNum NumberPlaceholder   vc@(VersionCompound _ )                = vc
-freezeDimensionByNum NumberPlaceholder   vn@(VersionNumber _ _)                 = vn
-freezeDimensionByNum (Number 0)          vc@(VersionCompound _ )                = vc
-freezeDimensionByNum (Number 0)          vn@(VersionNumber _ _)                 = vn
-freezeDimensionByNum (Number 1)          (VersionCompound vc)                   = (VersionCompound (freezeDimension vc) )
-freezeDimensionByNum (Number 1)          (VersionNumber vc vn)                  = ( VersionNumber ( freezeDimension vc ) vn ) 
-freezeDimensionByNum (Number n)          vc@(VersionCompound NumberPlaceholder) = vc
-freezeDimensionByNum num                 (VersionNumber vc vn)                  = (VersionNumber vc (freezeDimensionByNum (decrement num) vn ))
+instance FreezeDimension VersionNumber where
+        freezeDimensionByNum NumberPlaceholder   vc@(VersionCompound _ )                = vc
+        freezeDimensionByNum NumberPlaceholder   vn@(VersionNumber _ _)                 = vn
+        freezeDimensionByNum (Number 0)          vc@(VersionCompound _ )                = vc
+        freezeDimensionByNum (Number 0)          vn@(VersionNumber _ _)                 = vn
+        freezeDimensionByNum (Number 1)          (VersionCompound vc)                   = (VersionCompound (freezeDimension vc) )
+        freezeDimensionByNum (Number 1)          (VersionNumber vc vn)                  = ( VersionNumber ( freezeDimension vc ) vn ) 
+        freezeDimensionByNum (Number n)          vc@(VersionCompound NumberPlaceholder) = vc
+        freezeDimensionByNum num                 (VersionNumber vc vn)                  = (VersionNumber vc (freezeDimensionByNum (decrement num) vn ))
 
 
 

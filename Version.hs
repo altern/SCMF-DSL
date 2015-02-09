@@ -71,17 +71,38 @@ isInitialVersion :: Version -> Bool
 isInitialVersion (Version v) = isInitialVersionNumber v
 isInitialVersion (MaturityVersion _ v) = isInitialVersionNumber v
 
-isReleaseVersion :: Version -> Bool
-isReleaseVersion (Version v) = isReleaseVersionNumber v
-isReleaseVersion (MaturityVersion _ v) = isReleaseVersionNumber v
+instance IsExperimentalBranch Version where
+        isExperimentalBranch (Version v) = isExperimentalBranch v
+        isExperimentalBranch (MaturityVersion _ v) = isExperimentalBranch v
 
-isSupportVersion :: Version -> Bool
-isSupportVersion (Version v) = isSupportVersionNumber v
-isSupportVersion (MaturityVersion _ v) = isSupportVersionNumber v
+instance IsReleaseBranch Version where
+        isReleaseBranch (Version v) = isReleaseBranch v
+        isReleaseBranch (MaturityVersion _ v) = isReleaseBranch v
+
+instance IsSupportBranch Version where
+        isSupportBranch (Version v) = isSupportBranch v
+        isSupportBranch (MaturityVersion _ v) = isSupportBranch v
+
+instance IsExperimentalSnapshot Version where
+        isExperimentalSnapshot (Version v) = isExperimentalSnapshot v
+        isExperimentalSnapshot (MaturityVersion _ v) = isExperimentalSnapshot v
+
+instance IsReleaseSnapshot Version where
+        isReleaseSnapshot (Version v) = isReleaseSnapshot v
+        isReleaseSnapshot (MaturityVersion _ v) = isReleaseSnapshot v
+
+instance IsSupportSnapshot Version where
+        isSupportSnapshot (Version v) = isSupportSnapshot v
+        isSupportSnapshot (MaturityVersion _ v) = isSupportSnapshot v
 
 selectLatestVersion :: [Version] -> Version
 selectLatestVersion [] = initialVersion (NumberPlaceholder)
 selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
+
+instance FreezeDimension Version where
+        freezeDimensionByNum (Number 0) (Version v) = MaturityVersion Dev v
+        freezeDimensionByNum num (Version v) = Version (freezeDimensionByNum num v)
+        freezeDimensionByNum num (MaturityVersion ml v) = MaturityVersion ml (freezeDimensionByNum num v)
 
 instance Eq Version where
 	(Version vn1) == (Version vn2) = (vn1 == vn2)
