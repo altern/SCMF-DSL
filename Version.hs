@@ -79,6 +79,10 @@ isSupportVersion :: Version -> Bool
 isSupportVersion (Version v) = isSupportVersionNumber v
 isSupportVersion (MaturityVersion _ v) = isSupportVersionNumber v
 
+selectLatestVersion :: [Version] -> Version
+selectLatestVersion [] = initialVersion (NumberPlaceholder)
+selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
+
 instance Eq Version where
 	(Version vn1) == (Version vn2) = (vn1 == vn2)
 	(Version vn1) == (MaturityVersion ml vn2) = (ml == Dev) && vn1 == vn2
