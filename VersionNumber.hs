@@ -55,6 +55,9 @@ data VersionNumberWithMaybe = VC (Maybe Int)
 generateNewVersionNumber :: VersionNumber -> VersionNumber
 generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
 generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber vc (generateNewVersionNumber vn) )
+generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound NumberPlaceholder) ) = ( VersionNumber (generateNewVersionCompound vc) vn )
+generateNewVersionNumber ( VersionNumber vc vn@(VersionNumber _ _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
+generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
 
 instance VersionOperations VersionNumber where 
     decrement                              ( VersionCompound vc )                           = VersionCompound ( decrement vc )
@@ -137,6 +140,18 @@ isInitialVersionNumber ( VersionCompound ( Number _ )) = False
 isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc ) && ( isInitialVersionNumber vn )
 isInitialVersionNumber _ = False
 
+incrementReleaseNumber :: VersionNumber -> VersionNumber
+incrementReleaseNumber (VersionNumber vc@(Number _) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
+incrementReleaseNumber (VersionNumber vc@(NumberPlaceholder) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
+incrementReleaseNumber (VersionNumber vc vn) = VersionNumber vc (incrementReleaseNumber vn)
+{-incrementReleaseNumber (VersionNumber _ vn) = VersionNumber-}
+
+incrementSupportNumber :: VersionNumber -> VersionNumber
+incrementSupportNumber (VersionNumber vc@(Number _) vn@(VersionNumber NumberPlaceholder (VersionCompound _ ))) = VersionNumber (increment vc) vn
+incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionNumber _ (VersionCompound _ ))) = VersionNumber (increment vc) vn
+incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionCompound _ )) = VersionNumber vc vn
+incrementSupportNumber (VersionNumber vc vn) = VersionNumber vc (incrementSupportNumber vn)
+
 -- BRANCH DETECTORS
 
 class IsExperimentalBranch a where
@@ -186,7 +201,7 @@ class IsSupportSnapshot a where
 
 instance IsSupportSnapshot VersionNumber where
         isSupportSnapshot (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound (Number _)))) = True
-        isSupportSnapshot (VersionNumber (NumberPlaceholder) vn ) = isSupportSnapshot vn
+        isSupportSnapshot (VersionNumber (NumberPlaceholder) vn) = isSupportSnapshot vn
         isSupportSnapshot _ = False
 
 selectLatestVersionNumber :: [VersionNumber] -> VersionNumber

@@ -95,6 +95,14 @@ instance IsSupportSnapshot Version where
         isSupportSnapshot (Version v) = isSupportSnapshot v
         isSupportSnapshot (MaturityVersion _ v) = isSupportSnapshot v
 
+incrementReleaseNumberForVersion :: Version -> Version
+incrementReleaseNumberForVersion (Version v) = Version (incrementReleaseNumber v)
+incrementReleaseNumberForVersion (MaturityVersion ml v) = MaturityVersion ml ( incrementReleaseNumber v )
+
+incrementSupportNumberForVersion :: Version -> Version
+incrementSupportNumberForVersion (Version v) = Version (incrementSupportNumber v)
+incrementSupportNumberForVersion (MaturityVersion ml v) = MaturityVersion ml ( incrementSupportNumber v )
+
 selectLatestVersion :: [Version] -> Version
 selectLatestVersion [] = initialVersion (NumberPlaceholder)
 selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
