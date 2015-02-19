@@ -60,6 +60,22 @@ testArtifactTree3 = RoseTree (liftSnapshot $ Snapshot 1398980989 (Version $ Vers
         RoseTree (liftSnapshot $ Snapshot 1398980997 (Version $ VersionCompound $ Number 8) ( liftDocument $ Document "document1" "content8") ) []
     ] ]
 
+testArtifactTree4 :: RoseTreeArtifact 
+testArtifactTree4 = RoseTree (liftBranch $ Branch "trunk" (stringToVersion "x.x.x") (liftDocument $ Document "" "")) [
+        RoseTree (liftSnapshot $ Snapshot 1398980990 (stringToVersion "x.x.0") (liftDocument $ Document "" "")) [
+                RoseTree (liftBranch $ Branch "1.x" (stringToVersion "x.1.x") (liftDocument $ Document "doc1" "release1")) []
+        ] , 
+        RoseTree (liftSnapshot $ Snapshot 1398980991 (stringToVersion "x.x.1") (liftDocument $ Document "" "")) [
+                RoseTree (liftBranch $ Branch "2.x" (stringToVersion "x.2.x") (liftDocument $ Document "doc1" "release2")) [
+                        RoseTree (liftSnapshot $ Snapshot 1398980992 (stringToVersion "x.2.0") (liftDocument $ Document "doc1" "release2.0")) []
+                ]
+        ] , 
+        RoseTree (liftSnapshot $ Snapshot 1398980993 (stringToVersion "x.x.2") (liftDocument $ Document "" "")) [
+                RoseTree (liftBranch $ Branch "1.x.x" (stringToVersion "1.x.x") (liftDocument $ Document "doc1" "support1")) [
+                        RoseTree (liftSnapshot $ Snapshot 1398980994 (stringToVersion "1.x.0") (liftDocument $ Document "doc1" "support1_0")) []
+                ]
+        ] ]
+
 testSArtifactTree3 :: StringTree
 testSArtifactTree3 = Node "0" [ Node "trunk (x)" 
     [
@@ -126,6 +142,7 @@ tests = test [
         RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [] ]
         (Version $ VersionCompound $ Number 3) ),
 	"test F01"	~: "findVersionOfLatestSnapshot testArtifactTree3"                      ~:   ( Version $ VersionCompound $ Number 10 ) ~=? (findVersionOfLatestSnapshot testArtifactTree3 ) ,
+	{-"test G01"	~: "generateExperimentalVersionNumberFrom x.x.x"						~: (stringToVersion "x.x.3")                       ~=? (generateExperimentalVersionNumberFrom "trunk" testArtifactTree4),-}
 	"test _"	~: "empty test"								~: True														~=? True
 	]
 
