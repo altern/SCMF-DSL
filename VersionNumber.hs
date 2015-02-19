@@ -3,13 +3,11 @@
 module VersionNumber where
 
 import Data.Attoparsec.Char8
--- import Data.ByteString.Char8
 import Control.Applicative
 import Control.Monad
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
--- import System.Directory
 
 type NumberOfDimensions = VersionCompound
 
@@ -17,12 +15,6 @@ data VersionCompound = NumberPlaceholder                      -- X
                      | Number Int                           -- 1, 2, 3, ..., 45, ... 
                      deriving (Show)
 
-{-instance Monad VersionCompound where
-	return x = Number x
-	NumberPlaceholder >>= f = NumberPlaceholder
-	Number num >>= f = f num
-	fail _ = NumberPlaceholder
-	-}
 generateNewVersionCompound :: VersionCompound -> VersionCompound
 generateNewVersionCompound NumberPlaceholder = NumberPlaceholder
 generateNewVersionCompound (Number num) = Number (num + 1)
@@ -58,6 +50,7 @@ generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber vc (generateN
 generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound NumberPlaceholder) ) = ( VersionNumber (generateNewVersionCompound vc) vn )
 generateNewVersionNumber ( VersionNumber vc vn@(VersionNumber _ _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
 generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
+
 
 instance VersionOperations VersionNumber where 
     decrement                              ( VersionCompound vc )                           = VersionCompound ( decrement vc )
@@ -141,12 +134,14 @@ isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc )
 isInitialVersionNumber _ = False
 
 incrementReleaseNumber :: VersionNumber -> VersionNumber
+incrementReleaseNumber vc@(VersionCompound NumberPlaceholder) = VersionNumber (Number 0) (VersionCompound NumberPlaceholder ) 
 incrementReleaseNumber (VersionNumber vc@(Number _) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
 incrementReleaseNumber (VersionNumber vc@(NumberPlaceholder) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
 incrementReleaseNumber (VersionNumber vc vn) = VersionNumber vc (incrementReleaseNumber vn)
 {-incrementReleaseNumber (VersionNumber _ vn) = VersionNumber-}
 
 incrementSupportNumber :: VersionNumber -> VersionNumber
+incrementSupportNumber vc@(VersionCompound NumberPlaceholder ) = VersionNumber (Number 0) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))
 incrementSupportNumber (VersionNumber vc@(Number _) vn@(VersionNumber NumberPlaceholder (VersionCompound _ ))) = VersionNumber (increment vc) vn
 incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionNumber _ (VersionCompound _ ))) = VersionNumber (increment vc) vn
 incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionCompound _ )) = VersionNumber vc vn
@@ -193,7 +188,7 @@ class IsReleaseSnapshot a where
 
 instance IsReleaseSnapshot VersionNumber where
         isReleaseSnapshot (VersionNumber (Number _ ) (VersionCompound (Number _))) = True 
-        isReleaseSnapshot (VersionNumber (NumberPlaceholder) vn) = isReleaseSnapshot vn
+        isReleaseSnapshot (VersionNumber (_) vn) = isReleaseSnapshot vn
         isReleaseSnapshot _ = False
 
 class IsSupportSnapshot a where
@@ -294,7 +289,20 @@ instance FreezeDimension VersionNumber where
         freezeDimensionByNum num                 (VersionNumber vc vn)                  = (VersionNumber vc (freezeDimensionByNum (decrement num) vn ))
 
 
+freezeExperimental :: VersionNumber -> VersionNumber
+freezeExperimental (VersionCompound NumberPlaceholder) = VersionCompound (Number 0)
+freezeExperimental (VersionCompound num@(Number _)) = VersionCompound num 
+freezeExperimental (VersionNumber vc@(_) vn) = VersionNumber vc (freezeExperimental vn)
 
+freezeRelease :: VersionNumber -> VersionNumber
+freezeRelease (VersionNumber NumberPlaceholder vn@(VersionCompound _)) = VersionNumber (Number 0) vn
+freezeRelease (VersionNumber num@(Number _) vn@(VersionCompound _)) = VersionNumber num vn
+freezeRelease (VersionNumber vc vn) = VersionNumber vc (freezeRelease vn)
+
+freezeSupport :: VersionNumber -> VersionNumber
+freezeSupport (VersionNumber NumberPlaceholder vn@(VersionNumber _ (VersionCompound _))) = VersionNumber (Number 0) vn
+freezeSupport (VersionNumber num@(Number _) vn@(VersionNumber _ (VersionCompound _))) = VersionNumber num vn
+freezeSupport (VersionNumber vc vn) = VersionNumber vc (freezeSupport vn)
 
 
 

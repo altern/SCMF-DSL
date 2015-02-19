@@ -103,6 +103,18 @@ incrementSupportNumberForVersion :: Version -> Version
 incrementSupportNumberForVersion (Version v) = Version (incrementSupportNumber v)
 incrementSupportNumberForVersion (MaturityVersion ml v) = MaturityVersion ml ( incrementSupportNumber v )
 
+freezeExperimentalVersion :: Version -> Version
+freezeExperimentalVersion (Version v) = Version (freezeExperimental v)
+freezeExperimentalVersion (MaturityVersion ml v) = MaturityVersion ml ( freezeExperimental v )
+
+freezeReleaseVersion :: Version -> Version
+freezeReleaseVersion (Version v) = Version (freezeRelease v)
+freezeReleaseVersion (MaturityVersion ml v) = MaturityVersion ml ( freezeRelease v )
+
+freezeSupportVersion :: Version -> Version
+freezeSupportVersion (Version v) = Version (freezeSupport v)
+freezeSupportVersion (MaturityVersion ml v) = MaturityVersion ml ( freezeSupport v )
+
 selectLatestVersion :: [Version] -> Version
 selectLatestVersion [] = initialVersion (NumberPlaceholder)
 selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
