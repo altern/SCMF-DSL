@@ -7,6 +7,7 @@ import VersionNumber
 import Artifact
 import ArtifactTree 
 import RoseTree
+import Document
 
 import Data.Tree
 import Data.Tree.Pretty
@@ -64,7 +65,7 @@ instance JSON.ToJSON PlatformContents where
         , "document" JSON..= JSON.toJSON document
         ]
 
-data Platform = Platform PlatformName PlatformContents -- Connection 
+data Platform = Platform PlatformName PlatformContents  
 
 instance JSON.ToJSON Platform where
     toJSON (Platform name contents) = JSON.object 
@@ -72,7 +73,7 @@ instance JSON.ToJSON Platform where
         , "contents" JSON..= JSON.toJSON contents
         ]
 
-initialPlatform = Platform "" (PlatformContents emptyDocument initialVersion "")
+initialPlatform = Platform "" (PlatformContents (liftDocument emptyDocument) (initialVersion (NumberPlaceholder)) "")
 
 instance Show Platform where
     show (Platform name ( PlatformContents document version branchName) ) = (show name) ++ ": " ++ (show version) ++ " (" ++  branchName ++ ")"
@@ -200,20 +201,3 @@ instance FindPlatformByArtifact PlatformDB where
     findPlatformByVersion _ [] = []
     findPlatformByVersion version (x:xs) = (findPlatformByVersion version x) ++ (findPlatformByVersion version xs)
 
--- EXAMPLES --
-
-platform1 = Platform "platform1" (PlatformContents emptyDocument initialVersion "")
-platform2 = Platform "platform2" (PlatformContents emptyDocument initialVersion "")
-platform3 = Platform "platform3" (PlatformContents emptyDocument initialVersion "")
-
-platformDB = [ platform1, platform2, platform3 ]
-
-deploymentRule1 = DeploymentRuleVersion ( Version ( Number 10 ) ) "platform1"
-deploymentRule2 = DeploymentRuleArtifact ( Branch "trunk" (Version NumberPlaceholder) emptyDocument ) "platform2"
-deploymentRule3 = DeploymentRuleArtifact ( Branch "branch1" (Version NumberPlaceholder ) emptyDocument ) "platform3"
-deploymentRule4 = DeploymentRuleArtifact ( Branch "trunk" (Version NumberPlaceholder ) emptyDocument ) "platform3"
-
-deploymentRules = [deploymentRule1, deploymentRule2, deploymentRule3, deploymentRule4]
-
-displayPlatformsForArtifactTree :: ArtifactTree -> IO ()
-displayPlatformsForArtifactTree aTree = putStrLn $ drawVerticalTree ( artifactListToPlatformsTree ( aTree ) (deploy aTree deploymentRules platformDB ) )
