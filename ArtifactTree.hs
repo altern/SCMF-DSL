@@ -6,7 +6,6 @@ import Data.Tree.Pretty
 import Data.Time
 import Data.Time.Clock.POSIX
 import Control.Applicative
-import Control.Arrow
 
 import Document
 import Artifact
@@ -19,16 +18,17 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 
 type RoseTreeArtifact = RoseTree Artifact
-data ArtifactTree = ArtifactTree RoseTreeArtifact NumberOfDimensions deriving (Show)
+-- data ArtifactTree = ArtifactTree RoseTreeArtifact NumberOfDimensions deriving (Show)
+type ArtifactTree = RoseTree Artifact
 type RoseTreeArtifactList = [RoseTreeArtifact]
 type ArtifactTreeList = [ArtifactTree]
 
-liftRoseTreeArtifact :: RoseTreeArtifact -> NumberOfDimensions -> ArtifactTree
-liftRoseTreeArtifact x dim = ArtifactTree x dim 
+{-liftRoseTreeArtifact :: RoseTreeArtifact -> NumberOfDimensions -> ArtifactTree-}
+{-liftRoseTreeArtifact x dim = ArtifactTree x dim -}
 
-rTreeToATree :: RoseTreeArtifactList -> NumberOfDimensions -> ArtifactTreeList
-rTreeToATree [] _ = [ ]
-rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)
+{-rTreeToATree :: RoseTreeArtifactList -> NumberOfDimensions -> ArtifactTreeList-}
+{-rTreeToATree [] _ = [ ]-}
+{-rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)-}
 
 -- ARTIFACT TREE OPERATIONS --
 
@@ -41,7 +41,7 @@ rTreeToATree (x:xs) dim = [(ArtifactTree x dim)] ++ (rTreeToATree xs dim)
 
 -- INITIAL ARTIFACT DEFINITIONS --
 
-initialArtifactTree :: RoseTreeArtifact 
+initialArtifactTree :: ArtifactTree 
 initialArtifactTree = RoseTree ( liftSnapshot $ (Snapshot 0 (Version $ VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) 
  [ RoseTree ( liftBranch $ (Branch "trunk" ( Version $ VersionCompound $ NumberPlaceholder ) ) (liftDocument $ Document "" "") ) [] ]
     
@@ -57,18 +57,18 @@ class ArtifactTreeToStringTree a where
     artifactListToStringTreeList :: [a] -> [StringTree]
     artifactTreeToAllowedChangesTree :: [a] -> [StringTree]
 
-instance ArtifactTreeToStringTree ArtifactTree where
-    artifactTreeToStringTree ( ArtifactTree (RoseTree artifact []) _ ) = Node (artifactToString artifact) []
-    artifactTreeToStringTree ( ArtifactTree (RoseTree artifact (x:[]) ) _ ) = Node (artifactToString artifact) [ artifactTreeToStringTree x ]
-    artifactTreeToStringTree ( ArtifactTree (RoseTree artifact (x:xs) ) _ ) = Node (artifactToString artifact) ( (artifactTreeToStringTree x) : (artifactListToStringTreeList xs) )
-    artifactListToStringTreeList [] = []
-    artifactListToStringTreeList (x:[]) = [artifactTreeToStringTree x]
-    artifactListToStringTreeList (x:xs) = (artifactTreeToStringTree x):(artifactListToStringTreeList xs) 
+{-instance ArtifactTreeToStringTree ArtifactTree where-}
+    {-artifactTreeToStringTree ( RoseTree artifact [] ) = Node (artifactToString artifact) []-}
+    {-artifactTreeToStringTree ( RoseTree artifact (x:[]) ) = Node (artifactToString artifact) [ artifactTreeToStringTree x ]-}
+    {-artifactTreeToStringTree ( RoseTree artifact (x:xs) ) = Node (artifactToString artifact) ( (artifactTreeToStringTree x) : (artifactListToStringTreeList xs) )-}
+    {-artifactListToStringTreeList [] = []-}
+    {-artifactListToStringTreeList (x:[]) = [artifactTreeToStringTree x]-}
+    {-artifactListToStringTreeList (x:xs) = (artifactTreeToStringTree x):(artifactListToStringTreeList xs) -}
 --    artifactTreeToAllowedChangesTree ( ArtifactTree (RoseTree artifact []) _ ) = Node (allowedChangesToString ( detectAllowedChanges artifact)) []
 --    artifactTreeToAllowedChangesTree ( ArtifactTree (RoseTree artifact (x:[])) _ ) = Node (allowedChangesToString ( detectAllowedChanges artifact)) [ artifactTreeToAllowedChangesTree x ]
 --    artifactTreeToAllowedChangesTree ( ArtifactTree (RoseTree artifact (x:xs)) _ ) = Node (allowedChangesToString ( detectAllowedChanges artifact)) ( (artifactTreeToAllowedChangesTree x) : (artifactTreeToAllowedChangesTree xs) )
 
-instance ArtifactTreeToStringTree RoseTreeArtifact where
+instance ArtifactTreeToStringTree ArtifactTree where
     artifactTreeToStringTree (RoseTree artifact []) = Node (artifactToString artifact) []
     artifactTreeToStringTree (RoseTree artifact (x:[]) ) = Node (artifactToString artifact) [ artifactTreeToStringTree x ]
     artifactTreeToStringTree (RoseTree artifact (x:xs) ) = Node (artifactToString artifact) ( (artifactTreeToStringTree x) : (artifactListToStringTreeList xs) )
@@ -81,12 +81,12 @@ instance ArtifactTreeToStringTree RoseTreeArtifact where
     
 -- ARTIFACT TREE CONVERSION TO VERSION TREE --
 
-artifactTreeListToVersionTreeList :: RoseTreeArtifactList -> VersionTreeList
+artifactTreeListToVersionTreeList :: ArtifactTreeList -> VersionTreeList
 artifactTreeListToVersionTreeList [] = []
 artifactTreeListToVersionTreeList (x:[]) = [artifactTreeToVersionTree x]
 artifactTreeListToVersionTreeList (x:xs) = (artifactTreeToVersionTree x):(artifactTreeListToVersionTreeList xs) 
 
-artifactTreeToVersionTree :: RoseTreeArtifact -> VersionTree
+artifactTreeToVersionTree :: ArtifactTree -> VersionTree
 artifactTreeToVersionTree (RoseTree artifact []) = RoseTree (artifactToVersion artifact) []
 artifactTreeToVersionTree (RoseTree artifact (x:[])) = RoseTree (artifactToVersion artifact) [ artifactTreeToVersionTree x ]
 artifactTreeToVersionTree (RoseTree artifact (x:xs)) = RoseTree (artifactToVersion artifact) ( (artifactTreeToVersionTree x) : (artifactTreeListToVersionTreeList xs) )
@@ -143,53 +143,53 @@ instance SearchArtifactTree BranchName where
         False -> []
     searchArtifactTree ( ArtifactTree ( RoseTree artifact (x:xs) ) dim ) name = (searchArtifactTree (ArtifactTree (RoseTree artifact []) dim ) name) ++ (searchArtifactTree ( ArtifactTree x dim ) name) ++ (searchArtifactTreeList ( rTreeToATree xs dim ) name)-}
 
-class SearchRoseTreeArtifactList searchEntity where
-    searchRoseTreeArtifactList :: RoseTreeArtifactList -> searchEntity -> [Artifact] 
+class SearchArtifactTreeList searchEntity where
+    searchArtifactTreeList :: ArtifactTreeList -> searchEntity -> [Artifact] 
 
-instance SearchRoseTreeArtifactList Version where
-    searchRoseTreeArtifactList [] _ = []
-    searchRoseTreeArtifactList (artifactTree:[]) version = searchRoseTreeArtifact artifactTree version
-    searchRoseTreeArtifactList (x:xs) version = (searchRoseTreeArtifact x version) ++ (searchRoseTreeArtifactList xs version)
-instance SearchRoseTreeArtifactList Artifact where
-    searchRoseTreeArtifactList [] _ = []
-    searchRoseTreeArtifactList (artifactTree:[]) artifact = searchRoseTreeArtifact artifactTree artifact
-    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
-instance SearchRoseTreeArtifactList Timestamp where
-    searchRoseTreeArtifactList [] _ = []
-    searchRoseTreeArtifactList (artifactTree:[]) timestamp = searchRoseTreeArtifact artifactTree timestamp
-    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
-instance SearchRoseTreeArtifactList BranchName where
-    searchRoseTreeArtifactList [] _ = []
-    searchRoseTreeArtifactList (artifactTree:[]) branchName = searchRoseTreeArtifact artifactTree branchName
-    searchRoseTreeArtifactList (x:xs) artifact = (searchRoseTreeArtifact x artifact) ++ (searchRoseTreeArtifactList xs artifact)
+instance SearchArtifactTreeList Version where
+    searchArtifactTreeList [] _ = []
+    searchArtifactTreeList (artifactTree:[]) version = searchArtifactTree artifactTree version
+    searchArtifactTreeList (x:xs) version = (searchArtifactTree x version) ++ (searchArtifactTreeList xs version)
+instance SearchArtifactTreeList Artifact where
+    searchArtifactTreeList [] _ = []
+    searchArtifactTreeList (artifactTree:[]) artifact = searchArtifactTree artifactTree artifact
+    searchArtifactTreeList (x:xs) artifact = (searchArtifactTree x artifact) ++ (searchArtifactTreeList xs artifact)
+instance SearchArtifactTreeList Timestamp where
+    searchArtifactTreeList [] _ = []
+    searchArtifactTreeList (artifactTree:[]) timestamp = searchArtifactTree artifactTree timestamp
+    searchArtifactTreeList (x:xs) artifact = (searchArtifactTree x artifact) ++ (searchArtifactTreeList xs artifact)
+instance SearchArtifactTreeList BranchName where
+    searchArtifactTreeList [] _ = []
+    searchArtifactTreeList (artifactTree:[]) branchName = searchArtifactTree artifactTree branchName
+    searchArtifactTreeList (x:xs) artifact = (searchArtifactTree x artifact) ++ (searchArtifactTreeList xs artifact)
 
 
-class SearchRoseTreeArtifact searchEntity where
-    searchRoseTreeArtifact :: RoseTreeArtifact -> searchEntity -> [Artifact] 
+class SearchArtifactTree searchEntity where
+    searchArtifactTree :: ArtifactTree -> searchEntity -> [Artifact] 
 
-instance SearchRoseTreeArtifact Version where
-    searchRoseTreeArtifact (RoseTree artifact [] ) version = case (artifactHasVersion artifact version) of 
+instance SearchArtifactTree Version where
+    searchArtifactTree (RoseTree artifact [] ) version = case (artifactHasVersion artifact version) of 
         True -> [artifact]
         False -> []
-    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) version = (searchRoseTreeArtifact (RoseTree artifact []) version ) ++ (searchRoseTreeArtifact x version) ++ (searchRoseTreeArtifactList xs version)
+    searchArtifactTree ( RoseTree artifact (x:xs) ) version = (searchArtifactTree (RoseTree artifact []) version ) ++ (searchArtifactTree x version) ++ (searchArtifactTreeList xs version)
 
-instance SearchRoseTreeArtifact Artifact where
-    searchRoseTreeArtifact ( RoseTree artifact1 [] ) artifact2 = case (artifact1 == artifact2) of 
+instance SearchArtifactTree Artifact where
+    searchArtifactTree ( RoseTree artifact1 [] ) artifact2 = case (artifact1 == artifact2) of 
         True -> [artifact1]
         False -> []
-    searchRoseTreeArtifact ( RoseTree artifact1 (x:xs) ) artifact2 = (searchRoseTreeArtifact (RoseTree artifact1 []) artifact2) ++ (searchRoseTreeArtifact x artifact2) ++ (searchRoseTreeArtifactList xs artifact2)
+    searchArtifactTree ( RoseTree artifact1 (x:xs) ) artifact2 = (searchArtifactTree (RoseTree artifact1 []) artifact2) ++ (searchArtifactTree x artifact2) ++ (searchArtifactTreeList xs artifact2)
 
-instance SearchRoseTreeArtifact Timestamp where
-    searchRoseTreeArtifact ( RoseTree artifact [] ) timestamp = case (getArtifactTimestamp artifact == timestamp) of 
+instance SearchArtifactTree Timestamp where
+    searchArtifactTree ( RoseTree artifact [] ) timestamp = case (getArtifactTimestamp artifact == timestamp) of 
         True -> [artifact]
         False -> []
-    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) timestamp = (searchRoseTreeArtifact (RoseTree artifact []) timestamp) ++ (searchRoseTreeArtifact x timestamp) ++ (searchRoseTreeArtifactList xs timestamp)
+    searchArtifactTree ( RoseTree artifact (x:xs) ) timestamp = (searchArtifactTree (RoseTree artifact []) timestamp) ++ (searchArtifactTree x timestamp) ++ (searchArtifactTreeList xs timestamp)
 
-instance SearchRoseTreeArtifact BranchName where
-    searchRoseTreeArtifact ( RoseTree artifact [] ) name = case (getArtifactName artifact == name) of 
+instance SearchArtifactTree BranchName where
+    searchArtifactTree ( RoseTree artifact [] ) name = case (getArtifactName artifact == name) of 
         True -> [artifact]
         False -> []
-    searchRoseTreeArtifact ( RoseTree artifact (x:xs) ) name = (searchRoseTreeArtifact (RoseTree artifact []) name) ++ (searchRoseTreeArtifact x name) ++ (searchRoseTreeArtifactList xs name)
+    searchArtifactTree ( RoseTree artifact (x:xs) ) name = (searchArtifactTree (RoseTree artifact []) name) ++ (searchArtifactTree x name) ++ (searchArtifactTreeList xs name)
 
 -- FIRST DEPTH SEARCH --
 {-
@@ -204,16 +204,16 @@ instance SearchArtifactTreeChildren Version where
     searchArtifactTreeChildren [] _ = False
     searchArtifactTreeChildren ( ( ArtifactTree ( RoseTree artifact _ ) _ ):xs) version = (artifactHasVersion artifact version) || (searchArtifactTreeChildren xs version)
 -}
-class SearchRoseTreeArtifactChildren a where
-    searchRoseTreeArtifactChildren :: RoseTreeArtifactList -> a -> Bool    
+class SearchArtifactTreeChildren a where
+    searchArtifactTreeChildren :: ArtifactTreeList -> a -> Bool    
 
-instance SearchRoseTreeArtifactChildren Artifact where
-    searchRoseTreeArtifactChildren [] _ = False
-    searchRoseTreeArtifactChildren ( ( RoseTree artifact1 _):xs) artifact2 = (artifact1 == artifact2) || (searchRoseTreeArtifactChildren xs artifact2)
+instance SearchArtifactTreeChildren Artifact where
+    searchArtifactTreeChildren [] _ = False
+    searchArtifactTreeChildren ( ( RoseTree artifact1 _):xs) artifact2 = (artifact1 == artifact2) || (searchArtifactTreeChildren xs artifact2)
     
-instance SearchRoseTreeArtifactChildren Version where
-    searchRoseTreeArtifactChildren [] _ = False
-    searchRoseTreeArtifactChildren ( ( RoseTree artifact _ ):xs) version = (artifactHasVersion artifact version) || (searchRoseTreeArtifactChildren xs version)
+instance SearchArtifactTreeChildren Version where
+    searchArtifactTreeChildren [] _ = False
+    searchArtifactTreeChildren ( ( RoseTree artifact _ ):xs) version = (artifactHasVersion artifact version) || (searchArtifactTreeChildren xs version)
 
 
 -- ARTIFACT TREE LATEST ARTIFACT OPERATIONS --
@@ -223,13 +223,13 @@ currentTimeStamp = (round `fmap` getPOSIXTime)
 class FindTimestampOfLatestSnapshot searchStructure where
     findTimestampOfLatestSnapshot :: searchStructure -> Timestamp
     
-instance FindTimestampOfLatestSnapshot RoseTreeArtifact where    
+instance FindTimestampOfLatestSnapshot ArtifactTree where    
     findTimestampOfLatestSnapshot ( RoseTree artifact [] ) = getArtifactTimestamp artifact
     findTimestampOfLatestSnapshot ( RoseTree artifact1 list ) = case ( (getArtifactTimestamp artifact1) > (findTimestampOfLatestSnapshot list) ) of
         True -> getArtifactTimestamp artifact1
         False -> findTimestampOfLatestSnapshot list
 
-instance FindTimestampOfLatestSnapshot RoseTreeArtifactList where
+instance FindTimestampOfLatestSnapshot ArtifactTreeList where
     findTimestampOfLatestSnapshot [] = 0
     findTimestampOfLatestSnapshot (x:[]) = findTimestampOfLatestSnapshot x
     findTimestampOfLatestSnapshot (x:xs) = case ( (findTimestampOfLatestSnapshot x) > (findTimestampOfLatestSnapshot xs) ) of
@@ -238,98 +238,98 @@ instance FindTimestampOfLatestSnapshot RoseTreeArtifactList where
 
 class FindVersionOfLatestSnapshot searchStructure where
     findVersionOfLatestSnapshot :: searchStructure -> Version
-instance FindVersionOfLatestSnapshot RoseTreeArtifactList where
-     findVersionOfLatestSnapshot list = case (searchRoseTreeArtifactList list (findTimestampOfLatestSnapshot list)) of
+instance FindVersionOfLatestSnapshot ArtifactTreeList where
+     findVersionOfLatestSnapshot list = case (searchArtifactTreeList list (findTimestampOfLatestSnapshot list)) of
          [] -> initialVersion ( NumberPlaceholder )
          (x:xs) -> artifactToVersion x
-instance FindVersionOfLatestSnapshot RoseTreeArtifact where
-     findVersionOfLatestSnapshot rTree = case (searchRoseTreeArtifact rTree ( findTimestampOfLatestSnapshot rTree ) ) of
+instance FindVersionOfLatestSnapshot ArtifactTree where
+     findVersionOfLatestSnapshot rTree = case (searchArtifactTree rTree ( findTimestampOfLatestSnapshot rTree ) ) of
          [] -> initialVersion (NumberPlaceholder) 
          (x:xs) -> artifactToVersion x
          
 class GetArtifactOfLatestSnapshot searchStructure where
      getArtifactOfLatestSnapshot :: searchStructure -> Artifact
     
-instance GetArtifactOfLatestSnapshot RoseTreeArtifactList where
-     getArtifactOfLatestSnapshot list = case (searchRoseTreeArtifactList list (findTimestampOfLatestSnapshot list)) of
+instance GetArtifactOfLatestSnapshot ArtifactTreeList where
+     getArtifactOfLatestSnapshot list = case (searchArtifactTreeList list (findTimestampOfLatestSnapshot list)) of
          [] -> initialArtifact(NumberPlaceholder)
          (x:xs) -> x
 
-instance GetArtifactOfLatestSnapshot RoseTreeArtifact where
-     getArtifactOfLatestSnapshot aTree = case (searchRoseTreeArtifact aTree ( findTimestampOfLatestSnapshot aTree ) ) of
+instance GetArtifactOfLatestSnapshot ArtifactTree where
+     getArtifactOfLatestSnapshot aTree = case (searchArtifactTree aTree ( findTimestampOfLatestSnapshot aTree ) ) of
          [] -> initialArtifact(NumberPlaceholder)
          (x:xs) -> x
 
 class FindVersionOfLatestExperimentalSnapshot a where
         findVersionOfLatestExperimentalSnapshot :: a -> Version
 
-instance FindVersionOfLatestExperimentalSnapshot RoseTreeArtifact where
+instance FindVersionOfLatestExperimentalSnapshot ArtifactTree where
         findVersionOfLatestExperimentalSnapshot (RoseTree artifact list) = case (isExperimentalSnapshot (artifactToVersion artifact) ) of
                 True -> max (artifactToVersion artifact) (findVersionOfLatestExperimentalSnapshot list )
                 False -> findVersionOfLatestExperimentalSnapshot list  
 
-instance FindVersionOfLatestExperimentalSnapshot RoseTreeArtifactList where
+instance FindVersionOfLatestExperimentalSnapshot ArtifactTreeList where
         findVersionOfLatestExperimentalSnapshot [] = initialVersion (NumberPlaceholder)
         findVersionOfLatestExperimentalSnapshot (x:xs) = max ( findVersionOfLatestExperimentalSnapshot x ) (findVersionOfLatestExperimentalSnapshot xs) 
 
 class FindVersionOfLatestReleaseSnapshot a where
         findVersionOfLatestReleaseSnapshot :: a -> Version
 
-instance FindVersionOfLatestReleaseSnapshot RoseTreeArtifact where
+instance FindVersionOfLatestReleaseSnapshot ArtifactTree where
         findVersionOfLatestReleaseSnapshot (RoseTree artifact list) = case (isReleaseSnapshot (artifactToVersion artifact) ) of
                 True -> max (artifactToVersion artifact) (findVersionOfLatestReleaseSnapshot list )
                 False -> findVersionOfLatestReleaseSnapshot list  
 
-instance FindVersionOfLatestReleaseSnapshot RoseTreeArtifactList where
+instance FindVersionOfLatestReleaseSnapshot ArtifactTreeList where
         findVersionOfLatestReleaseSnapshot [] = initialVersion (NumberPlaceholder)
         findVersionOfLatestReleaseSnapshot (x:xs) = max ( findVersionOfLatestReleaseSnapshot x ) (findVersionOfLatestReleaseSnapshot xs) 
 
 class FindVersionOfLatestSupportSnapshot a where
         findVersionOfLatestSupportSnapshot :: a -> Version
 
-instance FindVersionOfLatestSupportSnapshot RoseTreeArtifact where
+instance FindVersionOfLatestSupportSnapshot ArtifactTree where
         findVersionOfLatestSupportSnapshot (RoseTree artifact list) = case (isReleaseSnapshot (artifactToVersion artifact) ) of
                 True -> max (artifactToVersion artifact) (findVersionOfLatestSupportSnapshot list )
                 False -> findVersionOfLatestSupportSnapshot list  
 
-instance FindVersionOfLatestSupportSnapshot RoseTreeArtifactList where
+instance FindVersionOfLatestSupportSnapshot ArtifactTreeList where
         findVersionOfLatestSupportSnapshot [] = initialVersion (NumberPlaceholder)
         findVersionOfLatestSupportSnapshot (x:xs) = max ( findVersionOfLatestSupportSnapshot x ) (findVersionOfLatestSupportSnapshot xs) 
 
 class FindVersionOfLatestReleaseBranch a where
         findVersionOfLatestReleaseBranch :: a -> Version
 
-instance FindVersionOfLatestReleaseBranch RoseTreeArtifact where
+instance FindVersionOfLatestReleaseBranch ArtifactTree where
         findVersionOfLatestReleaseBranch (RoseTree artifact list) = case (isReleaseBranch (artifactToVersion artifact) ) of
                 True -> max (artifactToVersion artifact) (findVersionOfLatestReleaseBranch list )
                 False -> findVersionOfLatestReleaseBranch list  
 
-instance FindVersionOfLatestReleaseBranch RoseTreeArtifactList where
+instance FindVersionOfLatestReleaseBranch ArtifactTreeList where
         findVersionOfLatestReleaseBranch [] = initialVersion (NumberPlaceholder)
         findVersionOfLatestReleaseBranch (x:xs) = max ( findVersionOfLatestReleaseBranch x ) (findVersionOfLatestReleaseBranch xs) 
 
 class FindVersionOfLatestSupportBranch a where
         findVersionOfLatestSupportBranch :: a -> Version
 
-instance FindVersionOfLatestSupportBranch RoseTreeArtifact where
+instance FindVersionOfLatestSupportBranch ArtifactTree where
         findVersionOfLatestSupportBranch (RoseTree artifact list) = case (isSupportBranch (artifactToVersion artifact) ) of
                 True -> max (artifactToVersion artifact) (findVersionOfLatestSupportBranch list )
                 False -> findVersionOfLatestSupportBranch list
 
-instance FindVersionOfLatestSupportBranch RoseTreeArtifactList where
+instance FindVersionOfLatestSupportBranch ArtifactTreeList where
         findVersionOfLatestSupportBranch [] = initialVersion (NumberPlaceholder)
         findVersionOfLatestSupportBranch (x:xs) = max ( findVersionOfLatestSupportBranch x ) (findVersionOfLatestSupportBranch xs) 
 
 class FindParentArtifact a where 
     findParentArtifact :: a -> Artifact -> Artifact
 
-instance FindParentArtifact RoseTreeArtifact where
+instance FindParentArtifact ArtifactTree where
     findParentArtifact (  RoseTree _ [] )  _ = initialArtifact (NumberPlaceholder)
-    findParentArtifact (  RoseTree parentArtifact list ) artifact = case (searchRoseTreeArtifactChildren list artifact) of
+    findParentArtifact (  RoseTree parentArtifact list ) artifact = case (searchArtifactTreeChildren list artifact) of
         True -> parentArtifact
         False -> findParentArtifact list artifact
         
-instance FindParentArtifact RoseTreeArtifactList where
+instance FindParentArtifact ArtifactTreeList where
     findParentArtifact [] _ = initialArtifact (NumberPlaceholder)
     findParentArtifact (x:xs) artifact = case ( isInitialArtifact (findParentArtifact x artifact) ) of
         True -> findParentArtifact xs artifact
@@ -358,17 +358,17 @@ instance FindParentArtifact RoseTreeArtifactList where
 x -: f = f x    
 
 class GenerateSnapshot a where 
-    generateSnapshot :: a -> RoseTreeArtifact -> RoseTreeArtifact
+    generateSnapshot :: a -> ArtifactTree -> ArtifactTree
 
 instance GenerateSnapshot Artifact where
     generateSnapshot artifact@(Artifact (Left (Branch _ _ _ ))) aTree = treeInsert aTree artifact (liftSnapshot $ Snapshot ( (getArtifactTimestamp latestArtifact) + 1 ) (generateNewVersion (getArtifactVersion latestArtifact )) (artifactToDocument artifact)) where latestArtifact = getArtifactOfLatestSnapshot aTree
     generateSnapshot artifact@(Artifact (Right (Snapshot _ _ _ ))) aTree = aTree
 
 
-generateExperimentalVersionNumberFrom :: BranchName -> RoseTreeArtifact -> Version
+generateExperimentalVersionNumberFrom :: BranchName -> ArtifactTree -> Version
 generateExperimentalVersionNumberFrom branchName aTree = incrementedVersion
         where 
-                branch = searchRoseTreeArtifact aTree branchName !! 0
+                branch = searchArtifactTree aTree branchName !! 0
                 branchVersion = getArtifactVersion branch
                 latestVersion = case (isExperimentalBranch branchVersion) of 
                         True ->  (findVersionOfLatestExperimentalSnapshot aTree)
@@ -387,32 +387,32 @@ generateExperimentalVersionNumberFrom branchName aTree = incrementedVersion
                                                 True -> incrementSupportNumberForVersion latestVersion
                                                 False -> latestVersion
 
-generateReleaseVersionNumberFrom :: BranchName -> RoseTreeArtifact -> Version
-generateReleaseVersionNumberFrom branchName aTree = incrementedVersion
-        where 
-                branch = searchRoseTreeArtifact aTree branchName !! 0
-                branchVersion = getArtifactVersion branch
-                latestVersion = case (isExperimentalBranch branchVersion) of 
-                        True ->  (findVersionOfLatestExperimentalSnapshot aTree)
-                        False -> case (isReleaseBranch branchVersion) of
-                                True -> (findVersionOfLatestReleaseSnapshot aTree)
-                                False -> case (isSupportBranch branchVersion) of
-                                        True -> (findVersionOfLatestSupportSnapshot aTree)
-                                        False -> initialVersion (NumberPlaceholder)
-                incrementedVersion = case (isInitialVersion latestVersion) of
-                        True -> freezeReleaseVersion branchVersion
-                        False -> case (isExperimentalBranch branchVersion) of
-                                True -> incrementReleaseNumberForVersion latestVersion
-                                False -> case (isReleaseBranch branchVersion) of 
-                                        True -> incrementReleaseNumberForVersion latestVersion
-                                        False -> case (isSupportBranch branchVersion) of
-                                                True -> incrementReleaseNumberForVersion latestVersion
-                                                False -> latestVersion
+{-generateReleaseVersionNumberFrom :: BranchName -> ArtifactTree -> Version-}
+{-generateReleaseVersionNumberFrom branchName aTree = incrementedVersion-}
+        {-where -}
+                {-branch = searchArtifactTree aTree branchName !! 0-}
+                {-branchVersion = getArtifactVersion branch-}
+                {-latestVersion = case (isExperimentalBranch branchVersion) of -}
+                        {-True ->  (findVersionOfLatestExperimentalSnapshot aTree)-}
+                        {-False -> case (isReleaseBranch branchVersion) of-}
+                                {-True -> (findVersionOfLatestReleaseSnapshot aTree)-}
+                                {-False -> case (isSupportBranch branchVersion) of-}
+                                        {-True -> (findVersionOfLatestSupportSnapshot aTree)-}
+                                        {-False -> initialVersion (NumberPlaceholder)-}
+                {-incrementedVersion = case (isInitialVersion latestVersion) of-}
+                        {-True -> freezeReleaseVersion branchVersion-}
+                        {-False -> case (isExperimentalBranch branchVersion) of-}
+                                {-True -> increment latestVersion-}
+                                {-False -> case (isReleaseBranch branchVersion) of -}
+                                        {-True -> incrementReleaseNumberForVersion latestVersion-}
+                                        {-False -> case (isSupportBranch branchVersion) of-}
+                                                {-True -> incrementSupportNumberForVersion latestVersion-}
+                                                {-False -> latestVersion-}
 
 instance GenerateSnapshot BranchName where
     generateSnapshot branchName aTree = treeInsert aTree toBranchArtifact (liftSnapshot $ Snapshot ( (getArtifactTimestamp latestArtifact) + 1 ) newVersion (artifactToDocument toBranchArtifact)) 
         where 
-           toBranchArtifact = searchRoseTreeArtifact aTree branchName !! 0
+           toBranchArtifact = searchArtifactTree aTree branchName !! 0
            toBranchVersion = getArtifactVersion toBranchArtifact
            {-latestArtifact = getArtifactOfLatestSnapshot aTree-}
            latestArtifact = getArtifactOfLatestSnapshot aTree
@@ -424,17 +424,16 @@ instance GenerateSnapshot BranchName where
                 False -> case (isSupportBranch toBranchVersion) of
                         True -> generateNewVersion latestVersion
                         False -> generateNewVersion latestVersion
-           {-newVersion = generateExperimentalVersionNumberFrom branchName-}
 
 class GenerateBranch a where
-    generateBranchFromSnapshot :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
-    generateBranchFromBranch :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
-    generateBranch :: a -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
+    generateBranchFromSnapshot :: a -> BranchName -> ArtifactTree -> ArtifactTree 
+    generateBranchFromBranch :: a -> BranchName -> ArtifactTree -> ArtifactTree 
+    generateBranch :: a -> BranchName -> ArtifactTree -> ArtifactTree 
 
 {-instance GenerateBranch Version where-}
     {-generateBranch version branchName aTree = treeInsert aTree snapshot branch-}
         {-where-}
-            {-snapshot = searchRoseTreeArtifact aTree version !! 0-}
+            {-snapshot = searchArtifactTree aTree version !! 0-}
             {-parentBranch = findParentArtifact aTree snapshot-}
             {-versionOfParentBranch = getArtifactVersion parentBranch-}
             {-branch = liftBranch $ Branch branchName ( versionOfParentBranch ) (artifactToDocument snapshot)-}
@@ -446,48 +445,48 @@ instance GenerateBranch String where
         where 
             fromBranch = getArtifactName artifact
             version = stringToVersion versionString
-            artifact = searchRoseTreeArtifact aTree version !! 0
+            artifact = searchArtifactTree aTree version !! 0
             
     generateBranchFromSnapshot versionString branchName aTree = treeInsert aTree artifact branch
         where
             version = stringToVersion versionString
-            artifact = searchRoseTreeArtifact aTree version !! 0
+            artifact = searchArtifactTree aTree version !! 0
             parentBranch = findParentArtifact aTree artifact
             versionOfParentBranch = getArtifactVersion parentBranch
             branch = liftBranch $ Branch branchName ( versionOfParentBranch ) (artifactToDocument artifact)
 
-{-generateBranchFromBranch :: BranchName -> BranchName -> RoseTreeArtifact -> RoseTreeArtifact -}
+{-generateBranchFromBranch :: BranchName -> BranchName -> ArtifactTree -> ArtifactTree -}
     generateBranchFromBranch fromBranchName toBranchName aTree = treeInsert treeWithArtifact artifact branch
         where
             treeWithArtifact = generateSnapshot fromBranchName aTree
             version = findVersionOfLatestExperimentalSnapshot treeWithArtifact 
-            artifact = searchRoseTreeArtifact treeWithArtifact version !! 0
+            artifact = searchArtifactTree treeWithArtifact version !! 0
             parentBranch = findParentArtifact treeWithArtifact artifact
             versionOfParentBranch = getArtifactVersion parentBranch
             branch = liftBranch $ Branch toBranchName ( versionOfParentBranch ) (artifactToDocument artifact)
                     
 createExperimentalBranch = generateBranch
 
-treeDimensionsMoreThanTwo :: RoseTreeArtifact -> Bool
-treeDimensionsMoreThanTwo aTree = getNumberOfDimensions ( searchRoseTreeArtifact aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0 ) >= Number 2
+treeDimensionsMoreThanTwo :: ArtifactTree -> Bool
+treeDimensionsMoreThanTwo aTree = getNumberOfDimensions ( searchArtifactTree aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0 ) >= Number 2
 
-treeDimensionsMoreThanThree :: RoseTreeArtifact -> Bool
-treeDimensionsMoreThanThree aTree = getNumberOfDimensions ( searchRoseTreeArtifact aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0 ) >= Number 3
+treeDimensionsMoreThanThree :: ArtifactTree -> Bool
+treeDimensionsMoreThanThree aTree = getNumberOfDimensions ( searchArtifactTree aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0 ) >= Number 3
 
-createReleaseBranch :: BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
+createReleaseBranch :: BranchName -> ArtifactTree -> ArtifactTree 
 createReleaseBranch branchName aTree = treeInsert treeWithArtifact artifact branch
         where
                 treeWithArtifact = case (treeDimensionsMoreThanTwo aTree) of 
                         True -> generateSnapshot branchName aTree
                         False -> generateSnapshot branchName (appendDimension aTree)
                 version = findVersionOfLatestExperimentalSnapshot treeWithArtifact 
-                artifact = searchRoseTreeArtifact treeWithArtifact version !! 0
+                artifact = searchArtifactTree treeWithArtifact version !! 0
                 parentBranch = findParentArtifact treeWithArtifact artifact
                 latestReleaseVersion = findVersionOfLatestReleaseBranch treeWithArtifact
                 releaseVersion = incrementReleaseNumberForVersion latestReleaseVersion 
                 branch = liftBranch $ Branch (versionToString releaseVersion) ( releaseVersion ) (artifactToDocument artifact)
 
-createSupportBranch:: BranchName -> RoseTreeArtifact -> RoseTreeArtifact 
+createSupportBranch:: BranchName -> ArtifactTree -> ArtifactTree 
 createSupportBranch branchName aTree = treeInsert treeWithArtifact artifact branch
         where
                 treeWithArtifact = case (treeDimensionsMoreThanThree aTree) of 
@@ -496,38 +495,38 @@ createSupportBranch branchName aTree = treeInsert treeWithArtifact artifact bran
                                 True -> generateSnapshot branchName (appendDimension aTree)
                                 False -> generateSnapshot branchName (appendDimension (appendDimension aTree))
                 version = findVersionOfLatestExperimentalSnapshot treeWithArtifact 
-                artifact = searchRoseTreeArtifact treeWithArtifact version !! 0
+                artifact = searchArtifactTree treeWithArtifact version !! 0
                 parentBranch = findParentArtifact treeWithArtifact artifact
                 latestSupportVersion = findVersionOfLatestSupportBranch treeWithArtifact
                 supportVersion = incrementSupportNumberForVersion latestSupportVersion 
                 branch = liftBranch $ Branch (versionToString supportVersion) ( supportVersion ) (artifactToDocument artifact)
 
 
-class EditRoseTreeArtifact a where
-        editRoseTreeArtifact :: BranchName -> DocumentOrDirectory -> a -> a
+class EditArtifactTree a where
+        editArtifactTree :: BranchName -> DocumentOrDirectory -> a -> a
 
-instance EditRoseTreeArtifact RoseTreeArtifact where 
-        editRoseTreeArtifact name newDD aTree@( RoseTree artifact [] ) = case (getArtifactName artifact == name) of 
+instance EditArtifactTree ArtifactTree where 
+        editArtifactTree name newDD aTree@( RoseTree artifact [] ) = case (getArtifactName artifact == name) of 
                 True -> (RoseTree (editArtifact newDD artifact) [] )
                 False -> aTree
-        editRoseTreeArtifact name newDD ( RoseTree artifact (x:xs) ) = case (getArtifactName artifact == name) of
-                True -> (RoseTree (editArtifact newDD artifact) (editRoseTreeArtifact name newDD (x:xs)))
-                False -> (RoseTree artifact (editRoseTreeArtifact name newDD (x:xs)))
+        editArtifactTree name newDD ( RoseTree artifact (x:xs) ) = case (getArtifactName artifact == name) of
+                True -> (RoseTree (editArtifact newDD artifact) (editArtifactTree name newDD (x:xs)))
+                False -> (RoseTree artifact (editArtifactTree name newDD (x:xs)))
 
-instance EditRoseTreeArtifact RoseTreeArtifactList where 
-    editRoseTreeArtifact _ _ []= []
-    editRoseTreeArtifact branchName newDD (x:xs) = (editRoseTreeArtifact branchName newDD x ) : (editRoseTreeArtifact branchName newDD xs )
+instance EditArtifactTree ArtifactTreeList where 
+    editArtifactTree _ _ []= []
+    editArtifactTree branchName newDD (x:xs) = (editArtifactTree branchName newDD x ) : (editArtifactTree branchName newDD xs )
 
-instance VersionOperations RoseTreeArtifact where 
+instance VersionOperations ArtifactTree where 
     appendDimension (RoseTree artifact list ) = RoseTree (appendDimension artifact) (appendDimension list)
-    getNumberOfDimensions aTree = getNumberOfDimensions (getArtifactVersion (searchRoseTreeArtifact aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0))
+    getNumberOfDimensions aTree = getNumberOfDimensions (getArtifactVersion (searchArtifactTree aTree (Version $ VersionCompound $ NumberPlaceholder) !! 0))
     
-instance VersionOperations RoseTreeArtifactList where 
+instance VersionOperations ArtifactTreeList where 
     appendDimension [] = []
     appendDimension (x:xs) = ( appendDimension x ) : (appendDimension xs)
 
-{-editArtifact :: BranchName -> Document -> RoseTreeArtifact -> RoseTreeArtifact -}
-{-editArtifact branchName document aTree = searchRoseTreeArtifact aTree branchName -}
+{-editArtifact :: BranchName -> Document -> ArtifactTree -> ArtifactTree -}
+{-editArtifact branchName document aTree = searchArtifactTree aTree branchName -}
 
 -- ARTIFACT TREE: APPLICATION OF DOCUMENT OPERATIONS -- 
 
@@ -538,102 +537,6 @@ instance VersionOperations RoseTreeArtifactList where
 -- updateArtifactTree (ArtifactTree aTree _ ) ( ArtifactTreeCreateSnapshot artifact@(Branch _ _ _) ) = generateSnapshot aTree artifact
 -- updateArtifactTree (ArtifactTree aTree _ ) ( ArtifactTreeCreateBranch artifact@(Snapshot _ _ document) branchName ) = treeInsert aTree artifact ( Branch branchName (generateNewVersion ( getArtifactVersion ( findParentArtifact aTree artifact ) ) ) document ) 
 -- updateArtifactTree (ArtifactTree aTree _ ) ( ArtifactTreeCreateBranch artifact@(Branch _ _ document ) branchName ) = treeInsert newTree ( getArtifactOfLatestSnapshot newTree ) ( Branch branchName (generateNewVersion ( getArtifactVersion artifact ) ) document ) where newTree = (generateSnapshot aTree artifact) 
-
--- EXAMPLES
-
-artifactTree1 :: RoseTreeArtifact
-artifactTree1 = RoseTree ( liftSnapshot $ (Snapshot 1398980989 (Version ( VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) ) []
-
-sArtifactTree1 :: StringTree
-sArtifactTree1 = Node "0" []
-
-artifactTree2 :: RoseTreeArtifact
-artifactTree2 = RoseTree ( liftSnapshot $ ( Snapshot 1398980989 (Version ( VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) ) 
-    [ RoseTree (liftBranch $ (Branch "trunk" (Version (VersionCompound NumberPlaceholder) ) ( liftDocument $ Document "document1" "") ) ) [] ]
-
-sArtifactTree2 :: StringTree
-sArtifactTree2 = Node "0" [ Node "trunk (x)" [] ]
-    
-artifactTree3 :: RoseTreeArtifact
-artifactTree3 = RoseTree (liftSnapshot $ Snapshot 1398980989 (Version $ VersionCompound $ Number 0 ) (liftDocument $ Document "" "") ) 
-    [ RoseTree (liftBranch $ Branch "trunk" (Version $ VersionCompound $ NumberPlaceholder ) ( liftDocument $ Document "document1" "latest_content") ) [ 
-        RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [
-            RoseTree (liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980993 (Version $ VersionCompound $ Number 4) ( liftDocument $ Document "document1" "content4") ) [], 
-                RoseTree (liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6") ) [] 
-            ],
-            RoseTree (liftBranch $ Branch "branch2" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch2") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980999 (Version $ VersionCompound $ Number 10) ( liftDocument $ Document "document1" "content10") ) [] 
-            ]
-        ],
-        RoseTree (liftSnapshot $ Snapshot 1398980994 (Version $ VersionCompound $ Number 5) ( liftDocument $ Document "document1" "content5") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980996 (Version $ VersionCompound $ Number 7) ( liftDocument $ Document "document1" "content7") ) [
-            RoseTree (liftBranch $ Branch "branch3" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch3") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980998 (Version $ VersionCompound $ Number 9) ( liftDocument $ Document "document1" "content9") ) [] 
-            ]
-        ], 
-        RoseTree (liftSnapshot $ Snapshot 1398980997 (Version $ VersionCompound $ Number 8) ( liftDocument $ Document "document1" "content8") ) []
-    ] ]
-
-t = artifactTree3
-
-a1 = liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") 
-a5 = liftSnapshot $ Snapshot 1398980994 (Version $ VersionCompound $ Number 5) ( liftDocument $ Document "document1" "content5") 
-a6 = liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6")
-br1 = liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") 
-list = [ RoseTree a1 [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [] ]
-subtree = RoseTree (liftBranch $ Branch "trunk" (Version $ VersionCompound $ NumberPlaceholder ) ( liftDocument $ Document "document1" "latest_content") ) [ 
-        RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [
-            RoseTree (liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980993 (Version $ VersionCompound $ Number 4) ( liftDocument $ Document "document1" "content4") ) [], 
-                RoseTree (liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6") ) [] 
-            ]
-        ]
-    ]
-
-artifactTree4 :: RoseTreeArtifact 
-artifactTree4 = RoseTree (liftBranch $ Branch "trunk" (stringToVersion "x.x.x") (liftDocument $ Document "" "")) [
-        RoseTree (liftSnapshot $ Snapshot 1398980990 (stringToVersion "x.x.0") (liftDocument $ Document "" "")) [
-                RoseTree (liftBranch $ Branch "1.x" (stringToVersion "x.1.x") (liftDocument $ Document "doc1" "release1")) []
-        ] , 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (stringToVersion "x.x.1") (liftDocument $ Document "" "")) [
-                RoseTree (liftBranch $ Branch "2.x" (stringToVersion "x.2.x") (liftDocument $ Document "doc1" "release2")) [
-                        RoseTree (liftSnapshot $ Snapshot 1398980992 (stringToVersion "x.2.0") (liftDocument $ Document "doc1" "release2.0")) []
-                ]
-        ] , 
-        RoseTree (liftSnapshot $ Snapshot 1398980993 (stringToVersion "x.x.2") (liftDocument $ Document "" "")) [
-                RoseTree (liftBranch $ Branch "1.x.x" (stringToVersion "1.x.x") (liftDocument $ Document "doc1" "support1")) [
-                        RoseTree (liftSnapshot $ Snapshot 1398980994 (stringToVersion "1.x.0") (liftDocument $ Document "doc1" "support1_0")) []
-                ]
-        ] ]
-sArtifactTree3 :: StringTree
-sArtifactTree3 = Node "0" [ Node "trunk (x)" 
-    [
-        Node "1" [],
-        Node "2" [],
-        Node "3" [
-            Node "branch1 (x)" [
-                Node "4" [],
-                Node "6" []
-            ], 
-            Node "branch2 (x)" [
-                Node "10" []
-            ] 
-        ],
-        Node "5" [],
-        Node "7" [
-            Node "branch3 (x)" [
-                Node "9" []
-            ]
-        ],
-        Node "8" []
-    ] ]
 
 -- HELPER FUNCTIONS --
 
