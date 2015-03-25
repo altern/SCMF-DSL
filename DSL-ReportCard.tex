@@ -85,7 +85,7 @@ One of the most advanced version numbering approaches is SemVer \cite{semver}. W
 \begin{itemize}
 \item Lack of formalization. There is only verbal description of SemVer approach available online. 
 \item As long as there is no formal definition of version numbering approach by SemVer, there is no way to detect whether version number of specific artifact already exists. This often leads to assignment of ambiguous version numbers when one version number represents several different artifacts.
-\item It introduces ambiguous rules (for example, composition of version numbers) that, if applied, result it unreliable references to software artifacts.
+\item It introduces ambiguous rules (for example, composition of version numbers) that, if applied, result in unreliable references to software artifacts.
 \end{itemize}
 
 There is another approach that is similar to version numbering - \textit{document sections numbering approach}. TODO: describe advantages and limitations.
@@ -119,7 +119,7 @@ The most serious limitation of DSL for SCM is that it can be used only by users 
 
 % What is (are) the outcome(s) of executing a DSL program? What analyses of DSL programs are conceivable?  Note that, in general, a DSL program can produce a variety of results. In fact, this aspect makes the use of a DSL very attractive, and this questions is an important part of the analysis of the DSL's purpose.
 
-Typical output of DSL for SCM is \textit{artifact tree} that can be built given initial artifact tree and list of DSL operations. 
+Typical output of DSL for SCM is \textit{artifact tree} that can be built given initial artifact tree and list of DSL operations (DSL program). 
 
 % Another example of output that DSL for SCM can produce is a subset of version numbers created based on filters of version numbers.
 
@@ -159,17 +159,16 @@ Another use case is deployment and redeployment of the web-site (TODO: use class
 \textbf{Steps:}
 \begin{enumerate}
 \item Allocate repository for class page (represented by \textbf{x}, or high-level concept of \textit{work in progress})
-\item Add template of class page to the repository (first revision)
-\item Fill in class page template with content (second revision)
-\item Fill in class page with content for week 1 (third revision)
-\item \textit{Tag} repository content (4th rev)
+\item Add template of class page to the repository 
+\item Commit existing version to the repository (first revision)
+\item Fill in class page template with content 
+\item Commit existing version to the repository (second revision)
+\item Fill in class page with content for week 1 
+\item Commit existing version to the repository (third revision)
+\item Add presentation for week 1, commit (4th rev)
+\item Add homework for week 1, commit  (5th rev)
 \item Deploy to the server
-\item Add presentation for week 1 (5th rev)
-\item Add homework for week 1 (6th rev)
-\item \textit{Tag} repository content (7th rev)
-\item Deploy to the server
-\item Add solutions for homework 1 (8th rev)
-\item \textit{Tag} repository content (9th rev)
+\item Add solutions for homework 1, commit (6th rev)
 \item Deploy to the server
 \item ...
 \end{enumerate}
@@ -401,7 +400,29 @@ x.1  x.2     x.3
 
 % \RevisionNeeded
 
+\subsection{Platform}
+ \begin{lstlisting}
+type PlatformName = String
 
+data PlatformContents = PlatformContents DocumentOrDirectory Version BranchName
+                deriving (Show)
+ 
+data Platform = Platform PlatformName PlatformContents
+
+type PlatformDB = [Platform]
+ \end{lstlisting}
+ 
+\subsection{DeploymentRule}
+
+ \begin{lstlisting}
+ data DeploymentRule = DeploymentRuleVersion Version PlatformName
+                    | DeploymentRuleArtifact Artifact PlatformName
+                    deriving (Show)
+ 
+ type DeploymentRules = [DeploymentRule]
+
+ \end{lstlisting}
+ 
 
 \section{Operators and Combinators}
 \label{sec:comb}
@@ -467,6 +488,7 @@ Another temporary limitation of the DSL is the absence of error-handling. DSL do
 
 \section{Interpretation and Analyses}
 \label{sec:analysis}
+\subsection{High-level example}
 In order to provide examples of interpretation and analyses in our DSL, we provide list of self-explanatory listings for executions of DSL programs: 
 \begin{lstlisting}
 initialArtifactTree :: ArtifactTree 
@@ -540,6 +562,180 @@ x.x.1  x.x.2     x.x.3         x.x.4
 
  
  \end{lstlisting}
+
+\subsection{Specific example}
+Another example uses list of steps from section \ref{sec:examples} to illustrate how DSL works in a specific sequence of SCM actions.
+\begin{enumerate}
+\item Allocate repository for class page (represented by \textbf{x}, or high-level concept of \textit{work in progress})
+\begin{lstlisting}
+initialArtifactTree :: ArtifactTree 
+initialArtifactTree = RoseTree ( liftSnapshot $ (Snapshot 0 (Version $  VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) 
+ [ RoseTree ( liftBranch $ (Branch "trunk" ( Version $ VersionCompound $ NumberPlaceholder ) ) (liftDocument $ Document "" "") ) [] ]
+ 
+> displayArtifactTree initialArtifactTree 
+
+    0    
+    |    
+trunk (x)
+ \end{lstlisting}
+\item Add template of class page to the repository
+\begin{lstlisting}
+program = editArtifactTree "trunk" (liftDocument $ Document "classPage" "") 
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: )) []]
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+
+\end{lstlisting}
+\item Commit existing version to the repository (first revision)
+
+\begin{lstlisting}
+program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk"
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: )) [RoseTree (Artifact (Right Snapshot taken at 1, Version 1, Document name: classPage, Content: )) []]]
+
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+    |    
+    1  
+
+\end{lstlisting}
+
+\item Fill in class page template with content 
+\begin{lstlisting}
+program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>") 
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>)) [RoseTree (Artifact (Right Snapshot taken at 1, Version 1, Document name: classPage, Content: )) []]]
+
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+    |    
+    1 
+
+\end{lstlisting}
+\item Commit existing version to the repository (second revision)
+\begin{lstlisting}
+program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>") >>> 
+generateSnapshot "trunk"
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>)) [RoseTree (Artifact (Right Snapshot taken at 1, Version 1, Document name: classPage, Content: )) [],RoseTree (Artifact (Right Snapshot taken at 2, Version 2, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>)) []]]
+
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+    |    
+    --   
+   /  \  
+   1  2  
+
+\end{lstlisting}
+\item Fill in class page with content for week 1
+ \begin{lstlisting}
+program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk" >>> editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>")  
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>)) [RoseTree (Artifact (Right Snapshot taken at 1, Version 1, Document name: classPage, Content: )) [],RoseTree (Artifact (Right Snapshot taken at 2, Version 2, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>)) []]]
+
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+    |    
+    --   
+   /  \  
+   1  2  
+
+\end{lstlisting}
+\item Commit existing version to the repository (third revision)
+ \begin{lstlisting}
+program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>") >>> 
+generateSnapshot "trunk"  
+
+> (program initialArtifactTree)
+
+RoseTree (Artifact (Right Snapshot taken at 0, Version 0, Document name: , Content: )) [RoseTree (Artifact (Left Branch 'trunk', Version x, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>)) [RoseTree (Artifact (Right Snapshot taken at 1, Version 1, Document name: classPage, Content: )) [],RoseTree (Artifact (Right Snapshot taken at 2, Version 2, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>)) [],RoseTree (Artifact (Right Snapshot taken at 3, Version 3, Document name: classPage, Content: <html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>)) []]]
+
+
+> displayArtifactTree (program initialArtifactTree)
+
+    0    
+    |    
+trunk (x)
+    |    
+  -----  
+ /  |  \ 
+ 1  2  3   
+
+\end{lstlisting}
+\item Deploy to the server (3rd revision)
+ \begin{lstlisting}
+ program = 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is a class page template</body></html>") >>> 
+generateSnapshot "trunk" >>> 
+editArtifactTree "trunk" (liftDocument $ Document "classPage" "<html><head><title>Class page</title></head><body><h1>Class page</h1><br />This is information for week 1</body></html>") >>> 
+generateSnapshot "trunk" 
+
+platform1 = Platform "platform1" (PlatformContents (liftDocument emptyDocument) (initialVersion(NumberPlaceholder) ) "")
+platform2 = Platform "platform2" (PlatformContents (liftDocument emptyDocument) (initialVersion(NumberPlaceholder) ) "")
+
+platformDB = [ platform1, platform2 ]
+
+> deploy (program initialArtifactTree) [DeploymentRuleVersion (stringToVersion "3") "platform2"] platformDB
+
+["platform1": x (),"platform2": 3 (),"platform3": x ()]
+ \end{lstlisting}
+\item Add presentation for week 1 (4th rev)
+\item Add homework for week 1 (5th rev)
+\item Deploy to the server
+\item Add solutions for homework 1 (6th rev)
+\item Deploy to the server
+\item ...
+\end{enumerate}
 
 % Provide a precise description of the different outcomes of the DSL. This
 % information is typically provided by Haskell function signatures (that is,
@@ -630,7 +826,7 @@ generateSnapshot :: BranchName -> ArtifactTree -> ArtifactTree
 createExperimentalBranch :: BranchName -> ArtifactTree -> ArtifactTree
 createReleaseBranch :: BranchName -> ArtifactTree -> ArtifactTree
 createSupportBranch :: BranchName -> ArtifactTree -> ArtifactTree
-editArtifact :: BranchName -> DocumentOrDirectory -> ArtifactTree -> ArtifactTree
+editArtifactTree :: BranchName -> DocumentOrDirectory -> ArtifactTree -> ArtifactTree
 deploy :: ArtifactTree -> DeploymentRules -> PlatformDB -> PlatformDB
 \end{lstlisting}
 % As you iterate over different designs of your DSL, it is quite instructive to
