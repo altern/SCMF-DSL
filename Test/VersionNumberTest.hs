@@ -6,7 +6,7 @@ import Test.HUnit
 import VersionNumber
 import Test.AssertError
 
-tests = test [ 
+versionNumberTests = test [ 
     "test A01"  ~: "versionCompoundToString x"          ~: "x"      ~=? ( versionCompoundToString NumberPlaceholder ),
     "test A02"  ~: "versionCompoundToString 1"          ~: "1"      ~=? ( versionCompoundToString ( Number 1 ) ),
     "test A03"  ~: "versionCompoundToString 2"          ~: "2"      ~=? ( versionCompoundToString ( Number 2 ) ),
@@ -135,4 +135,4 @@ tests = test [
 
 runTests :: IO Counts
 runTests = do
-    runTestTT tests
+    runTestTT versionNumberTests

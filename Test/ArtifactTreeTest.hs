@@ -122,7 +122,7 @@ testVArtifactTree3 = RoseTree (Version $ VersionCompound $ Number 0) [ RoseTree 
         RoseTree (Version $ VersionCompound $ Number 8) []
     ] ]
 
-tests = test [ 
+artifactTreeTests = test [ 
 	"test A01"	~: "artifactTreeToStringTree testArtifactTree1"							~: testSArtifactTree1								~=? (artifactTreeToStringTree testArtifactTree1),
 	"test A02"	~: "artifactTreeToStringTree testArtifactTree2"							~: testSArtifactTree2								~=? (artifactTreeToStringTree testArtifactTree2),
 	"test A03"	~: "artifactTreeToStringTree testArtifactTree3"							~: testSArtifactTree3								~=? (artifactTreeToStringTree testArtifactTree3),
@@ -148,4 +148,4 @@ tests = test [
 
 runTests :: IO Counts
 runTests = do
-	runTestTT tests
+	runTestTT artifactTreeTests

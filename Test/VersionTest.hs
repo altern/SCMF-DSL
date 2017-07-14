@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Test.AssertError
 
-tests = test [ 
+versionTests = test [ 
 	"test Z01"	~: "generateNewVersion Dev/1.x.0"			~: "Dev/1.x.1"												~=? ( versionToString ( generateNewVersion $ stringToVersion "Dev/1.x.0" ) ),
 	"test Z02"	~: "generateNewVersion Prod/1.3"			~: "Prod/1.4"												~=? ( versionToString ( generateNewVersion $ stringToVersion "Prod/1.3" ) ),
 	"test Y01"	~: "initialVersion 1"						~: "x"														~=? ( versionToString ( initialVersion (Number 1)) ),
@@ -64,4 +64,4 @@ tests = test [
 
 runTests :: IO Counts
 runTests = do
-	runTestTT tests
+	runTestTT versionTests
