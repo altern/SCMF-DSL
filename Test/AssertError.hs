@@ -4,8 +4,8 @@ import Control.Exception
 import Control.Monad
 import Test.HUnit
 
-instance Eq ErrorCall where
-    x == y = (show x) == (show y)
+-- instance Eq ErrorCall where
+--    x == y = (show x) == (show y)
 
 assertException :: (Exception e, Eq e) => e -> IO a -> IO ()
 assertException ex action =
