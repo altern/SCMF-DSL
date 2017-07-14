@@ -173,6 +173,23 @@ instance IsSupportBranch VersionNumber where
         isSupportBranch (VersionNumber vc vn) = isSupportBranch vn 
         isSupportBranch _ = False 
 
+class IsReleaseVersionNumber a where
+        isReleaseVersionNumber :: a -> Bool
+        
+instance IsReleaseVersionNumber VersionNumber where
+        isReleaseVersionNumber (VersionNumber (Number _) (VersionCompound NumberPlaceholder)) = True
+        isReleaseVersionNumber (VersionNumber vc vn) = isReleaseVersionNumber vn
+        isReleaseVersionNumber _ = False
+        
+class IsSupportVersionNumber a where
+        isSupportVersionNumber :: a -> Bool
+        
+instance IsSupportVersionNumber VersionNumber where
+        isSupportVersionNumber (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))) = True
+        isSupportVersionNumber (VersionNumber vc vn) = isSupportVersionNumber vn
+        isSupportVersionNumber _ = False
+ 
+
 -- SNAPSHOT DETECTORS
 
 class IsExperimentalSnapshot a where 
