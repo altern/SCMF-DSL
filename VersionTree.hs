@@ -80,15 +80,15 @@ versionTreeToStringTree (RoseTree num (x:xs)) = Node (versionToString num) ( (ve
 
 -- VERSION TREE CONVERSION TO ALLOWED CHANGES --
 
--- versionListToAllowedChangesList :: VersionTreeList -> StringTreeList
--- versionListToAllowedChangesList [] = []
--- versionListToAllowedChangesList(x:[]) = [versionTreeToAllowedChangesTree x]
--- versionListToAllowedChangesList (x:xs) = (versionTreeToAllowedChangesTree x):(versionListToAllowedChangesList xs) 
+versionListToAllowedChangesList :: VersionTreeList -> StringTreeList
+versionListToAllowedChangesList [] = []
+versionListToAllowedChangesList(x:[]) = [versionTreeToAllowedChangesTree x]
+versionListToAllowedChangesList (x:xs) = (versionTreeToAllowedChangesTree x):(versionListToAllowedChangesList xs) 
 
--- versionTreeToAllowedChangesTree :: VersionTree -> StringTree
--- versionTreeToAllowedChangesTree (RoseTree num []) = Node (allowedChangesToString ( detectAllowedChanges num)) []
--- versionTreeToAllowedChangesTree (RoseTree num (x:[])) = Node (allowedChangesToString ( detectAllowedChanges num)) [ versionTreeToAllowedChangesTree x ]
--- versionTreeToAllowedChangesTree (RoseTree num (x:xs)) = Node (allowedChangesToString ( detectAllowedChanges num)) ( (versionTreeToAllowedChangesTree x) : (versionListToAllowedChangesList xs) )
+versionTreeToAllowedChangesTree :: VersionTree -> StringTree
+versionTreeToAllowedChangesTree (RoseTree num []) = Node (allowedChangesToString ( detectAllowedChanges num)) []
+versionTreeToAllowedChangesTree (RoseTree num (x:[])) = Node (allowedChangesToString ( detectAllowedChanges num)) [ versionTreeToAllowedChangesTree x ]
+versionTreeToAllowedChangesTree (RoseTree num (x:xs)) = Node (allowedChangesToString ( detectAllowedChanges num)) ( (versionTreeToAllowedChangesTree x) : (versionListToAllowedChangesList xs) )
 
 class VersionTreeAppend structure where
     versionTreeAppend :: structure -> structure
@@ -171,4 +171,4 @@ vTree4 = RoseTree (Version (VersionCompound NumberPlaceholder)) [RoseTree (Versi
 -- HELPER FUNCTIONS --
 
 displayVersionTree t = putStrLn $ drawVerticalTree (versionTreeToStringTree t)
--- displayAllowedChanges t = putStrLn $ drawVerticalTree (versionTreeToAllowedChangesTree t)
+displayAllowedChanges t = putStrLn $ drawVerticalTree (versionTreeToAllowedChangesTree t)
