@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, OverloadedStrings, TypeFamilies, NoMonomorphismRestriction #-}
 
 module VersionNumber where
 
@@ -40,9 +40,12 @@ data VersionNumber = VersionCompound VersionCompound
        | VersionNumber VersionCompound VersionNumber
        deriving (Show)
 
+type VersionCompoundWithMaybe = Maybe Int
+
 data VersionNumberWithMaybe = VC (Maybe Int)
-		| VN (Maybe Int) VersionNumberWithMaybe
-		deriving (Show)
+                | VNL (Maybe Int) VersionNumberWithMaybe
+                | VNR VersionNumberWithMaybe (Maybe Int)
+                deriving (Show)
 
 generateNewVersionNumber :: VersionNumber -> VersionNumber
 generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
@@ -100,7 +103,8 @@ versionNumberToString (VersionNumber vc vn) = (versionCompoundToString vc) ++ ".
 versionNumberToString (VersionCompound vc) = (versionCompoundToString vc)
 
 versionNumberWithMaybeToString :: VersionNumberWithMaybe -> String
-versionNumberWithMaybeToString (VN vc vn) = (maybeToString vc) ++ "." ++ (versionNumberWithMaybeToString vn)
+versionNumberWithMaybeToString (VNL vc vn) = (maybeToString vc) ++ "." ++ (versionNumberWithMaybeToString vn)
+versionNumberWithMaybeToString (VNR vn vc) = (versionNumberWithMaybeToString vn) ++ "." ++ (maybeToString vc)
 versionNumberWithMaybeToString (VC vc) = (maybeToString vc)
 
 -- instance Show VersionCompound where
@@ -226,6 +230,35 @@ parseVersionCompound =
  <|> ( string "X"    >> return NumberPlaceholder)
  <|> ( decimal >>= \num -> return (Number num) )
       
+parseVersionCompoundWithMaybe :: Parser VersionCompoundWithMaybe
+parseVersionCompoundWithMaybe =
+     ( string "x"    >> return Nothing)
+ <|> ( string "X"    >> return Nothing)
+ <|> ( decimal >>= \num -> return (Just num) )
+
+stringToVersionCompoundWithMaybe :: String -> VersionCompoundWithMaybe
+stringToVersionCompoundWithMaybe str = case (parseOnly parseVersionCompoundWithMaybe $ BS.pack str) of
+    Right a -> a
+    Left _ -> Nothing
+
+parseVersionNumberWithMaybeL :: Parser VersionNumberWithMaybe
+parseVersionNumberWithMaybeL = do
+    ds <- sepBy1 parseVersionCompoundWithMaybe (char '.')
+    let vs = map VC ds
+    return (foldr1 (\(VC vc) -> VNL vc) vs )
+
+parseVersionNumberWithMaybeR :: Parser VersionNumberWithMaybe
+parseVersionNumberWithMaybeR = do
+    ds <- sepBy1 parseVersionCompoundWithMaybe (char '.')
+    let vs = map VC ds
+    return (foldr1 (\(VC vc) vs -> VNR vs vc) (reverse vs))
+
+
+stringToVersionNumberWithMaybe :: String -> VersionNumberWithMaybe
+stringToVersionNumberWithMaybe str = case (parseOnly parseVersionNumberWithMaybeR $ BS.pack str) of
+    Right a -> a
+    Left _ -> VC Nothing
+
 stringToVersionCompound :: String -> VersionCompound
 stringToVersionCompound str = case (parseOnly parseVersionCompound $ BS.pack str) of
     Right a -> a
@@ -258,11 +291,25 @@ instance Ord VersionCompound where
     (Number v1) `compare` (Number v2) = (v1 `compare` v2)
     
 instance Eq VersionNumber where
+--    ( VersionCompound vc1 ) == ( VersionCompound vc2 ) = (vc1 == vc2)
+--    ( VersionNumber vc1 vn1 ) == ( VersionNumber vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
+--    ( VersionNumber vc1 vn1 ) == ( VersionCompound vc2 ) = (vc1 == vc2 && vn1 == (VersionCompound NumberPlaceholder) ) 
+--    ( VersionCompound vc1 ) == ( VersionNumber vc2 vn2) = (vc1 == vc2 && vn2 == (VersionCompound NumberPlaceholder) )
     ( VersionCompound vc1 ) == ( VersionCompound vc2 ) = (vc1 == vc2)
     ( VersionNumber vc1 vn1 ) == ( VersionNumber vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
-    ( VersionNumber vc1 vn1 ) == ( VersionCompound vc2 ) = (vc1 == vc2 && vn1 == (VersionCompound NumberPlaceholder) ) 
-    ( VersionCompound vc1 ) == ( VersionNumber vc2 vn2) = (vc1 == vc2 && vn2 == (VersionCompound NumberPlaceholder) )
-        
+    ( VersionNumber _ (VersionCompound vc1) ) == ( VersionCompound vc2 ) = vc1 == vc2 
+    ( VersionCompound vc1 ) == ( VersionNumber _ (VersionCompound vc2)) = vc1 == vc2
+
+instance Eq VersionNumberWithMaybe where
+    (VC vc1) == (VC vc2) = (vc1 == vc2)
+    ( VNL vc1 vn1 ) == ( VNL vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
+    ( VNR vn1 vc1 ) == ( VNR vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)
+    ( VNL _ (VC vc1) ) == ( VC vc2 ) = vc1 == vc2 
+    ( VC vc1 ) == ( VNL _ (VC vc2)) = vc1 == vc2
+    ( VNR _ vc1 ) == (VC vc2) = vc1 == vc2
+    ( VC vc1 ) == (VNR _ vc2) = vc1 == vc2
+
+
 instance Ord VersionNumber where
     (VersionCompound vc1)   `compare` (VersionCompound vc2)     = (vc1 `compare` vc2)
     (VersionNumber vc1 vn1) `compare` (VersionCompound vc2)     = case (VersionCompound vc1 `compare` stringToVersionNumber "x") of
