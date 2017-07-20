@@ -89,6 +89,23 @@ isInitialVersionNumber ( VN vn vc@(Just _) ) = False
 isInitialVersionNumber ( VN vn vc@(Nothing) ) = ( isInitialVersionNumber vn )
 isInitialVersionNumber _ = False
 
+isReleaseVersionNumber :: VersionNumber -> Bool
+isReleaseVersionNumber (VC vc) = False
+isReleaseVersionNumber (VN vn Nothing) = isSnapshotVersionNumber vn
+isReleaseVersionNumber _ = False
+
+isSnapshotVersionNumber :: VersionNumber -> Bool
+isSnapshotVersionNumber (VC (Just _)) = True
+isSnapshotVersionNumber (VN vn Nothing) = False
+isSnapshotVersionNumber (VN vn _) = isSnapshotVersionNumber vn 
+isSnapshotVersionNumber _ = False
+
+isSupportVersionNumber :: VersionNumber -> Bool
+isSupportVersionNumber (VC _) = False
+isSupportVersionNumber (VN (VN (VC (Just _)) Nothing) Nothing) = True
+isSupportVersionNumber (VN vn _ ) = isReleaseVersionNumber vn
+isSupportVersionNumber _ = False
+
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
 {-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}
