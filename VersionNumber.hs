@@ -55,10 +55,6 @@ instance VersionOperations VersionNumber where
         appendDimension (VC vc) = VN (VC Nothing) vc
         appendDimension (VN vn vc) = VN (appendDimension vn) vc
 
-generateNewVersionNumber :: VersionNumber -> VersionNumber
-generateNewVersionNumber ( VC vc ) = ( VC (generateNewVC vc) )
-generateNewVersionNumber ( VN vn vc ) = ( VN vn (generateNewVC vc) )
-
 createVersionNumberByNumberOfDimensions :: (Maybe Int) -> VersionNumber
 createVersionNumberByNumberOfDimensions ( Nothing ) = VC Nothing
 createVersionNumberByNumberOfDimensions ( Just 0 ) = VC Nothing
@@ -126,13 +122,4 @@ stringToVersionNumber str = case (parseOnly parseVersionNumberR $ BS.pack str) o
     Right a -> a
     Left _ -> VC Nothing
 
-stringToVC :: String -> (Maybe Int)
-stringToVC str = case (parseOnly parseVC $ BS.pack str) of
-    Right a -> a
-    Left _ -> Nothing
 
-freezeDimension :: (Maybe Int) -> (Maybe Int)
-freezeDimension Nothing = (Just 0)
-freezeDimension (Just n) = Just n
-class FreezeDimension a where 
-        freezeDimensionByNum :: (Maybe Int) -> a -> a
