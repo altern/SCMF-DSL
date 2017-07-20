@@ -26,17 +26,38 @@ instance VersionOperations (Maybe Int) where
         decrement Nothing = Nothing
         decrement (Just 0) = Just 0
         decrement (Just num) = Just (num - 1)
+        decrementDimension (Just 1) vc = decrement vc
+        decrementDimension _ vc = vc
         increment Nothing = Nothing
         increment (Just num) = (Just (num + 1))
+        incrementDimension (Just 1) vc = increment vc
+        incrementDimension _ vc = vc
+        getNumberOfDimensions _ = Just 1
+        appendDimension vc = vc
 
 data VersionNumber = VC (Maybe Int)
-		| VN VersionNumber (Maybe Int)
-		deriving (Show)
+        | VN VersionNumber (Maybe Int)
+        deriving (Show)
+
+instance VersionOperations VersionNumber where
+        decrement (VC vc) = VC (decrement vc)
+        decrement (VN vn vc) = VN vn (decrement vc)
+        decrementDimension dim (VC vc) = VC (decrementDimension dim vc)
+        decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)
+        decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc
+        increment (VC vc) = VC (increment vc)
+        increment (VN vn vc) = VN vn (increment vc)
+        incrementDimension dim (VC vc) = VC (incrementDimension dim vc)
+        incrementDimension dim@(Just 1) (VN vn vc) = VN vn (incrementDimension dim vc)
+        incrementDimension dim (VN vn vc) = VN (incrementDimension (decrement dim) vn) vc
+        getNumberOfDimensions (VC vc) = (getNumberOfDimensions vc)
+        getNumberOfDimensions (VN vn vc) = increment (getNumberOfDimensions vn)
+        appendDimension (VC vc) = VN (VC Nothing) vc
+        appendDimension (VN vn vc) = VN (appendDimension vn) vc
 
 generateNewVersionNumber :: VersionNumber -> VersionNumber
 generateNewVersionNumber ( VC vc ) = ( VC (generateNewVC vc) )
 generateNewVersionNumber ( VN vn vc ) = ( VN vn (generateNewVC vc) )
-
 
 createVersionNumberByNumberOfDimensions :: (Maybe Int) -> VersionNumber
 createVersionNumberByNumberOfDimensions ( Nothing ) = VC Nothing
@@ -48,21 +69,13 @@ versionCompoundToString :: (Maybe Int)-> String
 versionCompoundToString (Just n) = (show n)
 versionCompoundToString Nothing = "x"
 
-maybeToString :: Maybe Int -> String
-maybeToString (Just n) = (show n)
-maybeToString Nothing = "x"
-
 versionNumberToString :: VersionNumber -> String
-versionNumberToString (VN vn vc) = (versionNumberToString vn) ++ "." ++ (maybeToString vc)
-versionNumberToString (VC vc) = (maybeToString vc)
+versionNumberToString (VN vn vc) = (versionNumberToString vn) ++ "." ++ (versionCompoundToString vc)
+versionNumberToString (VC vc) = (versionCompoundToString vc)
 
 -- instance Show VC where
     -- show (Just n) = (show n)
     -- show Nothing = "X" 
-
-
-initialVersionNumber :: (Maybe Int) -> VersionNumber
-initialVersionNumber dim = (createVersionNumberByNumberOfDimensions dim)
 
 -- isInitialVersionNumberN :: (Maybe Int) -> VersionNumber -> Bool
 -- isInitialVersionNumberN (Nothing) (VC Nothing ) = True
