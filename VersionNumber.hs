@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, OverloadedStrings, TypeFamilies, NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 
 module VersionNumber where
 
@@ -9,369 +9,117 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 
-type NumberOfDimensions = VersionCompound
 
-data VersionCompound = NumberPlaceholder                      -- X
-                     | Number Int                           -- 1, 2, 3, ..., 45, ... 
-                     deriving (Show)
-
-generateNewVersionCompound :: VersionCompound -> VersionCompound
-generateNewVersionCompound NumberPlaceholder = NumberPlaceholder
-generateNewVersionCompound (Number num) = Number (num + 1)
+generateNewVC :: (Maybe Int) -> (Maybe Int)
+generateNewVC Nothing = Nothing
+generateNewVC (Just num) = Just (num + 1)
 
 class VersionOperations a where
     decrement :: a -> a
-    decrementDimension :: NumberOfDimensions -> a -> a
+    decrementDimension :: (Maybe Int) -> a -> a
     increment :: a -> a
-    incrementDimension :: NumberOfDimensions -> a -> a
-    getNumberOfDimensions :: a -> NumberOfDimensions
+    incrementDimension :: (Maybe Int) -> a -> a
+    getNumberOfDimensions :: a -> (Maybe Int)
     appendDimension :: a -> a
 
-instance VersionOperations VersionCompound where 
-    decrement           NumberPlaceholder       = NumberPlaceholder
-    decrement           (Number 0)              = Number 0
-    decrement           (Number num)            = Number (num - 1)
-    decrementDimension  _                   a   = decrement a
-    increment           NumberPlaceholder       = NumberPlaceholder
-    increment           (Number num)            = Number (num + 1)
-    incrementDimension  _                   a   = increment a
+instance VersionOperations (Maybe Int) where
+        decrement Nothing = Nothing
+        decrement (Just 0) = Just 0
+        decrement (Just num) = Just (num - 1)
+        increment Nothing = Nothing
+        increment (Just num) = (Just (num + 1))
 
-data VersionNumber = VersionCompound VersionCompound
-       | VersionNumber VersionCompound VersionNumber
-       deriving (Show)
-
-type VersionCompoundWithMaybe = Maybe Int
-
-data VersionNumberWithMaybe = VC (Maybe Int)
-                | VNL (Maybe Int) VersionNumberWithMaybe
-                | VNR VersionNumberWithMaybe (Maybe Int)
-                deriving (Show)
+data VersionNumber = VC (Maybe Int)
+		| VN VersionNumber (Maybe Int)
+		deriving (Show)
 
 generateNewVersionNumber :: VersionNumber -> VersionNumber
-generateNewVersionNumber ( VersionCompound vc ) = ( VersionCompound (generateNewVersionCompound vc) )
-generateNewVersionNumber ( VersionNumber vc vn ) = ( VersionNumber vc (generateNewVersionNumber vn) )
-generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound NumberPlaceholder) ) = ( VersionNumber (generateNewVersionCompound vc) vn )
-generateNewVersionNumber ( VersionNumber vc vn@(VersionNumber _ _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
-generateNewVersionNumber ( VersionNumber vc vn@(VersionCompound _ ) ) = ( VersionNumber vc (generateNewVersionNumber vn ) )
+generateNewVersionNumber ( VC vc ) = ( VC (generateNewVC vc) )
+generateNewVersionNumber ( VN vn vc ) = ( VN vn (generateNewVC vc) )
 
 
-instance VersionOperations VersionNumber where 
-    decrement                              ( VersionCompound vc )                           = VersionCompound ( decrement vc )
-    decrement                              ( VersionNumber vc vn )                          = VersionNumber vc (decrement vn)
-    decrementDimension NumberPlaceholder   ( VersionCompound vc )                           = VersionCompound vc
-    decrementDimension (Number 0)          ( VersionCompound vc )                           = VersionCompound vc
-    decrementDimension (Number 1)          ( VersionCompound vc )                           = VersionCompound ( decrement vc )
-    decrementDimension dim                 ( VersionCompound vc )                           = VersionCompound ( decrementDimension ( decrement dim ) vc )
-    decrementDimension NumberPlaceholder vn@( VersionNumber _ _ )                           = vn
-    decrementDimension (Number 0)        vn@( VersionNumber _ _ )                           = vn
-    decrementDimension (Number 1)          ( VersionNumber vc vn )                          = VersionNumber ( decrement vc ) vn
-    decrementDimension (Number 2)          ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 ( decrement vc2 )
-    decrementDimension dim                 ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 vc2
-    decrementDimension dim                 ( VersionNumber vc vn@(VersionNumber _ _ ) )     = VersionNumber vc ( decrementDimension ( decrement dim ) vn )
-    increment                              ( VersionCompound vc )                           = VersionCompound ( increment vc )
-    increment                              ( VersionNumber vc vn )                          = VersionNumber vc ( increment vn )
-    incrementDimension (NumberPlaceholder) ( VersionCompound vc )                           = VersionCompound vc
-    incrementDimension (Number 0)          ( VersionCompound vc )                           = VersionCompound vc
-    incrementDimension (Number 1)          ( VersionCompound vc )                           = VersionCompound ( increment vc )
-    incrementDimension dim                 ( VersionCompound vc )                           = VersionCompound ( decrementDimension ( increment dim ) vc )
-    incrementDimension NumberPlaceholder vn@( VersionNumber _ _ )                           = vn
-    incrementDimension (Number 0)        vn@( VersionNumber _ _ )                           = vn
-    incrementDimension (Number 1)          ( VersionNumber vc vn )                          = VersionNumber ( increment vc ) vn
-    incrementDimension (Number 2)          ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 ( increment vc2 )
-    incrementDimension dim                 ( VersionNumber vc1 vc2@(VersionCompound _ ) )   = VersionNumber vc1 vc2
-    incrementDimension dim                 ( VersionNumber vc vn@(VersionNumber _ _ ) )     = VersionNumber vc ( incrementDimension ( decrement dim ) vn )
-    getNumberOfDimensions (VersionCompound _) = (Number 1)
-    getNumberOfDimensions (VersionNumber vc vn ) = increment (getNumberOfDimensions vn)
-    appendDimension vn = VersionNumber NumberPlaceholder vn
+createVersionNumberByNumberOfDimensions :: (Maybe Int) -> VersionNumber
+createVersionNumberByNumberOfDimensions ( Nothing ) = VC Nothing
+createVersionNumberByNumberOfDimensions ( Just 0 ) = VC Nothing
+createVersionNumberByNumberOfDimensions ( Just 1 ) = VC Nothing
+createVersionNumberByNumberOfDimensions num = VN (createVersionNumberByNumberOfDimensions ( decrement num )) Nothing 
 
-createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
-createVersionNumberByNumberOfDimensions ( NumberPlaceholder ) = VersionCompound NumberPlaceholder
-createVersionNumberByNumberOfDimensions ( Number 0 ) = VersionCompound NumberPlaceholder
-createVersionNumberByNumberOfDimensions ( Number 1 ) = VersionCompound NumberPlaceholder
-createVersionNumberByNumberOfDimensions num = VersionNumber NumberPlaceholder ( createVersionNumberByNumberOfDimensions ( decrement num ) )
-
-versionCompoundToString :: VersionCompound -> String
-versionCompoundToString (Number n) = (show n)
-versionCompoundToString NumberPlaceholder = "x"
+versionCompoundToString :: (Maybe Int)-> String
+versionCompoundToString (Just n) = (show n)
+versionCompoundToString Nothing = "x"
 
 maybeToString :: Maybe Int -> String
 maybeToString (Just n) = (show n)
 maybeToString Nothing = "x"
 
 versionNumberToString :: VersionNumber -> String
-versionNumberToString (VersionNumber vc vn) = (versionCompoundToString vc) ++ "." ++ (versionNumberToString vn)
-versionNumberToString (VersionCompound vc) = (versionCompoundToString vc)
+versionNumberToString (VN vn vc) = (versionNumberToString vn) ++ "." ++ (maybeToString vc)
+versionNumberToString (VC vc) = (maybeToString vc)
 
-versionNumberWithMaybeToString :: VersionNumberWithMaybe -> String
-versionNumberWithMaybeToString (VNL vc vn) = (maybeToString vc) ++ "." ++ (versionNumberWithMaybeToString vn)
-versionNumberWithMaybeToString (VNR vn vc) = (versionNumberWithMaybeToString vn) ++ "." ++ (maybeToString vc)
-versionNumberWithMaybeToString (VC vc) = (maybeToString vc)
-
--- instance Show VersionCompound where
-    -- show (Number n) = (show n)
-    -- show NumberPlaceholder = "X" 
+-- instance Show VC where
+    -- show (Just n) = (show n)
+    -- show Nothing = "X" 
 
 
-initialVersionCompound :: VersionCompound
-initialVersionCompound = NumberPlaceholder
-
-isInitialVersionCompound :: VersionCompound -> Bool
-isInitialVersionCompound NumberPlaceholder = True
-isInitialVersionCompound _ = False
-
-initialVersionNumber :: NumberOfDimensions -> VersionNumber
+initialVersionNumber :: (Maybe Int) -> VersionNumber
 initialVersionNumber dim = (createVersionNumberByNumberOfDimensions dim)
 
--- isInitialVersionNumberN :: NumberOfDimensions -> VersionNumber -> Bool
--- isInitialVersionNumberN (NumberPlaceholder) (VersionCompound NumberPlaceholder ) = True
--- isInitialVersionNumberN (Number 0) (VersionCompound NumberPlaceholder ) = True
--- isInitialVersionNumberN (Number 1) (VersionCompound NumberPlaceholder ) = True
--- isInitialVersionNumberN dim (VersionNumber NumberPlaceholder vn) = isInitialVersionNumberN (decrement dim) vn
+-- isInitialVersionNumberN :: (Maybe Int) -> VersionNumber -> Bool
+-- isInitialVersionNumberN (Nothing) (VC Nothing ) = True
+-- isInitialVersionNumberN (Just 0) (VC Nothing ) = True
+-- isInitialVersionNumberN (Just 1) (VC Nothing ) = True
+-- isInitialVersionNumberN dim (VersionNumber Nothing vn) = isInitialVersionNumberN (decrement dim) vn
 -- isInitialVersionNumberN _ _ = False
 
 isInitialVersionNumber :: VersionNumber -> Bool
-isInitialVersionNumber ( VersionCompound NumberPlaceholder ) = True
-isInitialVersionNumber ( VersionCompound ( Number 0 )) = False
-isInitialVersionNumber ( VersionCompound ( Number 1 )) = False
-isInitialVersionNumber ( VersionCompound ( Number _ )) = False
-isInitialVersionNumber ( VersionNumber vc vn ) = ( isInitialVersionCompound vc ) && ( isInitialVersionNumber vn )
+isInitialVersionNumber ( VC Nothing ) = True
+isInitialVersionNumber ( VC ( Just 0 )) = False
+isInitialVersionNumber ( VC ( Just 1 )) = False
+isInitialVersionNumber ( VC ( Just _ )) = False
+isInitialVersionNumber ( VN vn vc@(Just _) ) = False
+isInitialVersionNumber ( VN vn vc@(Nothing) ) = ( isInitialVersionNumber vn )
 isInitialVersionNumber _ = False
 
-incrementReleaseNumber :: VersionNumber -> VersionNumber
-incrementReleaseNumber vc@(VersionCompound NumberPlaceholder) = VersionNumber (Number 0) (VersionCompound NumberPlaceholder ) 
-incrementReleaseNumber (VersionNumber vc@(Number _) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
-incrementReleaseNumber (VersionNumber vc@(NumberPlaceholder) vn@(VersionCompound _)) = VersionNumber (increment vc) vn
-incrementReleaseNumber (VersionNumber vc vn) = VersionNumber vc (incrementReleaseNumber vn)
-{-incrementReleaseNumber (VersionNumber _ vn) = VersionNumber-}
+{-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
+{-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
+{-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}
 
-incrementSupportNumber :: VersionNumber -> VersionNumber
-incrementSupportNumber vc@(VersionCompound NumberPlaceholder ) = VersionNumber (Number 0) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))
-incrementSupportNumber (VersionNumber vc@(Number _) vn@(VersionNumber NumberPlaceholder (VersionCompound _ ))) = VersionNumber (increment vc) vn
-incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionNumber _ (VersionCompound _ ))) = VersionNumber (increment vc) vn
-incrementSupportNumber (VersionNumber vc@( _ ) vn@(VersionCompound _ )) = VersionNumber vc vn
-incrementSupportNumber (VersionNumber vc vn) = VersionNumber vc (incrementSupportNumber vn)
-
--- BRANCH DETECTORS
-
-class IsExperimentalBranch a where
-        isExperimentalBranch :: a -> Bool
-
-instance IsExperimentalBranch VersionNumber where
-        isExperimentalBranch (VersionCompound NumberPlaceholder) = True
-        isExperimentalBranch (VersionNumber (NumberPlaceholder) vn) = isExperimentalBranch vn
-        isExperimentalBranch _ = False
-
-class IsReleaseBranch a where 
-        isReleaseBranch :: a -> Bool
-
-instance IsReleaseBranch VersionNumber where
-        isReleaseBranch (VersionNumber vc@(Number _) vn@(VersionCompound NumberPlaceholder)) = True
-        isReleaseBranch (VersionNumber vc vn) = isReleaseBranch vn 
-        isReleaseBranch _ = False 
-
-class IsSupportBranch a where 
-        isSupportBranch :: a -> Bool
-
-instance IsSupportBranch VersionNumber where
-        isSupportBranch (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))) = True
-        isSupportBranch (VersionNumber vc vn) = isSupportBranch vn 
-        isSupportBranch _ = False 
-
-class IsReleaseVersionNumber a where
-        isReleaseVersionNumber :: a -> Bool
-        
-instance IsReleaseVersionNumber VersionNumber where
-        isReleaseVersionNumber (VersionNumber (Number _) (VersionCompound NumberPlaceholder)) = True
-        isReleaseVersionNumber (VersionNumber vc vn) = isReleaseVersionNumber vn
-        isReleaseVersionNumber _ = False
-        
-class IsSupportVersionNumber a where
-        isSupportVersionNumber :: a -> Bool
-        
-instance IsSupportVersionNumber VersionNumber where
-        isSupportVersionNumber (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound NumberPlaceholder))) = True
-        isSupportVersionNumber (VersionNumber vc vn) = isSupportVersionNumber vn
-        isSupportVersionNumber _ = False
- 
-
--- SNAPSHOT DETECTORS
-
-class IsExperimentalSnapshot a where 
-        isExperimentalSnapshot :: a -> Bool
-
-instance IsExperimentalSnapshot VersionNumber where
-        isExperimentalSnapshot (VersionCompound (Number _)) = True
-        isExperimentalSnapshot (VersionNumber (NumberPlaceholder) vn) = isExperimentalSnapshot vn
-        isExperimentalSnapshot _ = False
-
-class IsReleaseSnapshot a where 
-        isReleaseSnapshot :: a -> Bool
-
-instance IsReleaseSnapshot VersionNumber where
-        isReleaseSnapshot (VersionNumber (Number _ ) (VersionCompound (Number _))) = True 
-        isReleaseSnapshot (VersionNumber (_) vn) = isReleaseSnapshot vn
-        isReleaseSnapshot _ = False
-
-class IsSupportSnapshot a where
-        isSupportSnapshot :: a -> Bool
-
-instance IsSupportSnapshot VersionNumber where
-        isSupportSnapshot (VersionNumber (Number _) (VersionNumber NumberPlaceholder (VersionCompound (Number _)))) = True
-        isSupportSnapshot (VersionNumber (NumberPlaceholder) vn) = isSupportSnapshot vn
-        isSupportSnapshot _ = False
-
-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber
-selectLatestVersionNumber [] = initialVersionNumber (NumberPlaceholder)
-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)
-
-parseVersionCompound :: Parser VersionCompound
-parseVersionCompound =
-     ( string "x"    >> return NumberPlaceholder)
- <|> ( string "X"    >> return NumberPlaceholder)
- <|> ( decimal >>= \num -> return (Number num) )
-      
-parseVersionCompoundWithMaybe :: Parser VersionCompoundWithMaybe
-parseVersionCompoundWithMaybe =
+parseVC :: Parser (Maybe Int)
+parseVC =
      ( string "x"    >> return Nothing)
  <|> ( string "X"    >> return Nothing)
  <|> ( decimal >>= \num -> return (Just num) )
-
-stringToVersionCompoundWithMaybe :: String -> VersionCompoundWithMaybe
-stringToVersionCompoundWithMaybe str = case (parseOnly parseVersionCompoundWithMaybe $ BS.pack str) of
+      
+stringToVCWithMaybe :: String -> (Maybe Int) 
+stringToVCWithMaybe str = case (parseOnly parseVC $ BS.pack str) of
     Right a -> a
     Left _ -> Nothing
 
-parseVersionNumberWithMaybeL :: Parser VersionNumberWithMaybe
-parseVersionNumberWithMaybeL = do
-    ds <- sepBy1 parseVersionCompoundWithMaybe (char '.')
+{-parseVersionNumberL :: Parser VersionNumber-}
+{-parseVersionNumberL = do-}
+    {-ds <- sepBy1 parseVCWithMaybe (char '.')-}
+    {-let vs = map VC ds-}
+    {-return (foldr1 (\(VC vc) -> VNL vc) vs )-}
+
+parseVersionNumberR :: Parser VersionNumber
+parseVersionNumberR = do
+    ds <- sepBy1 parseVC (char '.')
     let vs = map VC ds
-    return (foldr1 (\(VC vc) -> VNL vc) vs )
-
-parseVersionNumberWithMaybeR :: Parser VersionNumberWithMaybe
-parseVersionNumberWithMaybeR = do
-    ds <- sepBy1 parseVersionCompoundWithMaybe (char '.')
-    let vs = map VC ds
-    return (foldr1 (\(VC vc) vs -> VNR vs vc) (reverse vs))
+    return (foldr1 (\(VC vc) vs -> VN vs vc) (reverse vs))
 
 
-stringToVersionNumberWithMaybe :: String -> VersionNumberWithMaybe
-stringToVersionNumberWithMaybe str = case (parseOnly parseVersionNumberWithMaybeR $ BS.pack str) of
+stringToVersionNumber :: String -> VersionNumber
+stringToVersionNumber str = case (parseOnly parseVersionNumberR $ BS.pack str) of
     Right a -> a
     Left _ -> VC Nothing
 
-stringToVersionCompound :: String -> VersionCompound
-stringToVersionCompound str = case (parseOnly parseVersionCompound $ BS.pack str) of
+stringToVC :: String -> (Maybe Int)
+stringToVC str = case (parseOnly parseVC $ BS.pack str) of
     Right a -> a
-    Left _ -> initialVersionCompound
+    Left _ -> Nothing
 
-parseVersionNumber :: Parser VersionNumber
-parseVersionNumber = do
-    ds <- sepBy1 parseVersionCompound (char '.')
-    let vs = map VersionCompound ds
-    return (foldr1 (\(VersionCompound vc) -> VersionNumber vc) vs )
-
-stringToVersionNumber :: String -> VersionNumber
-stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
-    Right a -> a
-    Left _ -> createVersionNumberByNumberOfDimensions (Number 0)
-
--- instance JSON.FromJSON VersionCompound where
-    -- parseJSON (JSON.Object v) = (parse parseVersionCompound v)
-    -- parseJSON _ = mzero
-    
-instance Eq VersionCompound where
-    NumberPlaceholder == NumberPlaceholder = True
-    (Number v1) == (Number v2)            = (v1 == v2)
-    _ == _                                 = False
-    
-instance Ord VersionCompound where
-    NumberPlaceholder `compare` NumberPlaceholder = EQ
-    n@(Number _ ) `compare` NumberPlaceholder = GT -- error "Cannot compare numbers and number placeholders"
-    NumberPlaceholder `compare` n@(Number _ ) = LT -- error "Cannot compare number placeholders and numbers"
-    (Number v1) `compare` (Number v2) = (v1 `compare` v2)
-    
-instance Eq VersionNumber where
---    ( VersionCompound vc1 ) == ( VersionCompound vc2 ) = (vc1 == vc2)
---    ( VersionNumber vc1 vn1 ) == ( VersionNumber vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
---    ( VersionNumber vc1 vn1 ) == ( VersionCompound vc2 ) = (vc1 == vc2 && vn1 == (VersionCompound NumberPlaceholder) ) 
---    ( VersionCompound vc1 ) == ( VersionNumber vc2 vn2) = (vc1 == vc2 && vn2 == (VersionCompound NumberPlaceholder) )
-    ( VersionCompound vc1 ) == ( VersionCompound vc2 ) = (vc1 == vc2)
-    ( VersionNumber vc1 vn1 ) == ( VersionNumber vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
-    ( VersionNumber _ (VersionCompound vc1) ) == ( VersionCompound vc2 ) = vc1 == vc2 
-    ( VersionCompound vc1 ) == ( VersionNumber _ (VersionCompound vc2)) = vc1 == vc2
-
-instance Eq VersionNumberWithMaybe where
-    (VC vc1) == (VC vc2) = (vc1 == vc2)
-    ( VNL vc1 vn1 ) == ( VNL vc2 vn2 ) = (vc1 == vc2 && vn1 == vn2)
-    ( VNR vn1 vc1 ) == ( VNR vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)
-    ( VNL _ (VC vc1) ) == ( VC vc2 ) = vc1 == vc2 
-    ( VC vc1 ) == ( VNL _ (VC vc2)) = vc1 == vc2
-    ( VNR _ vc1 ) == (VC vc2) = vc1 == vc2
-    ( VC vc1 ) == (VNR _ vc2) = vc1 == vc2
-
-
-instance Ord VersionNumber where
-    (VersionCompound vc1)   `compare` (VersionCompound vc2)     = (vc1 `compare` vc2)
-    (VersionNumber vc1 vn1) `compare` (VersionCompound vc2)     = case (VersionCompound vc1 `compare` stringToVersionNumber "x") of
-        EQ -> (vn1 `compare` VersionCompound vc2)
-        LT -> LT
-        GT -> GT
-    (VersionCompound vc1)   `compare` (VersionNumber vc2 vn2)   = case (stringToVersionNumber "x" `compare` VersionCompound vc2) of
-        EQ -> (VersionCompound vc1 `compare` vn2)
-        LT -> LT
-        GT -> GT
-    (VersionNumber vc1 vn1) `compare` (VersionNumber vc2 vn2)   = case (vc1 `compare` vc2) of
-        EQ -> (vn1 `compare` vn2)
-        LT -> LT
-        GT -> GT
-
-    {-( VersionCompound vc1 ) `compare` ( VersionNumber vc2 vn2 ) = case (isInitialVersionNumber vn2) of -}
-        {-False -> (VersionCompound NumberPlaceholder) `compare` vn2-}
-        {-True -> (vc1 `compare` vc2) -}
-    {-( VersionNumber vc1 vn1) `compare` ( VersionCompound vc2 ) = case (isInitialVersionNumber vn1) of -}
-        {-False -> (VersionCompound NumberPlaceholder) `compare` vn1-}
-        {-True -> (vc1 `compare` vc2) -}
-    {-( VersionNumber vc1 vn1 ) `compare` ( VersionNumber vc2 vn2 ) = case (vc1 `compare` vc2) of -}
-            {-EQ -> vn1 `compare` vn2-}
-            {-LT -> LT-}
-            {-GT -> GT-}
-
-freezeDimension :: VersionCompound -> VersionCompound
-freezeDimension NumberPlaceholder = (Number 0)
-freezeDimension (Number n) = Number n
+freezeDimension :: (Maybe Int) -> (Maybe Int)
+freezeDimension Nothing = (Just 0)
+freezeDimension (Just n) = Just n
 class FreezeDimension a where 
-        freezeDimensionByNum :: NumberOfDimensions -> a -> a
-
-instance FreezeDimension VersionNumber where
-        freezeDimensionByNum NumberPlaceholder   vc@(VersionCompound _ )                = vc
-        freezeDimensionByNum NumberPlaceholder   vn@(VersionNumber _ _)                 = vn
-        freezeDimensionByNum (Number 0)          vc@(VersionCompound _ )                = vc
-        freezeDimensionByNum (Number 0)          vn@(VersionNumber _ _)                 = vn
-        freezeDimensionByNum (Number 1)          (VersionCompound vc)                   = (VersionCompound (freezeDimension vc) )
-        freezeDimensionByNum (Number 1)          (VersionNumber vc vn)                  = ( VersionNumber ( freezeDimension vc ) vn ) 
-        freezeDimensionByNum (Number n)          vc@(VersionCompound NumberPlaceholder) = vc
-        freezeDimensionByNum num                 (VersionNumber vc vn)                  = (VersionNumber vc (freezeDimensionByNum (decrement num) vn ))
-
-
-freezeExperimental :: VersionNumber -> VersionNumber
-freezeExperimental (VersionCompound NumberPlaceholder) = VersionCompound (Number 0)
-freezeExperimental (VersionCompound num@(Number _)) = VersionCompound num 
-freezeExperimental (VersionNumber vc@(_) vn) = VersionNumber vc (freezeExperimental vn)
-
-freezeRelease :: VersionNumber -> VersionNumber
-freezeRelease (VersionNumber NumberPlaceholder vn@(VersionCompound _)) = VersionNumber (Number 0) vn
-freezeRelease (VersionNumber num@(Number _) vn@(VersionCompound _)) = VersionNumber num vn
-freezeRelease (VersionNumber vc vn) = VersionNumber vc (freezeRelease vn)
-
-freezeSupport :: VersionNumber -> VersionNumber
-freezeSupport (VersionNumber NumberPlaceholder vn@(VersionNumber _ (VersionCompound _))) = VersionNumber (Number 0) vn
-freezeSupport (VersionNumber num@(Number _) vn@(VersionNumber _ (VersionCompound _))) = VersionNumber num vn
-freezeSupport (VersionNumber vc vn) = VersionNumber vc (freezeSupport vn)
-
-
-
-
-
-
-
-
+        freezeDimensionByNum :: (Maybe Int) -> a -> a
