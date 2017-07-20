@@ -2,9 +2,9 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                SCMF
-version:             0.1.0
-synopsis:            SCMF - Software Configuration Management Framework. SCMF-DSL - Domain Specific Language that provides domain model of SCMF and Software Configuration Management discipline and related activities: version control, build management, deployment management, continuous integration, merge management, dependencies management, infrastructure management, software version numbering, etc.
--- description:         
+version:             1.0.0
+description:            SCMF - Software Configuration Management Framework. SCMF-DSL - Domain Specific Language that provides domain model of SCMF and Software Configuration Management discipline and related activities: version control, build management, deployment management, continuous integration, merge management, dependencies management, infrastructure management, software version numbering, etc.
+synopsis:            
 homepage:            http://scmfviz.altern.kiev.ua
 license:             GPL-3
 license-file:        LICENSE
