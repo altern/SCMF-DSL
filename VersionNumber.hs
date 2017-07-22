@@ -55,6 +55,27 @@ instance VersionOperations VersionNumber where
         appendDimension (VC vc) = VN (VC Nothing) vc
         appendDimension (VN vn vc) = VN (appendDimension vn) vc
 
+instance Eq VersionNumber where
+        (VC vc1) == (VC vc2) = (vc1 == vc2)
+        ( VN vn1 vc1 ) == ( VN vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)
+        ( VN _ vc1 ) == (VC vc2) = vc1 == vc2
+        ( VC vc1 ) == (VN _ vc2) = vc1 == vc2
+
+instance Ord VersionNumber where
+    (VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)
+    (VN vn1 vc1) `compare` (VC vc2)     = case (VC vc1 `compare` VC Nothing) of
+        EQ -> (vn1 `compare` VC vc2)
+        LT -> LT
+        GT -> GT
+    (VC vc1)   `compare` (VN vn2 vc2)   = case (VC Nothing `compare` vn2) of
+        EQ -> (vc1 `compare` vc2)
+        LT -> LT
+        GT -> GT
+    (VN vn1 vc1) `compare` (VN vn2 vc2)   = case (vn1 `compare` vn2) of
+        EQ -> (vc1 `compare` vc2)
+        LT -> LT
+        GT -> GT
+
 createVersionNumberByNumberOfDimensions :: (Maybe Int) -> VersionNumber
 createVersionNumberByNumberOfDimensions ( Nothing ) = VC Nothing
 createVersionNumberByNumberOfDimensions ( Just 0 ) = VC Nothing
@@ -82,12 +103,9 @@ versionNumberToString (VC vc) = (versionCompoundToString vc)
 
 isInitialVersionNumber :: VersionNumber -> Bool
 isInitialVersionNumber ( VC Nothing ) = True
-isInitialVersionNumber ( VC ( Just 0 )) = False
-isInitialVersionNumber ( VC ( Just 1 )) = False
 isInitialVersionNumber ( VC ( Just _ )) = False
 isInitialVersionNumber ( VN vn vc@(Just _) ) = False
 isInitialVersionNumber ( VN vn vc@(Nothing) ) = ( isInitialVersionNumber vn )
-isInitialVersionNumber _ = False
 
 isReleaseVersionNumber :: VersionNumber -> Bool
 isReleaseVersionNumber (VC vc) = False
@@ -101,9 +119,9 @@ isSnapshotVersionNumber (VN vn _) = isSnapshotVersionNumber vn
 isSnapshotVersionNumber _ = False
 
 isSupportVersionNumber :: VersionNumber -> Bool
-isSupportVersionNumber (VC _) = False
 isSupportVersionNumber (VN (VN (VC (Just _)) Nothing) Nothing) = True
-isSupportVersionNumber (VN vn _ ) = isReleaseVersionNumber vn
+isSupportVersionNumber (VN vn Nothing ) = isReleaseVersionNumber vn
+isSupportVersionNumber (VN vn (Just _)) = False
 isSupportVersionNumber _ = False
 
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
@@ -116,11 +134,6 @@ parseVC =
  <|> ( string "X"    >> return Nothing)
  <|> ( decimal >>= \num -> return (Just num) )
       
-stringToVCWithMaybe :: String -> (Maybe Int) 
-stringToVCWithMaybe str = case (parseOnly parseVC $ BS.pack str) of
-    Right a -> a
-    Left _ -> Nothing
-
 {-parseVersionNumberL :: Parser VersionNumber-}
 {-parseVersionNumberL = do-}
     {-ds <- sepBy1 parseVCWithMaybe (char '.')-}
@@ -132,7 +145,6 @@ parseVersionNumberR = do
     ds <- sepBy1 parseVC (char '.')
     let vs = map VC ds
     return (foldr1 (\(VC vc) vs -> VN vs vc) (reverse vs))
-
 
 stringToVersionNumber :: String -> VersionNumber
 stringToVersionNumber str = case (parseOnly parseVersionNumberR $ BS.pack str) of
