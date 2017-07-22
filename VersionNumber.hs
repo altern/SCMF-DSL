@@ -63,8 +63,8 @@ instance Eq VersionNumber where
 
 instance Ord VersionNumber where
     (VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)
-    (VN vn1 vc1) `compare` (VC vc2)     = case (VC vc1 `compare` VC Nothing) of
-        EQ -> (vn1 `compare` VC vc2)
+    (VN vn1 vc1) `compare` (VC vc2)     = case (vn1 `compare` VC Nothing) of
+        EQ -> (vc1 `compare` vc2)
         LT -> LT
         GT -> GT
     (VC vc1)   `compare` (VN vn2 vc2)   = case (VC Nothing `compare` vn2) of

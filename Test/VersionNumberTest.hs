@@ -82,6 +82,7 @@ versionNumberTests = test [
     "test N11"  ~: "x > 4"                                ~: False    ~=? ( stringToVersionNumber "x" > stringToVersionNumber "4" ) ,
     "test N12"  ~: "2.x.x > 2.5.1"                        ~: False    ~=? ( stringToVersionNumber "2.x.x" > stringToVersionNumber "2.5.1" ) ,
     "test N13"  ~: "2 > x.1"                              ~: True     ~=? ( stringToVersionNumber "2" > stringToVersionNumber "x.1" ) ,
+    "test N14"  ~: "1.x > 1"                              ~: True     ~=? ( stringToVersionNumber "1.x" > stringToVersionNumber "1" ) ,
     {-"test N09"  ~: assertError "Cannot compare numbers and number placeholders" ( (Just 3) > (Nothing) ) ,-}
     {-"test N10"  ~: assertError "Cannot compare number placeholders and numbers" ( (Nothing) > (Just 4) ) ,-}
     {-"test N11"  ~: assertError "Cannot compare numbers and number placeholders" ( (Just 3) < (Nothing) ) ,-}
