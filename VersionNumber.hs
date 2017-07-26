@@ -95,29 +95,36 @@ versionNumberToString (VC vc) = (versionCompoundToString vc)
 -- isInitialVersionNumberN (Just 1) (VC Nothing ) = True
 -- isInitialVersionNumberN dim (VersionNumber Nothing vn) = isInitialVersionNumberN (decrement dim) vn
 -- isInitialVersionNumberN _ _ = False
+class VersionDetection a where
+        isInitial :: a -> Bool 
+        isExperimentalBranch :: a -> Bool
+        isReleaseBranch :: a -> Bool
+        isSupportBranch :: a -> Bool
+        isReleaseSnapshot :: a -> Bool
+        isSupportSnapshot :: a -> Bool
 
-isInitialVersionNumber :: VersionNumber -> Bool
-isInitialVersionNumber ( VC Nothing ) = True
-isInitialVersionNumber ( VC ( Just _ )) = False
-isInitialVersionNumber ( VN vn vc@(Just _) ) = False
-isInitialVersionNumber ( VN vn vc@(Nothing) ) = ( isInitialVersionNumber vn )
-
-isReleaseVersionNumber :: VersionNumber -> Bool
-isReleaseVersionNumber (VC vc) = False
-isReleaseVersionNumber (VN vn Nothing) = isSnapshotVersionNumber vn
-isReleaseVersionNumber _ = False
-
-isSnapshotVersionNumber :: VersionNumber -> Bool
-isSnapshotVersionNumber (VC (Just _)) = True
-isSnapshotVersionNumber (VN vn Nothing) = False
-isSnapshotVersionNumber (VN vn _) = isSnapshotVersionNumber vn 
-isSnapshotVersionNumber _ = False
-
-isSupportVersionNumber :: VersionNumber -> Bool
-isSupportVersionNumber (VN (VN (VC (Just _)) Nothing) Nothing) = True
-isSupportVersionNumber (VN vn Nothing ) = isReleaseVersionNumber vn
-isSupportVersionNumber (VN vn (Just _)) = False
-isSupportVersionNumber _ = False
+instance VersionDetection VersionNumber where
+        isInitial ( VC Nothing ) = True
+        isInitial ( VC ( Just _ )) = False
+        isInitial ( VN vn vc@(Just _) ) = False
+        isInitial ( VN vn vc@(Nothing) ) = ( isInitial vn )
+        isExperimentalBranch _ = undefined
+        {-isReleaseBranch (VN (VN (VC (Just _)) Nothing) Nothing) = True-}
+        isReleaseBranch (VC vc) = False
+        isReleaseBranch (VN vn Nothing) = isReleaseSnapshot vn
+        isReleaseBranch _ = False
+        isSupportBranch (VN (VN (VC (Just _)) Nothing) Nothing) = True
+        isSupportBranch (VN vn Nothing ) = isReleaseBranch vn
+        isSupportBranch (VN vn (Just _)) = False
+        isSupportBranch _ = False
+        isReleaseSnapshot (VC (Just _)) = True
+        isReleaseSnapshot (VN vn Nothing) = False
+        isReleaseSnapshot (VN vn _) = isReleaseSnapshot vn 
+        isReleaseSnapshot _ = False
+        isSupportSnapshot (VN (VN (VC (Just _)) Nothing) (Just _)) = True
+        isSupportSnapshot (VN vn Nothing) = False
+        isSupportSnapshot (VN vn (Just _)) = isReleaseBranch vn
+        isSupportSnapshot _ = False
 
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
