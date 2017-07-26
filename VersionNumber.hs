@@ -9,11 +9,6 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 
-
-generateNewVC :: (Maybe Int) -> (Maybe Int)
-generateNewVC Nothing = Nothing
-generateNewVC (Just num) = Just (num + 1)
-
 class VersionOperations a where
     decrement :: a -> a
     decrementDimension :: (Maybe Int) -> a -> a
