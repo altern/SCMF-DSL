@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
+{-[># LANGUAGE TypeSynonymInstances, OverloadedStrings, FlexibleInstances #<]-}
+{-# LANGUAGE OverloadedStrings, DataKinds, TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 
 module VersionNumber where
 
@@ -9,15 +10,21 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 
+type VersionCompound = Maybe Int
+        
+data VersionNumber = VC VersionCompound
+        | VN VersionNumber VersionCompound
+        deriving (Show)
+
 class VersionOperations a where
     decrement :: a -> a
-    decrementDimension :: (Maybe Int) -> a -> a
+    decrementDimension :: VersionCompound -> a -> a
     increment :: a -> a
-    incrementDimension :: (Maybe Int) -> a -> a
-    getNumberOfDimensions :: a -> (Maybe Int)
+    incrementDimension :: VersionCompound -> a -> a
+    getNumberOfDimensions :: a -> VersionCompound
     appendDimension :: a -> a
 
-instance VersionOperations (Maybe Int) where
+instance VersionOperations VersionCompound where
         decrement Nothing = Nothing
         decrement (Just 0) = Just 0
         decrement (Just num) = Just (num - 1)
@@ -30,9 +37,6 @@ instance VersionOperations (Maybe Int) where
         getNumberOfDimensions _ = Just 1
         appendDimension vc = vc
 
-data VersionNumber = VC (Maybe Int)
-        | VN VersionNumber (Maybe Int)
-        deriving (Show)
 
 instance VersionOperations VersionNumber where
         decrement (VC vc) = VC (decrement vc)
@@ -77,7 +81,7 @@ createVersionNumberByNumberOfDimensions ( Just 0 ) = VC Nothing
 createVersionNumberByNumberOfDimensions ( Just 1 ) = VC Nothing
 createVersionNumberByNumberOfDimensions num = VN (createVersionNumberByNumberOfDimensions ( decrement num )) Nothing 
 
-versionCompoundToString :: (Maybe Int)-> String
+versionCompoundToString :: VersionCompound-> String
 versionCompoundToString (Just n) = (show n)
 versionCompoundToString Nothing = "x"
 
@@ -124,7 +128,7 @@ instance VersionDetection VersionNumber where
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
 {-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}
 
-parseVC :: Parser (Maybe Int)
+parseVC :: Parser VersionCompound
 parseVC =
      ( string "x"    >> return Nothing)
  <|> ( string "X"    >> return Nothing)
