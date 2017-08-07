@@ -2,7 +2,7 @@
 
 module VersionNumber where
 
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString.Char8
 import Control.Applicative
 import Control.Monad
 import qualified Data.Aeson as JSON
