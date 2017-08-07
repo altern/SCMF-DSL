@@ -9,15 +9,21 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 
+type VersionCompound = Maybe Int
+
+type NumberOfDimensions = Maybe Int
+
+type VersionNumber = [VersionCompound]
+
 class VersionOperations a where
     decrement :: a -> a
-    decrementDimension :: (Maybe Int) -> a -> a
+    decrementDimension :: VersionCompound -> a -> a
     increment :: a -> a
-    incrementDimension :: (Maybe Int) -> a -> a
-    getNumberOfDimensions :: a -> (Maybe Int)
+    incrementDimension :: VersionCompound -> a -> a
+    getNumberOfDimensions :: a -> VersionCompound
     appendDimension :: a -> a
 
-instance VersionOperations (Maybe Int) where
+instance VersionOperations VersionCompound where
         decrement Nothing = Nothing
         decrement (Just 0) = Just 0
         decrement (Just num) = Just (num - 1)
@@ -30,60 +36,57 @@ instance VersionOperations (Maybe Int) where
         getNumberOfDimensions _ = Just 1
         appendDimension vc = vc
 
-data VersionNumber = VC (Maybe Int)
-        | VN VersionNumber (Maybe Int)
-        deriving (Show)
+{-instance VersionOperations VersionNumber where-}
+        {-decrement (VC vc) = VC (decrement vc)-}
+        {-decrement (VN vn vc) = VN vn (decrement vc)-}
+        {-decrementDimension dim (VC vc) = VC (decrementDimension dim vc)-}
+        {-decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)-}
+        {-decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc-}
+        {-increment (VC vc) = VC (increment vc)-}
+        {-increment (VN vn vc) = VN vn (increment vc)-}
+        {-incrementDimension dim (VC vc) = VC (incrementDimension dim vc)-}
+        {-incrementDimension dim@(Just 1) (VN vn vc) = VN vn (incrementDimension dim vc)-}
+        {-incrementDimension dim (VN vn vc) = VN (incrementDimension (decrement dim) vn) vc-}
+        {-getNumberOfDimensions (VC vc) = (getNumberOfDimensions vc)-}
+        {-getNumberOfDimensions (VN vn vc) = increment (getNumberOfDimensions vn)-}
+        {-appendDimension (VC vc) = VN (VC Nothing) vc-}
+        {-appendDimension (VN vn vc) = VN (appendDimension vn) vc-}
 
-instance VersionOperations VersionNumber where
-        decrement (VC vc) = VC (decrement vc)
-        decrement (VN vn vc) = VN vn (decrement vc)
-        decrementDimension dim (VC vc) = VC (decrementDimension dim vc)
-        decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)
-        decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc
-        increment (VC vc) = VC (increment vc)
-        increment (VN vn vc) = VN vn (increment vc)
-        incrementDimension dim (VC vc) = VC (incrementDimension dim vc)
-        incrementDimension dim@(Just 1) (VN vn vc) = VN vn (incrementDimension dim vc)
-        incrementDimension dim (VN vn vc) = VN (incrementDimension (decrement dim) vn) vc
-        getNumberOfDimensions (VC vc) = (getNumberOfDimensions vc)
-        getNumberOfDimensions (VN vn vc) = increment (getNumberOfDimensions vn)
-        appendDimension (VC vc) = VN (VC Nothing) vc
-        appendDimension (VN vn vc) = VN (appendDimension vn) vc
+{-instance Eq VersionNumber where-}
+        {-(VC vc1) == (VC vc2) = (vc1 == vc2)-}
+        {-( VN vn1 vc1 ) == ( VN vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)-}
+        {-( VN _ vc1 ) == (VC vc2) = vc1 == vc2-}
+        {-( VC vc1 ) == (VN _ vc2) = vc1 == vc2-}
 
-instance Eq VersionNumber where
-        (VC vc1) == (VC vc2) = (vc1 == vc2)
-        ( VN vn1 vc1 ) == ( VN vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)
-        ( VN _ vc1 ) == (VC vc2) = vc1 == vc2
-        ( VC vc1 ) == (VN _ vc2) = vc1 == vc2
+{-instance Ord VersionNumber where-}
+    {-(VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)-}
+    {-(VN vn1 vc1) `compare` (VC vc2)     = case (vn1 `compare` VC Nothing) of-}
+        {-EQ -> (vc1 `compare` vc2)-}
+        {-LT -> LT-}
+        {-GT -> GT-}
+    {-(VC vc1)   `compare` (VN vn2 vc2)   = case (VC Nothing `compare` vn2) of-}
+        {-EQ -> (vc1 `compare` vc2)-}
+        {-LT -> LT-}
+        {-GT -> GT-}
+    {-(VN vn1 vc1) `compare` (VN vn2 vc2)   = case (vn1 `compare` vn2) of-}
+        {-EQ -> (vc1 `compare` vc2)-}
+        {-LT -> LT-}
+        {-GT -> GT-}
 
-instance Ord VersionNumber where
-    (VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)
-    (VN vn1 vc1) `compare` (VC vc2)     = case (vn1 `compare` VC Nothing) of
-        EQ -> (vc1 `compare` vc2)
-        LT -> LT
-        GT -> GT
-    (VC vc1)   `compare` (VN vn2 vc2)   = case (VC Nothing `compare` vn2) of
-        EQ -> (vc1 `compare` vc2)
-        LT -> LT
-        GT -> GT
-    (VN vn1 vc1) `compare` (VN vn2 vc2)   = case (vn1 `compare` vn2) of
-        EQ -> (vc1 `compare` vc2)
-        LT -> LT
-        GT -> GT
+createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
+createVersionNumberByNumberOfDimensions ( Nothing ) = []
+createVersionNumberByNumberOfDimensions ( Just 0 ) = []
+createVersionNumberByNumberOfDimensions ( Just 1 ) = [Nothing]
+createVersionNumberByNumberOfDimensions num = (createVersionNumberByNumberOfDimensions ( decrement num )) ++ [Nothing]
 
-createVersionNumberByNumberOfDimensions :: (Maybe Int) -> VersionNumber
-createVersionNumberByNumberOfDimensions ( Nothing ) = VC Nothing
-createVersionNumberByNumberOfDimensions ( Just 0 ) = VC Nothing
-createVersionNumberByNumberOfDimensions ( Just 1 ) = VC Nothing
-createVersionNumberByNumberOfDimensions num = VN (createVersionNumberByNumberOfDimensions ( decrement num )) Nothing 
-
-versionCompoundToString :: (Maybe Int)-> String
+versionCompoundToString :: VersionCompound-> String
 versionCompoundToString (Just n) = (show n)
 versionCompoundToString Nothing = "x"
 
 versionNumberToString :: VersionNumber -> String
-versionNumberToString (VN vn vc) = (versionNumberToString vn) ++ "." ++ (versionCompoundToString vc)
-versionNumberToString (VC vc) = (versionCompoundToString vc)
+versionNumberToString [] = []
+versionNumberToString (x:[]) = (versionCompoundToString x) 
+versionNumberToString (x:xs) = (versionCompoundToString x) ++ "." ++ (versionNumberToString xs)
 
 -- instance Show VC where
     -- show (Just n) = (show n)
@@ -103,28 +106,28 @@ class VersionDetection a where
         isReleaseSnapshot :: a -> Bool
         isSupportSnapshot :: a -> Bool
 
-instance VersionDetection VersionNumber where
-        isInitial ( VC Nothing ) = True
-        isInitial ( VC ( Just _ )) = False
-        isInitial ( VN vn vc@(Just _) ) = False
-        isInitial ( VN vn vc@(Nothing) ) = ( isInitial vn )
-        isExperimentalBranch vn = isInitial vn 
-        isReleaseBranch (VN (VN (VC (Just _)) (Just _)) Nothing) = True
-        isReleaseBranch (VN (VC (Just _)) Nothing) = True
-        isReleaseBranch _ = False
-        isSupportBranch (VN (VN (VC (Just _)) Nothing) Nothing) = True
-        isSupportBranch _ = False
-        isReleaseSnapshot (VN (VN (VC (Just _)) (Just _)) (Just _)) = True
-        isReleaseSnapshot (VN (VC (Just _)) (Just _)) = True
-        isReleaseSnapshot _ = False
-        isSupportSnapshot (VN (VN (VC (Just _)) Nothing) (Just _)) = True
-        isSupportSnapshot _ = False
+{-instance VersionDetection VersionNumber where-}
+        {-isInitial ( VC Nothing ) = True-}
+        {-isInitial ( VC ( Just _ )) = False-}
+        {-isInitial ( VN vn vc@(Just _) ) = False-}
+        {-isInitial ( VN vn vc@(Nothing) ) = ( isInitial vn )-}
+        {-isExperimentalBranch vn = isInitial vn -}
+        {-isReleaseBranch (VN (VN (VC (Just _)) (Just _)) Nothing) = True-}
+        {-isReleaseBranch (VN (VC (Just _)) Nothing) = True-}
+        {-isReleaseBranch _ = False-}
+        {-isSupportBranch (VN (VN (VC (Just _)) Nothing) Nothing) = True-}
+        {-isSupportBranch _ = False-}
+        {-isReleaseSnapshot (VN (VN (VC (Just _)) (Just _)) (Just _)) = True-}
+        {-isReleaseSnapshot (VN (VC (Just _)) (Just _)) = True-}
+        {-isReleaseSnapshot _ = False-}
+        {-isSupportSnapshot (VN (VN (VC (Just _)) Nothing) (Just _)) = True-}
+        {-isSupportSnapshot _ = False-}
 
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
 {-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}
 
-parseVC :: Parser (Maybe Int)
+parseVC :: Parser VersionCompound
 parseVC =
      ( string "x"    >> return Nothing)
  <|> ( string "X"    >> return Nothing)
@@ -136,15 +139,13 @@ parseVC =
     {-let vs = map VC ds-}
     {-return (foldr1 (\(VC vc) -> VNL vc) vs )-}
 
-parseVersionNumberR :: Parser VersionNumber
-parseVersionNumberR = do
+parseVersionNumber :: Parser VersionNumber
+parseVersionNumber = do
     ds <- sepBy1 parseVC (char '.')
-    let vs = map VC ds
-    return (foldr1 (\(VC vc) vs -> VN vs vc) (reverse vs))
+    return ds
 
 stringToVersionNumber :: String -> VersionNumber
-stringToVersionNumber str = case (parseOnly parseVersionNumberR $ BS.pack str) of
+stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
     Right a -> a
-    Left _ -> VC Nothing
-
+    Left _ -> []
 
