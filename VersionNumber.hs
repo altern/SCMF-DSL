@@ -8,12 +8,14 @@ import Control.Monad
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
+import Data.Function(on)
 
 type VersionCompound = Maybe Int
 
 type NumberOfDimensions = Maybe Int
 
-type VersionNumber = [VersionCompound]
+data VersionNumber = VersionNumber [VersionCompound]
+    deriving (Show)
 
 class VersionOperations a where
     decrement :: a -> a
@@ -52,7 +54,16 @@ instance VersionOperations VersionCompound where
         {-appendDimension (VC vc) = VN (VC Nothing) vc-}
         {-appendDimension (VN vn vc) = VN (appendDimension vn) vc-}
 
+
+instance Eq VersionNumber where
+    (VersionNumber a) == (VersionNumber b) = on (==) (dropWhile (Nothing ==)) a b
+
 {-instance Eq VersionNumber where-}
+        {-VersionNumber [] == VersionNumber [] = True-}
+        {-VersionNumber (x:[]) == VersionNumber (y:[]) = x == y-}
+        {-VersionNumber (Nothing:xs) == VersionNumber ys = (xs == ys)-}
+        {-VersionNumber xs == VersionNumber (Nothing:ys) = (xs == ys)-}
+        {-VersionNumber ((Just n):xs) == VersionNumber ((Just l):ys) = (n == l) && (xs == ys)-}
         {-(VC vc1) == (VC vc2) = (vc1 == vc2)-}
         {-( VN vn1 vc1 ) == ( VN vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)-}
         {-( VN _ vc1 ) == (VC vc2) = vc1 == vc2-}
@@ -73,20 +84,26 @@ instance VersionOperations VersionCompound where
         {-LT -> LT-}
         {-GT -> GT-}
 
-createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
-createVersionNumberByNumberOfDimensions ( Nothing ) = []
-createVersionNumberByNumberOfDimensions ( Just 0 ) = []
-createVersionNumberByNumberOfDimensions ( Just 1 ) = [Nothing]
-createVersionNumberByNumberOfDimensions num = (createVersionNumberByNumberOfDimensions ( decrement num )) ++ [Nothing]
+{-createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber-}
+{-createVersionNumberByNumberOfDimensions ( Nothing ) = VersionNumber []-}
+{-createVersionNumberByNumberOfDimensions ( Just 0 ) = VersionNumber []-}
+{-createVersionNumberByNumberOfDimensions ( Just 1 ) = VersionNumber [Nothing]-}
+{-createVersionNumberByNumberOfDimensions num = VersionNumber (createVersionNumberByNumberOfDimensions ( decrement num )) ++ [Nothing]-}
 
 versionCompoundToString :: VersionCompound-> String
 versionCompoundToString (Just n) = (show n)
 versionCompoundToString Nothing = "x"
 
+versionCompoundListToString :: [VersionCompound] -> String
+versionCompoundListToString [] = "" 
+versionCompoundListToString (x:[]) = (versionCompoundToString x)
+versionCompoundListToString (x:xs) = (versionCompoundToString x) ++ "." ++ (versionCompoundListToString xs) 
+
+
 versionNumberToString :: VersionNumber -> String
-versionNumberToString [] = []
-versionNumberToString (x:[]) = (versionCompoundToString x) 
-versionNumberToString (x:xs) = (versionCompoundToString x) ++ "." ++ (versionNumberToString xs)
+versionNumberToString (VersionNumber []) = "" 
+versionNumberToString (VersionNumber (x:[])) = (versionCompoundToString x) 
+versionNumberToString (VersionNumber (x:xs)) = (versionCompoundToString x) ++ "." ++ (versionCompoundListToString xs)
 
 -- instance Show VC where
     -- show (Just n) = (show n)
@@ -142,10 +159,10 @@ parseVC =
 parseVersionNumber :: Parser VersionNumber
 parseVersionNumber = do
     ds <- sepBy1 parseVC (char '.')
-    return ds
+    return (VersionNumber ds)
 
 stringToVersionNumber :: String -> VersionNumber
 stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
     Right a -> a
-    Left _ -> []
+    Left _ -> VersionNumber []
 
