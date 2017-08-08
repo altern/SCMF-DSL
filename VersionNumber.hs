@@ -58,16 +58,9 @@ instance VersionOperations VersionCompound where
 instance Eq VersionNumber where
     (VersionNumber a) == (VersionNumber b) = on (==) (dropWhile (Nothing ==)) a b
 
-{-instance Eq VersionNumber where-}
-        {-VersionNumber [] == VersionNumber [] = True-}
-        {-VersionNumber (x:[]) == VersionNumber (y:[]) = x == y-}
-        {-VersionNumber (Nothing:xs) == VersionNumber ys = (xs == ys)-}
-        {-VersionNumber xs == VersionNumber (Nothing:ys) = (xs == ys)-}
-        {-VersionNumber ((Just n):xs) == VersionNumber ((Just l):ys) = (n == l) && (xs == ys)-}
-        {-(VC vc1) == (VC vc2) = (vc1 == vc2)-}
-        {-( VN vn1 vc1 ) == ( VN vn2 vc2 ) = (vc1 == vc2 && vn1 == vn2)-}
-        {-( VN _ vc1 ) == (VC vc2) = vc1 == vc2-}
-        {-( VC vc1 ) == (VN _ vc2) = vc1 == vc2-}
+
+instance Ord VersionNumber where
+    (VersionNumber a) `compare` (VersionNumber b) = on compare (dropWhile (Nothing ==)) a b
 
 {-instance Ord VersionNumber where-}
     {-(VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)-}
