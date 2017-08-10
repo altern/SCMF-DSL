@@ -10,6 +10,7 @@ import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Function(on)
+import Data.Maybe
 
 type VersionCompound = Maybe Int
 
@@ -81,6 +82,20 @@ versionNumberToString (VersionNumber (x:xs)) = (versionCompoundToString x) ++ ".
 -- isInitialVersionNumberN (Just 1) (VC Nothing ) = True
 -- isInitialVersionNumberN dim (VersionNumber Nothing vn) = isInitialVersionNumberN (decrement dim) vn
 -- isInitialVersionNumberN _ _ = False
+
+class MakeDimensional a where
+      makeNDimensional :: NumberOfDimensions -> a -> a
+
+instance MakeDimensional [VersionCompound] where
+      makeNDimensional dim vn 
+        | dim <= length vn = vn
+        | dim > length vn = replicate (dim - length vn) Nothing ++ vn
+
+instance MakeDimensional VersionNumber where
+      makeNDimensional dim (VersionNumber vn) 
+        | dim <= length vn = VersionNumber vn
+        | dim > length vn = VersionNumber $ replicate (dim - length vn) Nothing ++ vn
+
 class VersionDetection a where
         isInitial :: a -> Bool 
         isExperimentalBranch :: a -> Bool
@@ -89,23 +104,17 @@ class VersionDetection a where
         isReleaseSnapshot :: a -> Bool
         isSupportSnapshot :: a -> Bool
 
-{-instance VersionDetection VersionNumber where-}
-        {-isInitial ( VC Nothing ) = True-}
-        {-isInitial ( VC ( Just _ )) = False-}
-        {-isInitial ( VN vn vc@(Just _) ) = False-}
-        {-isInitial ( VN vn vc@(Nothing) ) = ( isInitial vn )-}
-        {-isExperimentalBranch vn = isInitial vn -}
-        {-isReleaseBranch (VN (VN (VC (Just _)) (Just _)) Nothing) = True-}
-        {-isReleaseBranch (VN (VC (Just _)) Nothing) = True-}
-        {-isReleaseBranch _ = False-}
-        {-isSupportBranch (VN (VN (VC (Just _)) Nothing) Nothing) = True-}
-        {-isSupportBranch _ = False-}
-        {-isReleaseSnapshot (VN (VN (VC (Just _)) (Just _)) (Just _)) = True-}
-        {-isReleaseSnapshot (VN (VC (Just _)) (Just _)) = True-}
-        {-isReleaseSnapshot _ = False-}
-        {-isSupportSnapshot (VN (VN (VC (Just _)) Nothing) (Just _)) = True-}
-        {-isSupportSnapshot _ = False-}
+applyListOfBoolFunctions :: [VersionCompound -> Bool] -> [VersionCompound] -> Bool
+applyListOfBoolFunctions listOfBoolFunctions xs = all (==True) $ zipWith ($) listOfBoolFunctions $ makeNDimensional (length listOfBoolFunctions) $ lastN (length listOfBoolFunctions) $ dropWhile (==Nothing) xs
 
+instance VersionDetection VersionNumber where
+        isInitial (VersionNumber vn) = all (==Nothing) vn
+        isExperimentalBranch vn = isInitial vn 
+        isReleaseBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing] vn
+        isSupportBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isNothing] vn
+        isReleaseSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isJust] vn
+        isSupportSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isJust] vn
+        
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
 {-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}

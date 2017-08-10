@@ -13,3 +13,6 @@ strictBStoLazy x = LBS.fromStrict x
      {-| n == 0 = newVal:xs-}
      {-| otherwise = x:replaceNth (n-1) newVal xs-}
 replaceNth n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
+
+lastN :: Int -> [a] -> [a]
+lastN n xs = let m = length xs in drop (m-n) xs
