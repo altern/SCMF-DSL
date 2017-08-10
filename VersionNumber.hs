@@ -13,7 +13,7 @@ import Data.Function(on)
 
 type VersionCompound = Maybe Int
 
-type NumberOfDimensions = Maybe Int
+type NumberOfDimensions = Int
 
 data VersionNumber = VersionNumber [VersionCompound]
     deriving (Show)
@@ -50,15 +50,11 @@ instance VersionOperations VersionNumber where
 instance Eq VersionNumber where
     (VersionNumber a) == (VersionNumber b) = on (==) (dropWhile (Nothing ==)) a b
 
-
 instance Ord VersionNumber where
     (VersionNumber a) `compare` (VersionNumber b) = on compare (dropWhile (Nothing ==)) a b
 
-{-createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber-}
-{-createVersionNumberByNumberOfDimensions ( Nothing ) = VersionNumber []-}
-{-createVersionNumberByNumberOfDimensions ( Just 0 ) = VersionNumber []-}
-{-createVersionNumberByNumberOfDimensions ( Just 1 ) = VersionNumber [Nothing]-}
-{-createVersionNumberByNumberOfDimensions num = VersionNumber (createVersionNumberByNumberOfDimensions ( decrement num )) ++ [Nothing]-}
+createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
+createVersionNumberByNumberOfDimensions num = VersionNumber $ replicate num Nothing
 
 versionCompoundToString :: VersionCompound-> String
 versionCompoundToString (Just n) = (show n)
