@@ -40,24 +40,13 @@ instance VersionOperations VersionCompound where
         appendDimension vc = vc
 
 instance VersionOperations VersionNumber where
-        {-decrement (VC vc) = VC (decrement vc)-}
-        {-decrement (VN vn vc) = VN vn (decrement vc)-}
         decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ vn!!(length vn - 1)) vn)
         decrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (decrement $ vn!!(length vn - dim)) vn))
-        {-decrementDimension dim (VC vc) = VC (decrementDimension dim vc)-}
-        {-decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)-}
-        {-decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc-}
-        {-increment (VC vc) = VC (increment vc)-}
-        {-increment (VN vn vc) = VN vn (increment vc)-}
-        {-incrementDimension dim (VC vc) = VC (incrementDimension dim vc)-}
-        {-incrementDimension dim@(Just 1) (VN vn vc) = VN vn (incrementDimension dim vc)-}
-        {-incrementDimension dim (VN vn vc) = VN (incrementDimension (decrement dim) vn) vc-}
-        {-getNumberOfDimensions (VC vc) = (getNumberOfDimensions vc)-}
-        {-getNumberOfDimensions (VN vn vc) = increment (getNumberOfDimensions vn)-}
-        {-appendDimension (VC vc) = VN (VC Nothing) vc-}
-        {-appendDimension (VN vn vc) = VN (appendDimension vn) vc-}
-
-
+        increment (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (increment $ vn!!(length vn - 1)) vn)
+        incrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (increment $ vn!!(length vn - dim)) vn))
+        getNumberOfDimensions (VersionNumber vn) = length vn
+        appendDimension (VersionNumber vn) = VersionNumber $ [Nothing] ++ vn
+        
 instance Eq VersionNumber where
     (VersionNumber a) == (VersionNumber b) = on (==) (dropWhile (Nothing ==)) a b
 
