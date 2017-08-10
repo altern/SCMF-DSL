@@ -20,29 +20,30 @@ data VersionNumber = VersionNumber [VersionCompound]
 
 class VersionOperations a where
     decrement :: a -> a
-    decrementDimension :: VersionCompound -> a -> a
+    decrementDimension :: Int -> a -> a
     increment :: a -> a
-    incrementDimension :: VersionCompound -> a -> a
-    getNumberOfDimensions :: a -> VersionCompound
+    incrementDimension :: Int -> a -> a
+    getNumberOfDimensions :: a -> Int
     appendDimension :: a -> a
 
 instance VersionOperations VersionCompound where
         decrement Nothing = Nothing
         decrement (Just 0) = Just 0
         decrement (Just num) = Just (num - 1)
-        decrementDimension (Just 1) vc = decrement vc
+        decrementDimension 1 vc = decrement vc
         decrementDimension _ vc = vc
         increment Nothing = Nothing
         increment (Just num) = (Just (num + 1))
-        incrementDimension (Just 1) vc = increment vc
+        incrementDimension 1 vc = increment vc
         incrementDimension _ vc = vc
-        getNumberOfDimensions _ = Just 1
+        getNumberOfDimensions _ = 1
         appendDimension vc = vc
 
 instance VersionOperations VersionNumber where
         {-decrement (VC vc) = VC (decrement vc)-}
         {-decrement (VN vn vc) = VN vn (decrement vc)-}
-        decrement (VersionNumber vn) = VersionNumber (replaceNth (length vn - 1) (decrement $ vn!!(length vn - 1)) vn)
+        decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ vn!!(length vn - 1)) vn)
+        decrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (decrement $ vn!!(length vn - dim)) vn))
         {-decrementDimension dim (VC vc) = VC (decrementDimension dim vc)-}
         {-decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)-}
         {-decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc-}
