@@ -2,6 +2,7 @@
 
 module VersionNumber where
 
+import Util
 import Data.Attoparsec.ByteString.Char8
 import Control.Applicative
 import Control.Monad
@@ -38,9 +39,10 @@ instance VersionOperations VersionCompound where
         getNumberOfDimensions _ = Just 1
         appendDimension vc = vc
 
-{-instance VersionOperations VersionNumber where-}
+instance VersionOperations VersionNumber where
         {-decrement (VC vc) = VC (decrement vc)-}
         {-decrement (VN vn vc) = VN vn (decrement vc)-}
+        decrement (VersionNumber vn) = VersionNumber (replaceNth (length vn - 1) (decrement $ vn!!(length vn - 1)) vn)
         {-decrementDimension dim (VC vc) = VC (decrementDimension dim vc)-}
         {-decrementDimension dim@(Just 1) (VN vn vc) = VN vn (decrementDimension dim vc)-}
         {-decrementDimension dim (VN vn vc) = VN (decrementDimension (decrement dim) vn) vc-}
@@ -61,21 +63,6 @@ instance Eq VersionNumber where
 
 instance Ord VersionNumber where
     (VersionNumber a) `compare` (VersionNumber b) = on compare (dropWhile (Nothing ==)) a b
-
-{-instance Ord VersionNumber where-}
-    {-(VC vc1)   `compare` (VC vc2)     = (vc1 `compare` vc2)-}
-    {-(VN vn1 vc1) `compare` (VC vc2)     = case (vn1 `compare` VC Nothing) of-}
-        {-EQ -> (vc1 `compare` vc2)-}
-        {-LT -> LT-}
-        {-GT -> GT-}
-    {-(VC vc1)   `compare` (VN vn2 vc2)   = case (VC Nothing `compare` vn2) of-}
-        {-EQ -> (vc1 `compare` vc2)-}
-        {-LT -> LT-}
-        {-GT -> GT-}
-    {-(VN vn1 vc1) `compare` (VN vn2 vc2)   = case (vn1 `compare` vn2) of-}
-        {-EQ -> (vc1 `compare` vc2)-}
-        {-LT -> LT-}
-        {-GT -> GT-}
 
 {-createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber-}
 {-createVersionNumberByNumberOfDimensions ( Nothing ) = VersionNumber []-}
