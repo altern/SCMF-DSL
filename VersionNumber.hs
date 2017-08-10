@@ -40,9 +40,9 @@ instance VersionOperations VersionCompound where
         appendDimension vc = vc
 
 instance VersionOperations VersionNumber where
-        decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ vn!!(length vn - 1)) vn)
+        decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ last vn) vn)
         decrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (decrement $ vn!!(length vn - dim)) vn))
-        increment (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (increment $ vn!!(length vn - 1)) vn)
+        increment (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (increment $ last vn) vn)
         incrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (increment $ vn!!(length vn - dim)) vn))
         getNumberOfDimensions (VersionNumber vn) = length vn
         appendDimension (VersionNumber vn) = VersionNumber $ [Nothing] ++ vn
