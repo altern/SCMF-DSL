@@ -110,9 +110,9 @@ applyListOfBoolFunctions listOfBoolFunctions xs = all (==True) $ zipWith ($) lis
 instance VersionDetection VersionNumber where
         isInitial (VersionNumber vn) = all (==Nothing) vn
         isExperimentalBranch vn = isInitial vn 
-        isReleaseBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing] vn
+        isReleaseBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isNothing] vn || applyListOfBoolFunctions [isJust, isNothing] vn
         isSupportBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isNothing] vn
-        isReleaseSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isJust] vn
+        isReleaseSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isJust] vn || applyListOfBoolFunctions [isJust, isJust] vn
         isSupportSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isJust] vn
         
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
