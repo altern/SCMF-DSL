@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Applicative
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import VersionNumber 
 
 data MaturityLevel = Dev
                    | Test
@@ -28,10 +29,8 @@ stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
 	Right a -> a
 	Left _ -> Dev
 	
-incrementMaturityLevel :: MaturityLevel -> MaturityLevel
-incrementMaturityLevel Prod = Prod
-incrementMaturityLevel ml = succ ml
-
-decrementMaturityLevel :: MaturityLevel -> MaturityLevel
-decrementMaturityLevel Dev = Dev
-decrementMaturityLevel ml = pred ml
+instance VersionOperations MaturityLevel where
+    increment Prod = Prod
+    increment ml = succ ml
+    decrement Dev = Dev
+    decrement ml = pred ml
