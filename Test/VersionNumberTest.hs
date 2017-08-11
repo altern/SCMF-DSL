@@ -129,6 +129,10 @@ versionNumberTests = test [
     "test W01"  ~: "isExperimentalBranch x.x.x.x"      ~: True     ~=? ( isExperimentalBranch $ stringToVersionNumber "x.x.x.x" ) ,
     "test W02"  ~: "isExperimentalBranch x"            ~: True     ~=? ( isExperimentalBranch $ stringToVersionNumber "x" ) ,
     "test W03"  ~: "isExperimentalBranch 1.x"          ~: False    ~=? ( isExperimentalBranch $ stringToVersionNumber "1.x" ) ,
+    "test X01"  ~: "isExperimentalSnapshot x.x.x.1"    ~: True     ~=? ( isExperimentalSnapshot $ stringToVersionNumber "x.x.x.1" ) ,
+    "test X02"  ~: "isExperimentalSnapshot x.5"        ~: True     ~=? ( isExperimentalSnapshot $ stringToVersionNumber "x.5" ) ,
+    "test X03"  ~: "isExperimentalSnapshot 32"         ~: True     ~=? ( isExperimentalSnapshot $ stringToVersionNumber "32" ) ,
+    "test X04"  ~: "isExperimentalSnapshot x.x"        ~: False    ~=? ( isExperimentalSnapshot $ stringToVersionNumber "x.x" ) ,
     "test _"    ~: "empty test"                        ~: True     ~=? True
     ]
 
