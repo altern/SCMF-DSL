@@ -15,20 +15,20 @@ data MaturityLevel = Dev
                    | Prod
                    deriving (Show, Enum, Ord, Eq)
 
-	
+    
 parseMaturity :: Parser MaturityLevel
 parseMaturity = 
-		( string (BS.pack "Dev") >> return Dev)
-	<|> ( string (BS.pack "Test") >> return Test)
-	<|> ( string (BS.pack "User") >> return User)
-	<|> ( string (BS.pack "ReleaseCandidate") >> return ReleaseCandidate)
-	<|> ( string (BS.pack "Prod") >> return Prod)
-	
+        ( string (BS.pack "Dev") >> return Dev)
+    <|> ( string (BS.pack "Test") >> return Test)
+    <|> ( string (BS.pack "User") >> return User)
+    <|> ( string (BS.pack "ReleaseCandidate") >> return ReleaseCandidate)
+    <|> ( string (BS.pack "Prod") >> return Prod)
+    
 stringToMaturity :: String -> MaturityLevel
 stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
-	Right a -> a
-	Left _ -> Dev
-	
+    Right a -> a
+    Left _ -> Dev
+    
 instance VersionOperations MaturityLevel where
     increment Prod = Prod
     increment ml = succ ml
