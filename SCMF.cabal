@@ -31,7 +31,8 @@ Test-Suite test-scmf
                       time,
                       attoparsec,
                       pretty-tree,
-                      unordered-containers
+                      unordered-containers,
+                      lens
 
 executable SCMF
   main-is            : Main.hs
