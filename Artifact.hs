@@ -94,15 +94,15 @@ instance JSON.FromJSON Artifact where
 type ArtifactList = [Artifact]
 
 initialArtifact :: NumberOfDimensions -> Artifact
-initialArtifact dim = Artifact ( Left ( Branch "trunk" ( initialVersion dim ) ( liftDocument $ Document "" "" ) ) )
+initialArtifact dim = Artifact ( Left ( Branch "trunk" ( Version $ createVersionNumberByNumberOfDimensions dim ) ( liftDocument $ Document "" "" ) ) )
 
 class IsInitialArtifact a where
     isInitialArtifact :: a -> Bool
 
 instance IsInitialArtifact Artifact where
     isInitialArtifact a = case a of 
-        (Artifact ( Right ( Snapshot _ ( v ) _ ) ) ) -> isInitialVersion v
-        (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitialVersion v
+        (Artifact ( Right ( Snapshot _ ( v ) _ ) ) ) -> isInitial v
+        (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitial v
         _ -> False
 
 artifactToString :: Artifact -> String
@@ -168,12 +168,11 @@ class DetectAllowedChanges entity where
     detectAllowedChanges :: entity -> AllowedChanges
 
 instance DetectAllowedChanges VersionCompound where
-    detectAllowedChanges NumberPlaceholder  = Any
-    detectAllowedChanges (Number n)         = None 
+    detectAllowedChanges Nothing  = Any
+    detectAllowedChanges (Just n) = None 
 
 instance DetectAllowedChanges VersionNumber where
-    detectAllowedChanges (VersionCompound vc)  = detectAllowedChanges vc
-    detectAllowedChanges (VersionNumber vc vn) = detectAllowedChanges vn 
+    detectAllowedChanges (VersionNumber vn) = detectAllowedChanges $ Prelude.last vn 
     
 instance DetectAllowedChanges Version where
     detectAllowedChanges (Version num) = detectAllowedChanges num
@@ -231,19 +230,19 @@ data BranchType = Mainline
 -- EXAMPLES:--
 
 snapshot1 :: Snapshot
-snapshot1 = Snapshot 12372 ( MaturityVersion Dev ( VersionCompound ( Number 10 ) ) ) ( liftDocument doc1 )
+snapshot1 = Snapshot 12372 ( MaturityVersion Dev $ VersionNumber [Just 10] ) ( liftDocument doc1 )
 
 snapshot2 :: Snapshot2
 snapshot2 = Snapshot2 12372  ( liftDocument doc1 )
 
 snapshot3 :: Snapshot
-snapshot3 = Snapshot 12372 ( Version ( VersionCompound ( Number 11 ) ) ) ( liftDocument $ Document "document1" "content11" )
+snapshot3 = Snapshot 12372 ( Version $ VersionNumber [Just 11] ) ( liftDocument $ Document "document1" "content11" )
 
 branch1 :: Branch
-branch1 = Branch "branch3" ( Version ( VersionCompound NumberPlaceholder ) ) ( liftDocument doc2 )
+branch1 = Branch "branch3" ( Version $ VersionNumber [Nothing] ) ( liftDocument doc2 )
 
 branch2 :: Branch
-branch2 = Branch "branch22" ( Version ( VersionCompound NumberPlaceholder ) ) ( liftDocument $ Document "document22" "content_branch22" )
+branch2 = Branch "branch22" ( Version $ VersionNumber [Nothing] ) ( liftDocument $ Document "document22" "content_branch22" )
 
 artifact1 :: Artifact
 artifact1 = liftSnapshot $ snapshot1
