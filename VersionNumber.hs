@@ -57,20 +57,22 @@ instance Ord VersionNumber where
 createVersionNumberByNumberOfDimensions :: NumberOfDimensions -> VersionNumber
 createVersionNumberByNumberOfDimensions num = VersionNumber $ replicate num Nothing
 
-versionCompoundToString :: VersionCompound-> String
-versionCompoundToString (Just n) = (show n)
-versionCompoundToString Nothing = "x"
+class ToString a where
+    toString :: a -> String
 
-versionCompoundListToString :: [VersionCompound] -> String
-versionCompoundListToString [] = "" 
-versionCompoundListToString (x:[]) = (versionCompoundToString x)
-versionCompoundListToString (x:xs) = (versionCompoundToString x) ++ "." ++ (versionCompoundListToString xs) 
+instance ToString VersionCompound where
+    toString (Just n) = (show n)
+    toString Nothing = "x"
 
+instance ToString [VersionCompound] where
+    toString [] = "" 
+    toString (x:[]) = (toString x)
+    toString (x:xs) = (toString x) ++ "." ++ (toString xs) 
 
-versionNumberToString :: VersionNumber -> String
-versionNumberToString (VersionNumber []) = "" 
-versionNumberToString (VersionNumber (x:[])) = (versionCompoundToString x) 
-versionNumberToString (VersionNumber (x:xs)) = (versionCompoundToString x) ++ "." ++ (versionCompoundListToString xs)
+instance ToString VersionNumber where
+    toString (VersionNumber []) = "" 
+    toString (VersionNumber (x:[])) = (toString x) 
+    toString (VersionNumber (x:xs)) = (toString x) ++ "." ++ (toString xs)
 
 -- instance Show VC where
     -- show (Just n) = (show n)
