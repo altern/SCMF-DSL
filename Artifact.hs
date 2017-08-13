@@ -23,7 +23,7 @@ instance Eq Branch where
 --    _ == _                                                                  = False
 
 instance Show Branch where
-    show (Branch branchName version contents ) = ("Branch '" ++ branchName ++ "', Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
+    show (Branch branchName version contents ) = ("Branch '" ++ branchName ++ "', Version " ++ (toString version) ++ ", " ++ (show contents) ++ "")
 
 data Snapshot = Snapshot Timestamp Version DocumentOrDirectory 
 data Snapshot2 = Snapshot2 Timestamp DocumentOrDirectory deriving (Show, Eq)
@@ -33,7 +33,7 @@ instance Eq Snapshot where
 --    _ == _                                                                  = False
 
 instance Show Snapshot where
-    show (Snapshot timestamp version contents ) = ("Snapshot taken at " ++ (show timestamp) ++ ", Version " ++ (versionToString version) ++ ", " ++ (show contents) ++ "")
+    show (Snapshot timestamp version contents ) = ("Snapshot taken at " ++ (show timestamp) ++ ", Version " ++ (toString version) ++ ", " ++ (show contents) ++ "")
 
 newtype Artifact = Artifact (Either Branch Snapshot) deriving (Show, Eq)
 
@@ -105,9 +105,9 @@ instance IsInitialArtifact Artifact where
         (Artifact ( Left  ( Branch "trunk" v _ ) ) ) -> isInitial v
         _ -> False
 
-artifactToString :: Artifact -> String
-artifactToString (Artifact (Left (Branch branchName version _))) = (branchName ++ " (" ++ ( versionToString version ) ++ ")")
-artifactToString (Artifact (Right (Snapshot timestamp version _))) = (versionToString version)
+instance ToString Artifact where
+    toString (Artifact (Left (Branch branchName version _))) = (branchName ++ " (" ++ ( toString version ) ++ ")")
+    toString (Artifact (Right (Snapshot timestamp version _))) = (toString version)
 
 artifactToVersion :: Artifact -> Version
 artifactToVersion (Artifact (Left (Branch branchName version _))) = version
@@ -121,7 +121,7 @@ artifactListToVersionList (x:xs) = (artifactListToVersionList xs) ++ [artifactTo
 
 artifactListToString :: ArtifactList -> [String]
 artifactListToString [] = []
-artifactListToString (x:xs) = (artifactListToString xs) ++ [artifactToString x]
+artifactListToString (x:xs) = (artifactListToString xs) ++ [toString x]
 
 artifactToDocument :: Artifact -> DocumentOrDirectory
 artifactToDocument (Artifact (Left (Branch _ _ document))) = document
