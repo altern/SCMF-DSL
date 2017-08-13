@@ -20,14 +20,14 @@ type StringTreeList = [StringTree]
 -- data RoseTree2 = RoseNode Int [RoseTree2] deriving (Show)
 
 instance (Show a) => JSON.ToJSON (RoseTree a) where
-	toJSON (RoseTree n cs) =
-		JSON.object [T.pack "value" JSON..= show n
-		, T.pack "children" JSON..= JSON.toJSON cs] 
+    toJSON (RoseTree n cs) =
+        JSON.object [T.pack "value" JSON..= show n
+        , T.pack "children" JSON..= JSON.toJSON cs] 
 
 instance (Show a, JSON.FromJSON a) => JSON.FromJSON (RoseTree a) where
-	parseJSON (JSON.Object o) =
-		RoseTree <$> o JSON..: T.pack "value"
-		<*> o JSON..: T.pack "children"
+    parseJSON (JSON.Object o) =
+        RoseTree <$> o JSON..: T.pack "value"
+        <*> o JSON..: T.pack "children"
         
 -- instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
     -- toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
