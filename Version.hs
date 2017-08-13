@@ -36,11 +36,11 @@ parseVersionFromString s =
 type VersionList = [Version]
 
 instance Show Version where
-    show version = versionToString version
+    show version = toString version
 
-versionToString :: Version -> String
-versionToString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (versionNumberToString versionNumber)
-versionToString (Version versionNumber) = (versionNumberToString versionNumber)
+instance ToString Version where
+    toString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (toString versionNumber)
+    toString (Version versionNumber) = (toString versionNumber)
 
 instance VersionOperations Version where 
     decrement           (Version vn)                        = Version (decrement vn)
