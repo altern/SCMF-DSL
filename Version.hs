@@ -117,6 +117,10 @@ instance Ord Version where
     (Version vn1) `compare` (MaturityVersion _ vn2) = vn1 `compare` vn2
     (Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
 
+instance MakeDimensional Version where
+	makeNDimensional dim (Version version) = Version (makeNDimensional dim version)
+	makeNDimensional dim (MaturityVersion ml version) = MaturityVersion ml (makeNDimensional dim version)
+
 parseVersion :: Parser Version
 parseVersion = do { 
         maturity <- parseMaturity

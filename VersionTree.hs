@@ -14,7 +14,7 @@ import qualified Data.Aeson.Types as AT
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString.Char8
 import Data.Attoparsec.Combinator
 import Control.Monad
 import Control.Applicative
@@ -55,9 +55,9 @@ versionTreeToStringTree (RoseTree num (x:xs)) = Node (versionToString num) ( (ve
 
 -- TODO: implement toJSON and FromJSON for versionTrees
 -- instance JSON.ToJSON VersionTree where
-	-- toJSON (RoseTree version children) = 
-		-- JSON.object [ T.pack "version" JSON..= (T.pack $ show version)]
-		-- JSON.object [ T.pack "children" JSON..= (JSON.toJSON children)]
+    -- toJSON (RoseTree version children) = 
+        -- JSON.object [ T.pack "version" JSON..= (T.pack $ show version)]
+        -- JSON.object [ T.pack "children" JSON..= (JSON.toJSON children)]
 
 -- instance JSON.FromJSON VersionTree where
     -- parseJSON (JSON.Object vTree) = liftM stringToVersion ( vTree JSON..: T.pack "versionTree" )
@@ -129,6 +129,14 @@ instance SearchVersionTreeChildren Version where
 
 appendNewVersion :: VersionTree -> Version -> VersionTree 
 appendNewVersion vTree version = treeInsert vTree version ( increment version ) 
+
+
+instance MakeDimensional VersionTree where
+    makeNDimensional dim (RoseTree version list) = RoseTree (makeNDimensional dim version) (makeNDimensional dim list)
+    
+instance MakeDimensional VersionTreeList where
+    makeNDimensional dim [] = []
+    makeNDimensional dim (x:xs) = [makeNDimensional dim x] ++ (makeNDimensional dim xs)
 
 -- EXAMPLES --
 
