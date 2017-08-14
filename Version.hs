@@ -73,6 +73,8 @@ instance VersionDetection Version where
         isReleaseSnapshot (MaturityVersion _ v) = isReleaseSnapshot v
         isSupportSnapshot (Version v) = isSupportSnapshot v
         isSupportSnapshot (MaturityVersion _ v) = isSupportSnapshot v
+        isRevision (Version v) = isRevision v
+        isRevision (MaturityVersion _ v) = isRevision v
 
 {-incrementReleaseNumberForVersion :: Version -> Version-}
 {-incrementReleaseNumberForVersion (Version v) = Version (incrementReleaseNumber v)-}

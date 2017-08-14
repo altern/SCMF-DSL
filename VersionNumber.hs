@@ -106,6 +106,7 @@ class VersionDetection a where
         isExperimentalSnapshot :: a -> Bool
         isReleaseSnapshot :: a -> Bool
         isSupportSnapshot :: a -> Bool
+        isRevision :: a -> Bool 
 
 applyListOfBoolFunctions :: [VersionCompound -> Bool] -> [VersionCompound] -> Bool
 applyListOfBoolFunctions listOfBoolFunctions xs = all (==True) $ zipWith ($) listOfBoolFunctions $ makeNDimensional (length listOfBoolFunctions) $ lastN (length listOfBoolFunctions) $ dropWhile (==Nothing) xs
@@ -118,6 +119,7 @@ instance VersionDetection VersionNumber where
         isExperimentalSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust] vn 
         isReleaseSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isJust] vn || applyListOfBoolFunctions [isJust, isJust] vn
         isSupportSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isJust] vn
+        isRevision (VersionNumber vn) = applyListOfBoolFunctions [isJust] vn
         
 {-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
 {-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}

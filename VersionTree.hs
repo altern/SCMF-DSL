@@ -95,6 +95,7 @@ class FindLatest a where
     findLatestReleaseBranch :: a -> Version
     findLatestSupportSnapshot :: a -> Version
     findLatestReleaseSnapshot :: a -> Version
+    findLatestRevision :: a -> Version
 
 instance FindLatest VersionTree where    
     findLatestVersion ( RoseTree version [] ) = version
@@ -107,6 +108,8 @@ instance FindLatest VersionTree where
     findLatestSupportSnapshot (RoseTree version list) = if (isSupportSnapshot version && (version > findLatestSupportSnapshot list)) then version else findLatestSupportSnapshot list
     findLatestReleaseSnapshot (RoseTree version []) = if (isReleaseSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseSnapshot (RoseTree version list) = if (isReleaseSnapshot version && (version > findLatestReleaseSnapshot list)) then version else findLatestReleaseSnapshot list
+    findLatestRevision (RoseTree version []) = if (isRevision version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestRevision (RoseTree version list) = if (isRevision version && (version > findLatestRevision list)) then version else findLatestRevision list
 
 instance FindLatest VersionTreeList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
@@ -124,6 +127,9 @@ instance FindLatest VersionTreeList where
     findLatestReleaseSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseSnapshot (x:[]) = findLatestReleaseSnapshot x
     findLatestReleaseSnapshot (x:xs) = if ((findLatestReleaseSnapshot x) > (findLatestReleaseSnapshot xs)) then (findLatestReleaseSnapshot x) else (findLatestReleaseSnapshot xs)
+    findLatestRevision [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestRevision (x:[]) = findLatestRevision x
+    findLatestRevision (x:xs) = if ((findLatestRevision x) > (findLatestRevision xs)) then (findLatestRevision x) else (findLatestRevision xs)
 
 class FindParentVersion a where 
     findParentVersion :: a -> Version -> Version
