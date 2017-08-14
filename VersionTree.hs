@@ -89,21 +89,41 @@ class VersionTreeAppend structure where
     {-versionTreeAppend (RoseTree (Version (VersionCompound NumberPlaceholder)) list) = (RoseTree (Version (VersionCompound NumberPlaceholder)) (versionTreeAppend list))-}
     {-versionTreeAppend a@(RoseTree (Version (VersionCompound (Number n))) list) = a-}
 
-class FindLatestVersion a where 
+class FindLatest a where 
     findLatestVersion :: a -> Version
+    findLatestSupportBranch :: a -> Version
+    findLatestReleaseBranch :: a -> Version
+    findLatestSupportSnapshot :: a -> Version
+    findLatestReleaseSnapshot :: a -> Version
 
-instance FindLatestVersion VersionTree where    
+instance FindLatest VersionTree where    
     findLatestVersion ( RoseTree version [] ) = version
-    findLatestVersion ( RoseTree version1 list ) = case ( version1 > ( findLatestVersion list ) ) of
-        True -> version1
-        False -> findLatestVersion list
+    findLatestVersion ( RoseTree version1 list ) = if ( version1 > ( findLatestVersion list ) ) then version1 else findLatestVersion list
+    findLatestSupportBranch (RoseTree version []) = if (isSupportBranch version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestSupportBranch (RoseTree version list) = if (isSupportBranch version && (version > findLatestSupportBranch list)) then version else findLatestSupportBranch list
+    findLatestReleaseBranch (RoseTree version []) = if (isReleaseBranch version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestReleaseBranch (RoseTree version list) = if (isReleaseBranch version && (version > findLatestReleaseBranch list)) then version else findLatestReleaseBranch list
+    findLatestSupportSnapshot (RoseTree version []) = if (isSupportSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestSupportSnapshot (RoseTree version list) = if (isSupportSnapshot version && (version > findLatestSupportSnapshot list)) then version else findLatestSupportSnapshot list
+    findLatestReleaseSnapshot (RoseTree version []) = if (isReleaseSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestReleaseSnapshot (RoseTree version list) = if (isReleaseSnapshot version && (version > findLatestReleaseSnapshot list)) then version else findLatestReleaseSnapshot list
 
-instance FindLatestVersion VersionTreeList where
+instance FindLatest VersionTreeList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestVersion (x:[]) = findLatestVersion x
-    findLatestVersion (x:xs) = case ((findLatestVersion x) > (findLatestVersion xs)) of
-        True -> (findLatestVersion x)
-        False -> (findLatestVersion xs)
+    findLatestVersion (x:xs) = if ((findLatestVersion x) > (findLatestVersion xs)) then (findLatestVersion x) else (findLatestVersion xs)
+    findLatestSupportBranch [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestSupportBranch (x:[]) = findLatestSupportBranch x
+    findLatestSupportBranch (x:xs) = if ((findLatestSupportBranch x) > (findLatestSupportBranch xs)) then (findLatestSupportBranch x) else (findLatestSupportBranch xs)
+    findLatestReleaseBranch [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestReleaseBranch (x:[]) = findLatestReleaseBranch x
+    findLatestReleaseBranch (x:xs) = if ((findLatestReleaseBranch x) > (findLatestReleaseBranch xs)) then (findLatestReleaseBranch x) else (findLatestReleaseBranch xs)
+    findLatestSupportSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestSupportSnapshot (x:[]) = findLatestSupportSnapshot x
+    findLatestSupportSnapshot (x:xs) = if ((findLatestSupportSnapshot x) > (findLatestSupportSnapshot xs)) then (findLatestSupportSnapshot x) else (findLatestSupportSnapshot xs)
+    findLatestReleaseSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestReleaseSnapshot (x:[]) = findLatestReleaseSnapshot x
+    findLatestReleaseSnapshot (x:xs) = if ((findLatestReleaseSnapshot x) > (findLatestReleaseSnapshot xs)) then (findLatestReleaseSnapshot x) else (findLatestReleaseSnapshot xs)
 
 class FindParentVersion a where 
     findParentVersion :: a -> Version -> Version
@@ -161,6 +181,33 @@ strTree3 = Node "X" [Node "1" [], Node "2" []]
 vTree4 :: VersionTree
 vTree4 = RoseTree (Version $ VersionNumber [Nothing]) [RoseTree (Version $ VersionNumber [Just 1]) [], RoseTree (Version $ VersionNumber [Just 2]) [], RoseTree (Version $ VersionNumber [Just 3]) [], RoseTree (Version $ VersionNumber [Just 4]) []]
 
+vTree5 :: VersionTree 
+vTree5 = RoseTree (Version $ VersionNumber [Nothing, Nothing, Nothing]) [
+            RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 1]) [
+                RoseTree (Version $ VersionNumber [Just 1, Nothing, Nothing]) [
+                    RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 6]) [
+                        RoseTree (Version $ VersionNumber [Just 1, Nothing, Just 0]) []
+                    ]
+                ]
+            ],
+            RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 2]) [
+                RoseTree (Version $ VersionNumber [Just 2, Nothing, Nothing]) [
+                    RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 4]) [
+                        RoseTree (Version $ VersionNumber [Just 2, Just 0, Nothing]) []
+                    ],
+                    RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 5]) [
+                        RoseTree (Version $ VersionNumber [Just 2, Just 1, Nothing]) [
+                            RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 7]) [
+                                RoseTree (Version $ VersionNumber [Just 2, Just 1, Just 0]) []
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            RoseTree (Version $ VersionNumber [Nothing, Nothing, Just 3]) [
+                RoseTree (Version $ VersionNumber [Just 3, Nothing, Nothing]) []
+            ]
+         ]
 -- HELPER FUNCTIONS --
 
 displayVersionTree t = putStrLn $ drawVerticalTree (versionTreeToStringTree t)
