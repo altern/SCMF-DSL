@@ -129,9 +129,48 @@ instance VersionDetection VersionNumber where
         isSupportSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isJust] vn
         isRevision (VersionNumber vn) = applyListOfBoolFunctions [isJust] vn
         
-{-selectLatestVersionNumber :: [VersionNumber] -> VersionNumber-}
-{-selectLatestVersionNumber [] = initialVersionNumber (Nothing)-}
-{-selectLatestVersionNumber (x:xs) = max x (selectLatestVersionNumber xs)-}
+class GenerateNew a where
+        generateNewReleaseBranch :: a -> a
+        generateNewSupportBranch :: a -> a
+        generateNewReleaseSnapshot :: a -> a
+        generateNewSupportSnapshot :: a -> a
+        generateNewRevision :: a -> a
+        generateNewExperimentalSnapshot :: a -> a
+
+instance GenerateNew VersionNumber where
+        generateNewReleaseBranch vn = if (isReleaseBranch vn) 
+                                      then incrementDimension 2 vn 
+                                      else if (isSupportBranch vn)
+                                          then freezeDimension 2 vn
+                                          else if (isInitial vn)
+                                              then freezeDimension 2 $ makeNDimensional 2 vn
+                                              else vn
+        generateNewSupportBranch vn = if (isSupportBranch vn)
+                                      then incrementDimension 3 vn
+                                      else if (isInitial vn)
+                                          then freezeDimension 3 $ makeNDimensional 3 vn 
+                                          else vn
+        generateNewReleaseSnapshot vn = if (isReleaseSnapshot vn)
+                                        then incrementDimension 1 vn
+                                        else if (isReleaseBranch vn)
+                                            then freezeDimension 1 $ makeNDimensional 1 vn
+                                            else vn
+        generateNewSupportSnapshot vn = if (isSupportSnapshot vn)
+                                        then incrementDimension 1 vn
+                                        else if (isSupportBranch vn)
+                                            then freezeDimension 1 $ makeNDimensional 1 vn
+                                            else vn
+        generateNewExperimentalSnapshot vn = if (isExperimentalSnapshot vn)
+                                             then incrementDimension 1 vn
+                                             else if (isInitial vn)
+                                                then freezeDimension 1 $ makeNDimensional 1 vn
+                                                else vn
+        generateNewRevision vn = if (isRevision vn)
+                                 then incrementDimension 1 vn
+                                 else if (isInitial vn)
+                                    then freezeDimension 1 $ makeNDimensional 1 vn
+                                    else vn
+
 
 parseVC :: Parser VersionCompound
 parseVC =
