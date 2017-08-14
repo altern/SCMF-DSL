@@ -49,9 +49,9 @@ versionListToStringTreeList (x:[]) = [versionTreeToStringTree x]
 versionListToStringTreeList (x:xs) = (versionTreeToStringTree x):(versionListToStringTreeList xs) 
 
 versionTreeToStringTree :: VersionTree -> StringTree
-versionTreeToStringTree (RoseTree num []) = Node (versionToString num) []
-versionTreeToStringTree (RoseTree num (x:[])) = Node (versionToString num) [ versionTreeToStringTree x ]
-versionTreeToStringTree (RoseTree num (x:xs)) = Node (versionToString num) ( (versionTreeToStringTree x) : (versionListToStringTreeList xs) )
+versionTreeToStringTree (RoseTree num []) = Node (toString num) []
+versionTreeToStringTree (RoseTree num (x:[])) = Node (toString num) [ versionTreeToStringTree x ]
+versionTreeToStringTree (RoseTree num (x:xs)) = Node (toString num) ( (versionTreeToStringTree x) : (versionListToStringTreeList xs) )
 
 -- TODO: implement toJSON and FromJSON for versionTrees
 -- instance JSON.ToJSON VersionTree where
