@@ -76,6 +76,20 @@ instance VersionDetection Version where
         isRevision (Version v) = isRevision v
         isRevision (MaturityVersion _ v) = isRevision v
 
+instance GenerateNew Version where
+        generateNewReleaseBranch (Version v) = Version $ generateNewReleaseBranch v
+        generateNewReleaseBranch (MaturityVersion ml v) = MaturityVersion ml $ generateNewReleaseBranch v
+        generateNewSupportBranch (Version v) = Version $ generateNewSupportBranch v
+        generateNewSupportBranch (MaturityVersion ml v) = MaturityVersion ml $ generateNewSupportBranch v
+        generateNewReleaseSnapshot (Version v) = Version $ generateNewReleaseSnapshot v
+        generateNewReleaseSnapshot (MaturityVersion ml v) = MaturityVersion ml $ generateNewReleaseSnapshot v
+        generateNewSupportSnapshot (Version v) = Version $ generateNewSupportSnapshot v
+        generateNewSupportSnapshot (MaturityVersion ml v) = MaturityVersion ml $ generateNewSupportSnapshot v
+        generateNewRevision (Version v) = Version $ generateNewRevision v
+        generateNewRevision (MaturityVersion ml v) = MaturityVersion ml $ generateNewRevision v
+        generateNewExperimentalSnapshot (Version v) = Version $ generateNewExperimentalSnapshot v
+        generateNewExperimentalSnapshot (MaturityVersion ml v) = MaturityVersion ml $ generateNewExperimentalSnapshot v
+  
 {-incrementReleaseNumberForVersion :: Version -> Version-}
 {-incrementReleaseNumberForVersion (Version v) = Version (incrementReleaseNumber v)-}
 {-incrementReleaseNumberForVersion (MaturityVersion ml v) = MaturityVersion ml ( incrementReleaseNumber v )-}
