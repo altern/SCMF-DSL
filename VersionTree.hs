@@ -96,6 +96,15 @@ class FindLatest a where
     findLatestSupportSnapshot :: a -> Version
     findLatestReleaseSnapshot :: a -> Version
     findLatestRevision :: a -> Version
+    findLatestExperimentalSnapshot :: a -> Version
+    findLatestForParentVersion :: Version -> a -> Version
+    findLatestForParentSupportBranch :: Version -> a -> Version
+    findLatestForParentReleaseBranch :: Version -> a -> Version
+    findLatestForParentSupportSnapshot :: Version -> a -> Version
+    findLatestForParentReleaseSnapshot :: Version -> a -> Version
+    findLatestForParentRevision :: Version -> a -> Version
+    findLatestForParentExperimentalSnapshot :: Version -> a -> Version
+
 
 instance FindLatest VersionTree where    
     findLatestVersion ( RoseTree version [] ) = version
@@ -108,9 +117,16 @@ instance FindLatest VersionTree where
     findLatestSupportSnapshot (RoseTree version list) = if (isSupportSnapshot version && (version > findLatestSupportSnapshot list)) then version else findLatestSupportSnapshot list
     findLatestReleaseSnapshot (RoseTree version []) = if (isReleaseSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseSnapshot (RoseTree version list) = if (isReleaseSnapshot version && (version > findLatestReleaseSnapshot list)) then version else findLatestReleaseSnapshot list
-    findLatestRevision (RoseTree version []) = if (isRevision version) then version else Version $ createVersionNumberByNumberOfDimensions 0
-    findLatestRevision (RoseTree version list) = if (isRevision version && (version > findLatestRevision list)) then version else findLatestRevision list
-
+    findLatestExperimentalSnapshot (RoseTree version []) = if (isExperimentalSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestExperimentalSnapshot (RoseTree version list) = if (isExperimentalSnapshot version && (version > findLatestExperimentalSnapshot list)) then version else findLatestExperimentalSnapshot list
+    findLatestRevision = findLatestExperimentalSnapshot
+    findLatestForParentVersion parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestVersion list else findLatestForParentVersion parentVersion list
+    findLatestForParentSupportBranch parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestSupportBranch list else findLatestForParentSupportBranch parentVersion list
+    findLatestForParentReleaseBranch parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestReleaseBranch list else findLatestForParentReleaseBranch parentVersion list
+    findLatestForParentSupportSnapshot parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestSupportSnapshot list else findLatestForParentSupportSnapshot parentVersion list
+    findLatestForParentReleaseSnapshot parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestReleaseSnapshot list else findLatestForParentReleaseSnapshot parentVersion list
+    findLatestForParentExperimentalSnapshot parentVersion (RoseTree version list) = if (parentVersion == version) then findLatestExperimentalSnapshot list else findLatestForParentExperimentalSnapshot parentVersion list
+    findLatestForParentRevision = findLatestForParentExperimentalSnapshot
 instance FindLatest VersionTreeList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestVersion (x:[]) = findLatestVersion x
@@ -127,10 +143,48 @@ instance FindLatest VersionTreeList where
     findLatestReleaseSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseSnapshot (x:[]) = findLatestReleaseSnapshot x
     findLatestReleaseSnapshot (x:xs) = if ((findLatestReleaseSnapshot x) > (findLatestReleaseSnapshot xs)) then (findLatestReleaseSnapshot x) else (findLatestReleaseSnapshot xs)
-    findLatestRevision [] = Version $ createVersionNumberByNumberOfDimensions 0
-    findLatestRevision (x:[]) = findLatestRevision x
-    findLatestRevision (x:xs) = if ((findLatestRevision x) > (findLatestRevision xs)) then (findLatestRevision x) else (findLatestRevision xs)
-
+    findLatestExperimentalSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestExperimentalSnapshot (x:[]) = findLatestExperimentalSnapshot x
+    findLatestExperimentalSnapshot (x:xs) = if ((findLatestExperimentalSnapshot x) > (findLatestExperimentalSnapshot xs)) then (findLatestExperimentalSnapshot x) else (findLatestExperimentalSnapshot xs)
+    findLatestRevision = findLatestExperimentalSnapshot
+    findLatestForParentVersion parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentVersion parentVersion (x:[]) = findLatestForParentVersion parentVersion x
+    findLatestForParentVersion parentVersion (x:xs) = 
+        if ((findLatestForParentVersion parentVersion x) > (findLatestForParentVersion parentVersion xs)) 
+        then (findLatestForParentVersion parentVersion x)
+        else (findLatestForParentVersion parentVersion xs)
+    findLatestForParentSupportBranch parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentSupportBranch parentVersion (x:[]) = findLatestForParentSupportBranch parentVersion x
+    findLatestForParentSupportBranch parentVersion (x:xs) = 
+        if ((findLatestForParentSupportBranch parentVersion x) > (findLatestForParentSupportBranch parentVersion xs)) 
+        then (findLatestForParentSupportBranch parentVersion x)
+        else (findLatestForParentSupportBranch parentVersion xs)
+    findLatestForParentReleaseBranch parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentReleaseBranch parentVersion (x:[]) = findLatestForParentReleaseBranch parentVersion x
+    findLatestForParentReleaseBranch parentVersion (x:xs) = 
+        if ((findLatestForParentReleaseBranch parentVersion x) > (findLatestForParentReleaseBranch parentVersion xs)) 
+        then (findLatestForParentReleaseBranch parentVersion x)
+        else (findLatestForParentReleaseBranch parentVersion xs)
+    findLatestForParentSupportSnapshot parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentSupportSnapshot parentVersion (x:[]) = findLatestForParentSupportSnapshot parentVersion x
+    findLatestForParentSupportSnapshot parentVersion (x:xs) = 
+        if ((findLatestForParentSupportSnapshot parentVersion x) > (findLatestForParentSupportSnapshot parentVersion xs)) 
+        then (findLatestForParentSupportSnapshot parentVersion x)
+        else (findLatestForParentSupportSnapshot parentVersion xs)
+    findLatestForParentReleaseSnapshot parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentReleaseSnapshot parentVersion (x:[]) = findLatestForParentReleaseSnapshot parentVersion x
+    findLatestForParentReleaseSnapshot parentVersion (x:xs) = 
+        if ((findLatestForParentReleaseSnapshot parentVersion x) > (findLatestForParentReleaseSnapshot parentVersion xs)) 
+        then (findLatestForParentReleaseSnapshot parentVersion x)
+        else (findLatestForParentReleaseSnapshot parentVersion xs)
+    findLatestForParentExperimentalSnapshot parentVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestForParentExperimentalSnapshot parentVersion (x:[]) = findLatestForParentExperimentalSnapshot parentVersion x
+    findLatestForParentExperimentalSnapshot parentVersion (x:xs) = 
+        if ((findLatestForParentExperimentalSnapshot parentVersion x) > (findLatestForParentExperimentalSnapshot parentVersion xs)) 
+        then (findLatestForParentExperimentalSnapshot parentVersion x)
+        else (findLatestForParentExperimentalSnapshot parentVersion xs)
+    findLatestForParentRevision = findLatestForParentExperimentalSnapshot
+    
 class FindParentVersion a where 
     findParentVersion :: a -> Version -> Version
 
@@ -163,6 +217,59 @@ instance MakeDimensional VersionTree where
 instance MakeDimensional VersionTreeList where
     makeNDimensional dim [] = []
     makeNDimensional dim (x:xs) = [makeNDimensional dim x] ++ (makeNDimensional dim xs)
+
+newReleaseBranch :: Version -> VersionTree -> VersionTree
+newReleaseBranch searchVersion vTree = 
+    if (isSupportBranch searchVersion) then
+        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            previousVersion = findLatestForParentReleaseBranch searchVersion vTree
+        in (treeInsert 
+              vTree1 
+              (findLatestRevision vTree1)
+              (generateNewReleaseBranch (if (isInitial previousVersion) then searchVersion else previousVersion))
+           )
+    else 
+        vTree
+
+newSupportBranch :: Version -> VersionTree -> VersionTree
+newSupportBranch searchVersion vTree = 
+    if (isInitial searchVersion) then
+        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            previousVersion = findLatestForParentSupportBranch searchVersion vTree
+        in (treeInsert 
+              vTree1 
+              (findLatestRevision vTree1)
+              (generateNewSupportBranch (if (isInitial previousVersion) then searchVersion else previousVersion))
+           )
+    else 
+        vTree
+
+newReleaseSnapshot :: Version -> VersionTree -> VersionTree
+newReleaseSnapshot searchVersion vTree = 
+    if (isReleaseBranch searchVersion) then
+        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            previousVersion = findLatestForParentReleaseSnapshot searchVersion vTree
+        in (treeInsert 
+              vTree1 
+              (findLatestRevision vTree1)
+              (generateNewReleaseSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion))
+           )
+    else 
+        vTree
+
+newSupportSnapshot :: Version -> VersionTree -> VersionTree
+newSupportSnapshot searchVersion vTree = 
+    if (isSupportBranch searchVersion) then
+        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            previousVersion = findLatestForParentSupportSnapshot searchVersion vTree
+        in (treeInsert 
+              vTree1 
+              (findLatestRevision vTree1)
+              (generateNewSupportSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion))
+           )
+    else 
+        vTree
+
 
 -- EXAMPLES --
 
