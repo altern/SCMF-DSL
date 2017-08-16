@@ -292,7 +292,20 @@ strTree3 :: StringTree
 strTree3 = Node "X" [Node "1" [], Node "2" []]
 
 vTree4 :: VersionTree
-vTree4 = RoseTree (Version $ VersionNumber [Nothing]) [RoseTree (Version $ VersionNumber [Just 1]) [], RoseTree (Version $ VersionNumber [Just 2]) [], RoseTree (Version $ VersionNumber [Just 3]) [], RoseTree (Version $ VersionNumber [Just 4]) []]
+vTree4 = RoseTree (Version $ VersionNumber [Nothing]) [
+            RoseTree (Version $ VersionNumber [Just 1]) [
+                RoseTree (Version $ VersionNumber [Nothing]) []
+            ], 
+            RoseTree (Version $ VersionNumber [Just 2]) [
+                RoseTree (Version $ VersionNumber [Nothing]) []
+            ],
+            RoseTree (Version $ VersionNumber [Just 3]) [
+                RoseTree (Version $ VersionNumber [Nothing]) []
+            ],
+            RoseTree (Version $ VersionNumber [Just 4]) [
+                RoseTree (Version $ VersionNumber [Nothing]) []
+            ]
+         ]
 
 vTree5 :: VersionTree 
 vTree5 = RoseTree (Version $ VersionNumber [Nothing, Nothing, Nothing]) [
