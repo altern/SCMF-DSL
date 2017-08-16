@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings, DeriveFunctor #-}
 module RoseTree where
 
 import Data.Tree
@@ -9,7 +9,7 @@ import Control.Applicative
 import qualified Data.ByteString.Char8 as BS
 
 data RoseTree a = RoseTree a [RoseTree a]
-                   deriving (Show)
+                   deriving (Show, Functor)
 
 type RoseTreeList a = [RoseTree a]
 
@@ -98,3 +98,17 @@ treeListUpdate (x:xs) find replace
     | ( listContains xs find ) = [x] ++ ( treeListUpdate xs find replace )
     | otherwise = (x:xs)
     
+extractChild :: RoseTree a -> RoseTree a
+extractChild (RoseTree _ (x:[])) = x
+extractChild rTree = rTree
+
+filterTree :: ( a -> Bool ) -> RoseTree a -> RoseTree a
+filterTree condition rTree@(RoseTree a list) = 
+    if (condition $ a) 
+      then filterTree condition (extractChild rTree)  
+      else (RoseTree a (filterTreeList condition list)) 
+
+filterTreeList :: (a -> Bool) -> [RoseTree a] -> [RoseTree a]
+filterTreeList condition [] = []
+filterTreeList condition (x:xs) = [filterTree condition x] ++ (filterTreeList condition xs)
+
