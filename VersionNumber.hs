@@ -124,10 +124,10 @@ instance VersionDetection VersionNumber where
         isExperimentalBranch vn = isInitial vn 
         isReleaseBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isNothing] vn || applyListOfBoolFunctions [isJust, isNothing] vn
         isSupportBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isNothing] vn
-        isExperimentalSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust] vn 
+        isExperimentalSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isNothing, isNothing, isJust] vn 
         isReleaseSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isJust] vn || applyListOfBoolFunctions [isJust, isJust] vn
         isSupportSnapshot (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isJust] vn
-        isRevision (VersionNumber vn) = applyListOfBoolFunctions [isJust] vn
+        isRevision (VersionNumber vn) = applyListOfBoolFunctions [isNothing, isNothing, isJust] vn
         
 class GenerateNew a where
         generateNewReleaseBranch :: a -> a
