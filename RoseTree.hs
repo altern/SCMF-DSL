@@ -4,11 +4,15 @@ module RoseTree where
 import Data.Tree
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
+import qualified Data.Aeson.Types as AT
 import Control.Applicative
-
+import Data.Attoparsec.Combinator
 import qualified Data.ByteString.Char8 as BS
+import Control.Monad
+import Control.Applicative
+import Data.Attoparsec.ByteString.Char8
 
-data RoseTree a = RoseTree a [RoseTree a]
+data RoseTree a = Empty | RoseTree a [RoseTree a]
                    deriving (Show, Functor)
 
 type RoseTreeList a = [RoseTree a]
@@ -29,6 +33,14 @@ instance (Show a, JSON.FromJSON a) => JSON.FromJSON (RoseTree a) where
         RoseTree <$> o JSON..: T.pack "value"
         <*> o JSON..: T.pack "children"
         
+parseRoseTreeFromJSON :: (Show a, JSON.FromJSON a) => String -> (RoseTree a)
+parseRoseTreeFromJSON json = 
+      let bs = BS.pack json in case parse JSON.json bs of
+               (Done rest r) -> case AT.parseMaybe JSON.parseJSON r of
+                    (Just x) -> x
+                    Nothing -> Empty 
+               _ -> Empty
+
 -- instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
     -- toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
 
