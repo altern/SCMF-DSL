@@ -220,7 +220,7 @@ instance MakeDimensional VersionTreeList where
 
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
-    if (isSupportBranch searchVersion) then
+    if (isInitial searchVersion || isSupportBranch searchVersion) then
         let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
             previousVersion = findLatestForParentReleaseBranch searchVersion vTree
         in (treeInsert 
