@@ -25,12 +25,12 @@ instance JSON.FromJSON Version where
     parseJSON (JSON.Object v) = liftM stringToVersion ( v JSON..: "version" )
     parseJSON _ = mzero
  
-parseVersionFromString :: String -> Version
-parseVersionFromString s = 
+parseVersionFromJSON :: String -> Version
+parseVersionFromJSON s = 
     let bs = BS.pack s in case parse JSON.json bs of
                (Done rest r) -> case AT.parseMaybe JSON.parseJSON r of
                     (Just x) -> x
-                    Nothing -> Version $ VersionNumber [Nothing]
+                    Nothing  -> Version $ VersionNumber [Nothing]
                _             -> Version $ VersionNumber [Nothing]
 
 type VersionList = [Version]
