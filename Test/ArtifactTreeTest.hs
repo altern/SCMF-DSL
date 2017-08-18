@@ -19,45 +19,45 @@ import qualified Data.ByteString.Lazy.Char8 as BLS
 
 
 testArtifactTree1 :: ArtifactTree
-testArtifactTree1 = RoseTree ( liftSnapshot $ (Snapshot 1398980989 (Version ( VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) ) []
+testArtifactTree1 = RoseTree ( liftSnapshot $ (Snapshot 1398980989 (Version $ VersionNumber [Just 0] ) ( liftDocument $ Document "" "") ) ) []
 
 testSArtifactTree1 :: StringTree
 testSArtifactTree1 = Node "0" []
 
 testVArtifactTree1 :: VersionTree
-testVArtifactTree1 = RoseTree (Version $ VersionCompound $ Number 0) []
+testVArtifactTree1 = RoseTree (Version $ VersionNumber [Just 0]) []
 
 testArtifactTree2 :: ArtifactTree
-testArtifactTree2 = RoseTree ( liftSnapshot $ ( Snapshot 1398980989 (Version ( VersionCompound (Number 0) ) ) ( liftDocument $ Document "" "") ) ) 
-    [ RoseTree (liftBranch $ (Branch "trunk" (Version (VersionCompound NumberPlaceholder) ) ( liftDocument $ Document "document1" "") ) ) [] ]
+testArtifactTree2 = RoseTree ( liftSnapshot $ ( Snapshot 1398980989 (Version $ VersionNumber [Just 0] ) ( liftDocument $ Document "" "") ) ) 
+    [ RoseTree (liftBranch $ (Branch "trunk" (Version (VersionNumber [Nothing]) ) ( liftDocument $ Document "document1" "") ) ) [] ]
 
 testSArtifactTree2 :: StringTree
 testSArtifactTree2 = Node "0" [ Node "trunk (x)" [] ]
 
 testVArtifactTree2 :: VersionTree
-testVArtifactTree2 = RoseTree (Version $ VersionCompound $ Number 0) [ RoseTree (Version $ VersionCompound $ NumberPlaceholder) [] ]
+testVArtifactTree2 = RoseTree (Version $ VersionNumber [Just 0]) [ RoseTree (Version $ VersionNumber [Nothing]) [] ]
 
 testArtifactTree3 :: ArtifactTree
-testArtifactTree3 = RoseTree (liftSnapshot $ Snapshot 1398980989 (Version $ VersionCompound $ Number 0 ) (liftDocument $ Document "" "") ) 
-    [ RoseTree (liftBranch $ Branch "trunk" (Version $ VersionCompound $ NumberPlaceholder ) ( liftDocument $ Document "document1" "latest_content") ) [ 
-        RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [
-            RoseTree (liftBranch $ Branch "branch1" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch1") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980993 (Version $ VersionCompound $ Number 4) ( liftDocument $ Document "document1" "content4") ) [], 
-                RoseTree (liftSnapshot $ Snapshot 1398980995 (Version $ VersionCompound $ Number 6) ( liftDocument $ Document "document1" "content6") ) [] 
+testArtifactTree3 = RoseTree (liftSnapshot $ Snapshot 1398980989 (Version $ VersionNumber [Just 0] ) (liftDocument $ Document "" "") ) 
+    [ RoseTree (liftBranch $ Branch "trunk" (Version $ VersionNumber [Nothing] ) ( liftDocument $ Document "document1" "latest_content") ) [ 
+        RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionNumber [Just 1]) ( liftDocument $ Document "document1" "content1") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionNumber [Just 2]) ( liftDocument $ Document "document1" "content2") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionNumber [Just 3]) ( liftDocument $ Document "document1" "content3") ) [
+            RoseTree (liftBranch $ Branch "branch1" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch1") ) [
+                RoseTree (liftSnapshot $ Snapshot 1398980993 (Version $ VersionNumber [Just 4]) ( liftDocument $ Document "document1" "content4") ) [], 
+                RoseTree (liftSnapshot $ Snapshot 1398980995 (Version $ VersionNumber [Just 6]) ( liftDocument $ Document "document1" "content6") ) [] 
             ],
-            RoseTree (liftBranch $ Branch "branch2" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch2") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980999 (Version $ VersionCompound $ Number 10) ( liftDocument $ Document "document1" "content10") ) [] 
+            RoseTree (liftBranch $ Branch "branch2" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch2") ) [
+                RoseTree (liftSnapshot $ Snapshot 1398980999 (Version $ VersionNumber [Just 10]) ( liftDocument $ Document "document1" "content10") ) [] 
             ]
         ],
-        RoseTree (liftSnapshot $ Snapshot 1398980994 (Version $ VersionCompound $ Number 5) ( liftDocument $ Document "document1" "content5") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980996 (Version $ VersionCompound $ Number 7) ( liftDocument $ Document "document1" "content7") ) [
-            RoseTree (liftBranch $ Branch "branch3" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch3") ) [
-                RoseTree (liftSnapshot $ Snapshot 1398980998 (Version $ VersionCompound $ Number 9) ( liftDocument $ Document "document1" "content9") ) [] 
+        RoseTree (liftSnapshot $ Snapshot 1398980994 (Version $ VersionNumber [Just 5]) ( liftDocument $ Document "document1" "content5") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980996 (Version $ VersionNumber [Just 7]) ( liftDocument $ Document "document1" "content7") ) [
+            RoseTree (liftBranch $ Branch "branch3" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch3") ) [
+                RoseTree (liftSnapshot $ Snapshot 1398980998 (Version $ VersionNumber [Just 9]) ( liftDocument $ Document "document1" "content9") ) [] 
             ]
         ], 
-        RoseTree (liftSnapshot $ Snapshot 1398980997 (Version $ VersionCompound $ Number 8) ( liftDocument $ Document "document1" "content8") ) []
+        RoseTree (liftSnapshot $ Snapshot 1398980997 (Version $ VersionNumber [Just 8]) ( liftDocument $ Document "document1" "content8") ) []
     ] ]
 
 testArtifactTree4 :: ArtifactTree 
@@ -98,54 +98,54 @@ testSArtifactTree3 = Node "0" [ Node "trunk (x)"
         ],
         Node "8" []
     ] ]
-	
+    
 testVArtifactTree3 :: VersionTree
-testVArtifactTree3 = RoseTree (Version $ VersionCompound $ Number 0) [ RoseTree (Version $ VersionCompound $ NumberPlaceholder) 
+testVArtifactTree3 = RoseTree (Version $ VersionNumber [Just 0]) [ RoseTree (Version $ VersionNumber [Nothing]) 
     [
-        RoseTree (Version $ VersionCompound $ Number 1) [],
-        RoseTree (Version $ VersionCompound $ Number 2) [],
-        RoseTree (Version $ VersionCompound $ Number 3) [
-            RoseTree (Version $ VersionCompound $ NumberPlaceholder) [
-                RoseTree (Version $ VersionCompound $ Number 4) [],
-                RoseTree (Version $ VersionCompound $ Number 6) []
+        RoseTree (Version $ VersionNumber [Just 1]) [],
+        RoseTree (Version $ VersionNumber [Just 2]) [],
+        RoseTree (Version $ VersionNumber [Just 3]) [
+            RoseTree (Version $ VersionNumber [Nothing]) [
+                RoseTree (Version $ VersionNumber [Just 4]) [],
+                RoseTree (Version $ VersionNumber [Just 6]) []
             ], 
-            RoseTree (Version $ VersionCompound $ NumberPlaceholder) [
-                RoseTree (Version $ VersionCompound $ Number 10) []
+            RoseTree (Version $ VersionNumber [Nothing]) [
+                RoseTree (Version $ VersionNumber [Just 10]) []
             ] 
         ],
-        RoseTree (Version $ VersionCompound $ Number 5) [],
-        RoseTree (Version $ VersionCompound $ Number 7) [
-            RoseTree (Version $ VersionCompound $ NumberPlaceholder) [
-                RoseTree (Version $ VersionCompound $ Number 9) []
+        RoseTree (Version $ VersionNumber [Just 5]) [],
+        RoseTree (Version $ VersionNumber [Just 7]) [
+            RoseTree (Version $ VersionNumber [Nothing]) [
+                RoseTree (Version $ VersionNumber [Just 9]) []
             ]
         ],
-        RoseTree (Version $ VersionCompound $ Number 8) []
+        RoseTree (Version $ VersionNumber [Just 8]) []
     ] ]
 
 artifactTreeTests = test [ 
-	"test A01"	~: "artifactTreeToStringTree testArtifactTree1"							~: testSArtifactTree1								~=? (artifactTreeToStringTree testArtifactTree1),
-	"test A02"	~: "artifactTreeToStringTree testArtifactTree2"							~: testSArtifactTree2								~=? (artifactTreeToStringTree testArtifactTree2),
-	"test A03"	~: "artifactTreeToStringTree testArtifactTree3"							~: testSArtifactTree3								~=? (artifactTreeToStringTree testArtifactTree3),
-	"test B01"	~: "artifactTreeToVersionTree testArtifactTree1"						~: testVArtifactTree1								~=? (artifactTreeToVersionTree testArtifactTree1),
-	"test B02"	~: "artifactTreeToVersionTree testArtifactTree2"						~: testVArtifactTree2								~=? (artifactTreeToVersionTree testArtifactTree2),
-	"test B03"	~: "artifactTreeToVersionTree testArtifactTree3"						~: testVArtifactTree3								~=? (artifactTreeToVersionTree testArtifactTree3),
-	"test C01"	~: "findTimestampOfLatestSnapshot testArtifactTree1"					~: 1398980989										~=? (findTimestampOfLatestSnapshot testArtifactTree1),
-	"test C02"	~: "findTimestampOfLatestSnapshot testArtifactTree2"					~: 1398980989										~=? (findTimestampOfLatestSnapshot testArtifactTree2),
-	"test C03"	~: "findTimestampOfLatestSnapshot testArtifactTree3"					~: 1398980999										~=? (findTimestampOfLatestSnapshot testArtifactTree3),
-	"test D01"	~: "searchArtifactTree testArtifactTree3 10"					    ~:  [liftSnapshot $ Snapshot 1398980999 (Version $ VersionCompound $ Number 10) ( liftDocument $ Document "document1" "content10")] ~=? (searchArtifactTree testArtifactTree3 (Version $ VersionCompound $ Number 10 ) ),
-	"test D02"	~: "searchArtifactTree testArtifactTree3 artifact"					~:  [liftBranch $ Branch "branch3" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch3") ] ~=? (searchArtifactTree testArtifactTree3 (liftBranch $ Branch "branch3" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch3")  ) ),
-	-- "test D03"	~: "searchArtifactTree testArtifactTree3 1398980994"                ~:  [liftSnapshot $ Snapshot 1398980994 (Version $ VersionCompound $ Number 5) ( liftDocument $ Document "document1" "content5") ] ~=? (searchArtifactTree testArtifactTree3 1398980994 ) ,
-	"test D04"	~: "searchArtifactTree testArtifactTree3 branch3"                   ~:  [liftBranch $ Branch "branch3" (Version $ VersionCompound $ NumberPlaceholder) ( liftDocument $ Document "document1" "content_branch3") ] ~=? (searchArtifactTree testArtifactTree3 "branch3") ,
-	"test E01"	~: "searchArtifactTreeChildren [ar1,ar2,ar3] 3"                     ~:  True ~=? ( searchArtifactTreeChildren 
-        [RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionCompound $ Number 1) ( liftDocument $ Document "document1" "content1") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionCompound $ Number 2) ( liftDocument $ Document "document1" "content2") ) [], 
-        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionCompound $ Number 3) ( liftDocument $ Document "document1" "content3") ) [] ]
-        (Version $ VersionCompound $ Number 3) ),
-	"test F01"	~: "findVersionOfLatestSnapshot testArtifactTree3"                      ~:   ( Version $ VersionCompound $ Number 10 ) ~=? (findVersionOfLatestSnapshot testArtifactTree3 ) ,
-	{-"test G01"	~: "generateExperimentalVersionNumberFrom x.x.x"						~: (stringToVersion "x.x.3")                       ~=? (generateExperimentalVersionNumberFrom "trunk" testArtifactTree4),-}
-	"test _"	~: "empty test"								~: True														~=? True
-	]
+    {-"test A01"    ~: "artifactTreeToStringTree testArtifactTree1"                            ~: testSArtifactTree1                                ~=? (artifactTreeToStringTree testArtifactTree1),-}
+    {-"test A02"    ~: "artifactTreeToStringTree testArtifactTree2"                            ~: testSArtifactTree2                                ~=? (artifactTreeToStringTree testArtifactTree2),-}
+    {-"test A03"    ~: "artifactTreeToStringTree testArtifactTree3"                            ~: testSArtifactTree3                                ~=? (artifactTreeToStringTree testArtifactTree3),-}
+    "test B01"    ~: "artifactTreeToVersionTree testArtifactTree1"                        ~: testVArtifactTree1                                ~=? (artifactTreeToVersionTree testArtifactTree1),
+    "test B02"    ~: "artifactTreeToVersionTree testArtifactTree2"                        ~: testVArtifactTree2                                ~=? (artifactTreeToVersionTree testArtifactTree2),
+    "test B03"    ~: "artifactTreeToVersionTree testArtifactTree3"                        ~: testVArtifactTree3                                ~=? (artifactTreeToVersionTree testArtifactTree3),
+    "test C01"    ~: "findTimestampOfLatestSnapshot testArtifactTree1"                    ~: 1398980989                                        ~=? (findTimestampOfLatestSnapshot testArtifactTree1),
+    "test C02"    ~: "findTimestampOfLatestSnapshot testArtifactTree2"                    ~: 1398980989                                        ~=? (findTimestampOfLatestSnapshot testArtifactTree2),
+    "test C03"    ~: "findTimestampOfLatestSnapshot testArtifactTree3"                    ~: 1398980999                                        ~=? (findTimestampOfLatestSnapshot testArtifactTree3),
+    "test D01"    ~: "searchArtifactTree testArtifactTree3 10"                        ~:  [liftSnapshot $ Snapshot 1398980999 (Version $ VersionNumber [Just 10]) ( liftDocument $ Document "document1" "content10")] ~=? (searchArtifactTree testArtifactTree3 (Version $ VersionNumber [Just 10] ) ),
+    "test D02"    ~: "searchArtifactTree testArtifactTree3 artifact"                    ~:  [liftBranch $ Branch "branch3" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch3") ] ~=? (searchArtifactTree testArtifactTree3 (liftBranch $ Branch "branch3" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch3")  ) ),
+    -- "test D03"    ~: "searchArtifactTree testArtifactTree3 1398980994"                ~:  [liftSnapshot $ Snapshot 1398980994 (Version $ VersionNumber [Just 5]) ( liftDocument $ Document "document1" "content5") ] ~=? (searchArtifactTree testArtifactTree3 1398980994 ) ,
+    "test D04"    ~: "searchArtifactTree testArtifactTree3 branch3"                   ~:  [liftBranch $ Branch "branch3" (Version $ VersionNumber [Nothing]) ( liftDocument $ Document "document1" "content_branch3") ] ~=? (searchArtifactTree testArtifactTree3 "branch3") ,
+    "test E01"    ~: "searchArtifactTreeChildren [ar1,ar2,ar3] 3"                     ~:  True ~=? ( searchArtifactTreeChildren 
+        [RoseTree (liftSnapshot $ Snapshot 1398980990 (Version $ VersionNumber [Just 1]) ( liftDocument $ Document "document1" "content1") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980991 (Version $ VersionNumber [Just 2]) ( liftDocument $ Document "document1" "content2") ) [], 
+        RoseTree (liftSnapshot $ Snapshot 1398980992 (Version $ VersionNumber [Just 3]) ( liftDocument $ Document "document1" "content3") ) [] ]
+        (Version $ VersionNumber [Just 3]) ),
+    "test F01"    ~: "findVersionOfLatestSnapshot testArtifactTree3"                      ~:   ( Version $ VersionNumber [Just 10] ) ~=? (findVersionOfLatestSnapshot testArtifactTree3 ) ,
+    {-"test G01"    ~: "generateExperimentalVersionNumberFrom x.x.x"                        ~: (stringToVersion "x.x.3")                       ~=? (generateExperimentalVersionNumberFrom "trunk" testArtifactTree4),-}
+    "test _"    ~: "empty test"                                ~: True                                                        ~=? True
+    ]
 
 runTests :: IO Counts
 runTests = do
-	runTestTT artifactTreeTests
+    runTestTT artifactTreeTests
