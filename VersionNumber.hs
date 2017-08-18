@@ -30,32 +30,32 @@ class VersionOperations a where
     appendDimension :: a -> a
 
 instance VersionOperations VersionCompound where
-        decrement Nothing = Nothing
-        decrement (Just 0) = Just 0
-        decrement (Just num) = Just (num - 1)
-        decrementDimension 1 vc = decrement vc
-        decrementDimension _ vc = vc
-        increment Nothing = Nothing
-        increment (Just num) = (Just (num + 1))
-        freeze Nothing = (Just 0)
-        freeze (Just n) = (Just n)
-        incrementDimension 1 vc = increment vc
-        incrementDimension _ vc = vc
-        freezeDimension 1 vc = freeze vc
-        freezeDimension _ vc = vc
-        getNumberOfDimensions _ = 1
-        appendDimension vc = vc
+    decrement Nothing = Nothing
+    decrement (Just 0) = Just 0
+    decrement (Just num) = Just (num - 1)
+    decrementDimension 1 vc = decrement vc
+    decrementDimension _ vc = vc
+    increment Nothing = Nothing
+    increment (Just num) = (Just (num + 1))
+    freeze Nothing = (Just 0)
+    freeze (Just n) = (Just n)
+    incrementDimension 1 vc = increment vc
+    incrementDimension _ vc = vc
+    freezeDimension 1 vc = freeze vc
+    freezeDimension _ vc = vc
+    getNumberOfDimensions _ = 1
+    appendDimension vc = vc
 
 instance VersionOperations VersionNumber where
-        decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ last vn) vn)
-        decrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (decrement $ vn!!(length vn - dim)) vn))
-        increment (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (increment $ last vn) vn)
-        freeze (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (freeze $ last vn) vn)
-        incrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (increment $ vn!!(length vn - dim)) vn))
-        freezeDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (freeze $ vn!!(length vn - dim)) vn))
-        getNumberOfDimensions (VersionNumber vn) = length vn
-        appendDimension (VersionNumber vn) = VersionNumber $ [Nothing] ++ vn
-        
+    decrement (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (decrement $ last vn) vn)
+    decrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (decrement $ vn!!(length vn - dim)) vn))
+    increment (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (increment $ last vn) vn)
+    freeze (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (freeze $ last vn) vn)
+    incrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (increment $ vn!!(length vn - dim)) vn))
+    freezeDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (freeze $ vn!!(length vn - dim)) vn))
+    getNumberOfDimensions (VersionNumber vn) = length vn
+    appendDimension (VersionNumber vn) = VersionNumber $ [Nothing] ++ vn
+    
 instance Eq VersionNumber where
     (VersionNumber a) == (VersionNumber b) = on (==) (dropWhile (Nothing ==)) a b
 
@@ -202,3 +202,5 @@ stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
     Right a -> a
     Left _ -> VersionNumber []
 
+initialVersionNumber :: VersionNumber
+initialVersionNumber = VersionNumber [Nothing]
