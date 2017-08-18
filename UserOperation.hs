@@ -8,6 +8,7 @@ import Version
 import VersionTree
 import Platform
 import FileOperation
+import Document 
 
 data UserOperation = LoadHistoryFromFile
                    | SaveHistoryToFile
@@ -116,18 +117,18 @@ instance Action DeploymentRules ( IO () ) where
     action Explain rules = displayDeploymentRules rules 
 
 instance ActionWithInput ArtifactTree BranchName ArtifactTree where
-    actionWithInput Append aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
-    actionWithInput Add aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
-    actionWithInput Generate aTree branchName = generateSnapshot aTree $ searchArtifactTree aTree branchName
+    actionWithInput Append aTree branchName = generateSnapshot ((searchArtifactTree aTree branchName)!!0) aTree
+    actionWithInput Add aTree branchName = generateSnapshot ((searchArtifactTree aTree branchName)!!0) aTree
+    actionWithInput Generate aTree branchName = generateSnapshot ((searchArtifactTree aTree branchName)!!0) aTree
     
 instance ActionWithInput ArtifactTree (BranchName, DocumentName, DocumentContent) ArtifactTree where
-    actionWithInput Edit aTree (branchName, documentName, documentContent) = updateArtifactTree aTree ( ArtifactTreeEdit (searchArtifactTree aTree branchName !! 0 ) (Document documentName documentContent) ) 
-    actionWithInput Update aTree (branchName, documentName, documentContent) = updateArtifactTree aTree ( ArtifactTreeEdit (searchArtifactTree aTree branchName !! 0 ) (Document documentName documentContent) ) 
+    actionWithInput Edit aTree (branchName, documentName, documentContent) = editArtifactTree branchName (liftDocument $ Document documentName documentContent) aTree
+    actionWithInput Update aTree (branchName, documentName, documentContent) = editArtifactTree branchName (liftDocument $ Document documentName documentContent) aTree 
     
 instance ActionWithInput ArtifactTree Artifact ArtifactTree where
-    actionWithInput Append aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact
-    actionWithInput Add aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact
-    actionWithInput Generate aTree artifact = generateSnapshot aTree $ searchArtifactTree aTree artifact    
+    actionWithInput Append aTree artifact = generateSnapshot ((searchArtifactTree aTree artifact)!!0) aTree 
+    actionWithInput Add aTree artifact = generateSnapshot ((searchArtifactTree aTree artifact)!!0) aTree
+    actionWithInput Generate aTree artifact = generateSnapshot ((searchArtifactTree aTree artifact)!!0) aTree
     
 instance ActionWithInput VersionTree Version VersionTree where
     actionWithInput Append vTree version = appendNewVersion vTree version
