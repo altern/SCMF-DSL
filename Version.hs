@@ -154,4 +154,6 @@ stringToVersion str = case (parseOnly parseVersion $ BS.pack str) of
     Right a -> a
     Left _ -> Version ( VersionNumber [Nothing] )
 
+initialVersion :: Version
+initialVersion = Version $ initialVersionNumber
 
