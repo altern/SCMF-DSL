@@ -270,6 +270,8 @@ newSupportSnapshot searchVersion vTree =
     else 
         vTree
 
+initialVersionTree :: VersionTree
+initialVersionTree = RoseTree (Version $ VersionNumber [Just 0]) [ RoseTree initialVersion []]
 
 -- EXAMPLES --
 
