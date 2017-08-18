@@ -51,7 +51,7 @@ parseInput inp
     -- outputStrLn $ action Show t :: IO ()
     -- tree <- loadArtifactTreeFromFile
     -- displayRepresentationsOfArtifactTree tree
-    liftIO $ displayRepresentationsOfArtifactTree artifactTree3
+    liftIO $ displayArtifactTree initialArtifactTree 
     mainLoop 
                                                    
   | inp =~ ":" = do
