@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, OverloadedStrings, DeriveFunctor #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings, DeriveFunctor, DeriveAnyClass,DeriveGeneric #-}
 module RoseTree where
 
 import Data.Tree
@@ -11,9 +11,10 @@ import qualified Data.ByteString.Char8 as BS
 import Control.Monad
 import Control.Applicative
 import Data.Attoparsec.ByteString.Char8
+import GHC.Generics (Generic)
 
-data RoseTree a = Empty | RoseTree a [RoseTree a]
-                   deriving (Show, Functor)
+data RoseTree a = RoseTree { value :: a, children :: [RoseTree a]}
+                   deriving (Show, Generic, JSON.FromJSON, JSON.ToJSON)
 
 type RoseTreeList a = [RoseTree a]
 
@@ -23,23 +24,23 @@ type StringTreeList = [StringTree]
 
 -- data RoseTree2 = RoseNode Int [RoseTree2] deriving (Show)
 
-instance (Show a) => JSON.ToJSON (RoseTree a) where
-    toJSON (RoseTree n cs) =
-        JSON.object [T.pack "value" JSON..= show n
-        , T.pack "children" JSON..= JSON.toJSON cs] 
+{-instance (Show a) => JSON.ToJSON (RoseTree a) where-}
+    {-toJSON (RoseTree n cs) =-}
+        {-JSON.object [T.pack "value" JSON..= show n-}
+        {-, T.pack "children" JSON..= JSON.toJSON cs] -}
 
-instance (Show a, JSON.FromJSON a) => JSON.FromJSON (RoseTree a) where
-    parseJSON (JSON.Object o) =
-        RoseTree <$> o JSON..: T.pack "value"
-        <*> o JSON..: T.pack "children"
+{-instance (Show a, JSON.FromJSON a) => JSON.FromJSON (RoseTree a) where-}
+    {-parseJSON (JSON.Object o) =-}
+        {-RoseTree <$> o JSON..: T.pack "value"-}
+        {-<*> o JSON..: T.pack "children"-}
         
-parseRoseTreeFromJSON :: (Show a, JSON.FromJSON a) => String -> (RoseTree a)
-parseRoseTreeFromJSON json = 
-      let bs = BS.pack json in case parse JSON.json bs of
-               (Done rest r) -> case AT.parseMaybe JSON.parseJSON r of
-                    (Just x) -> x
-                    Nothing -> Empty 
-               _ -> Empty
+{-parseRoseTreeFromJSON :: (Show a, JSON.FromJSON a) => String -> (RoseTree a)-}
+{-parseRoseTreeFromJSON json = -}
+      {-let bs = BS.pack json in case parse JSON.json bs of-}
+               {-(Done rest r) -> case AT.parseMaybe JSON.parseJSON r of-}
+                    {-(Just x) -> x-}
+                    {-Nothing -> Empty -}
+               {-_ -> Empty-}
 
 -- instance (JSON.ToJSON v) => JSON.ToJSON (RoseTree v) where
     -- toJSON (RoseTree root branches) = JSON.toJSON (root, branches)
