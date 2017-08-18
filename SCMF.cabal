@@ -32,7 +32,8 @@ Test-Suite test-scmf
                       attoparsec,
                       pretty-tree,
                       unordered-containers,
-                      lens
+                      lens,
+                      exitcode
 
 executable SCMF
   main-is            : Main.hs
