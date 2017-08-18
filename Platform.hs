@@ -73,7 +73,7 @@ instance JSON.ToJSON Platform where
         , "contents" JSON..= JSON.toJSON contents
         ]
 
-initialPlatform = Platform "" (PlatformContents (liftDocument emptyDocument) (initialVersion (NumberPlaceholder)) "")
+initialPlatform = Platform "" (PlatformContents (liftDocument emptyDocument) (Version $ createVersionNumberByNumberOfDimensions 0) "")
 
 instance Show Platform where
     show (Platform name ( PlatformContents document version branchName) ) = (show name) ++ ": " ++ (show version) ++ " (" ++  branchName ++ ")"
