@@ -17,6 +17,9 @@ import Control.Monad.IO.Class
 import Text.Regex.PCRE
 import System.Console.Haskeline
 
+versionTree :: VersionTree
+versionTree = initialVersionTree
+
 help :: InputT IO ()
 help = liftIO $ mapM_ putStrLn
        [ ""
@@ -29,10 +32,11 @@ help = liftIO $ mapM_ putStrLn
 commands :: InputT IO ()
 commands = liftIO $ mapM_ putStrLn
        [ ""
-       , ":show     - display artifact trees, version trees, artifacts, etc. "
+       , ":show     - display version tree "
        , ":save     - save results to file"
-       , ":edit     - edit artifact tree"
-       , ":search   - search for specific element in artifact tree"
+       , ":edit     - edit version tree"
+       , ":search   - search for specific element in version tree"
+       , ":new      - generate new element in version tree"
        , ""
        ]
        
@@ -51,9 +55,22 @@ parseInput inp
     -- outputStrLn $ action Show t :: IO ()
     -- tree <- loadArtifactTreeFromFile
     -- displayRepresentationsOfArtifactTree tree
-    liftIO $ displayArtifactTree initialArtifactTree 
+    liftIO $ displayVersionTree versionTree
     mainLoop 
-                                                   
+
+  | inp =~ "^\\:save" = do
+    liftIO $ saveToFile versionTree
+    mainLoop
+    
+  | inp =~ "^\\:load" = do
+    {-liftIO $ loadVersionTreeFromFile -}
+    let versionTree = loadVersionTreeFromFile
+    mainLoop
+
+  | inp =~ "^\\:new" = do
+    let versionTree = (newSupportBranch (initialVersion) versionTree)
+    mainLoop
+
   | inp =~ ":" = do
     outputStrLn $ "\nNo command \"" ++ inp ++ "\"\n"
     mainLoop
