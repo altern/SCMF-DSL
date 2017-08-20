@@ -19,7 +19,8 @@ import Data.Attoparsec
 import Data.Attoparsec.Char8
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Lazy as B
-
+import TH (litFile)
+import Data.Maybe
 
 versionTreeFile :: FilePath
 versionTreeFile = "versionTree.json"
@@ -33,8 +34,10 @@ platformDBFile = "platforms.json"
 deploymentRulesFile :: FilePath
 deploymentRulesFile = "deploymentRules.json"
 
-loadArtifactTreeFromFile :: IO B.ByteString
-loadArtifactTreeFromFile = B.readFile versionTreeFile
+{-loadVersionTreeFromFile :: IO (Maybe VersionTree)-}
+{-loadVersionTreeFromFile = fmap JSON.decode $ B.readFile versionTreeFile-}
+loadVersionTreeFromFile :: VersionTree
+loadVersionTreeFromFile = fromJust $ JSON.decode $ [litFile|versionTree.json|]
 
 v2s :: JSON.Value -> String
 v2s = unpack . toLazyText . encodeToTextBuilder
