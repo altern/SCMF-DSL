@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 module Main where
 
 import RoseTree
@@ -6,21 +7,25 @@ import VersionNumber
 import VersionTree
 import Artifact
 import ArtifactTree
-import Data.List.Split
-import Data.List
 import Platform
 import FileOperation
 import UserOperation
 
-import Control.Monad
-import Control.Monad.IO.Class
 import Text.Regex.PCRE
 import System.Console.Haskeline
+import System.IO
+import Control.Monad.State.Strict
+
 
 versionTree :: VersionTree
 versionTree = initialVersionTree
 
-help :: InputT IO ()
+instance MonadState s m => MonadState s (InputT m) where
+    get = lift get
+    put = lift . put
+    state = lift . state
+
+help :: InputT (StateT VersionTree IO)()
 help = liftIO $ mapM_ putStrLn
        [ ""
        , ":help     - this help"
@@ -29,7 +34,7 @@ help = liftIO $ mapM_ putStrLn
        , ""
        ]
        
-commands :: InputT IO ()
+commands :: InputT (StateT VersionTree IO)()
 commands = liftIO $ mapM_ putStrLn
        [ ""
        , ":show     - display version tree "
@@ -40,10 +45,10 @@ commands = liftIO $ mapM_ putStrLn
        , ""
        ]
        
--- showCommand :: InputT IO ()
+-- showCommand :: InputT (StateT VersionTree IO)()
 -- showCommand inp = putStrLn $ action Show t :: IO ()
 
-parseInput :: String -> InputT IO ()
+parseInput :: String -> InputT (StateT VersionTree IO)()
 parseInput inp
   | inp =~ "^\\:q"        = return ()
                             
@@ -55,20 +60,24 @@ parseInput inp
     -- outputStrLn $ action Show t :: IO ()
     -- tree <- loadArtifactTreeFromFile
     -- displayRepresentationsOfArtifactTree tree
+    versionTree <- get
     liftIO $ displayVersionTree versionTree
     mainLoop 
 
   | inp =~ "^\\:save" = do
+    versionTree <- get 
     liftIO $ saveToFile versionTree
     mainLoop
     
   | inp =~ "^\\:load" = do
     {-liftIO $ loadVersionTreeFromFile -}
-    let versionTree = loadVersionTreeFromFile
+    versionTree <- get
+    put loadVersionTreeFromFile
     mainLoop
 
   | inp =~ "^\\:new" = do
-    let versionTree = (newSupportBranch (initialVersion) versionTree)
+    versionTree <- get
+    put $ newSupportBranch initialVersion versionTree
     mainLoop
 
   | inp =~ ":" = do
@@ -77,13 +86,13 @@ parseInput inp
     
   | otherwise = handleInput inp
 
-handleInput :: String -> InputT IO ()
+handleInput :: String -> InputT (StateT VersionTree IO)()
 handleInput inp = mainLoop
 
-mainLoop :: InputT IO ()
+mainLoop :: InputT (StateT VersionTree IO)()
 mainLoop = do
   inp <- getInputLine "% "
-  maybe (return ()) (parseInput) inp
+  maybe (return ()) parseInput inp
 
 greet :: IO ()
 greet = mapM_ putStrLn
@@ -94,11 +103,10 @@ greet = mapM_ putStrLn
         , ""
         ]
 
-main :: IO ()
+main :: IO ((), VersionTree)
 main = do 
     greet 
-    runInputT defaultSettings (mainLoop)
-    
+    runStateT (runInputT defaultSettings mainLoop) initialVersionTree  
     -- tree <- loadArtifactTreeFromFile
     -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     -- let db = (deploy t deploymentRules platformDB )

@@ -37,7 +37,7 @@ deploymentRulesFile = "deploymentRules.json"
 {-loadVersionTreeFromFile :: IO (Maybe VersionTree)-}
 {-loadVersionTreeFromFile = fmap JSON.decode $ B.readFile versionTreeFile-}
 loadVersionTreeFromFile :: VersionTree
-loadVersionTreeFromFile = fromJust $ JSON.decode $ [litFile|versionTree.json|]
+loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]
 
 v2s :: JSON.Value -> String
 v2s = unpack . toLazyText . encodeToTextBuilder
