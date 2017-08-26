@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeSynonymInstances, FlexibleInstances, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings, TypeSynonymInstances, FlexibleInstances #-}
 
 module FileOperation where
 
@@ -21,6 +21,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Lazy as B
 import TH (litFile)
 import Data.Maybe
+import System.IO.Unsafe
 
 versionTreeFile :: FilePath
 versionTreeFile = "versionTree.json"
@@ -34,10 +35,11 @@ platformDBFile = "platforms.json"
 deploymentRulesFile :: FilePath
 deploymentRulesFile = "deploymentRules.json"
 
-{-loadVersionTreeFromFile :: IO (Maybe VersionTree)-}
-{-loadVersionTreeFromFile = fmap JSON.decode $ B.readFile versionTreeFile-}
+{-# NOINLINE loadVersionTreeFromFile #-} 
 loadVersionTreeFromFile :: VersionTree
-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]
+loadVersionTreeFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile versionTreeFile
+{-loadVersionTreeFromFile :: VersionTree-}
+{-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]-}
 
 v2s :: JSON.Value -> String
 v2s = unpack . toLazyText . encodeToTextBuilder
