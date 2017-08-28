@@ -75,9 +75,36 @@ parseInput inp
     put loadVersionTreeFromFile
     mainLoop
 
-  | inp =~ "^\\:new" = do
+  | inp =~ "^\\:newSupportBranch" = do
     versionTree <- get
-    put $ newSupportBranch initialVersion versionTree
+    versionInput <- getInputLine "\tEnter version, which will be used to append new support branch to: "
+    searchVersion <- case versionInput of
+      Nothing -> put $ newSupportBranch initialVersion versionTree
+      Just stringVersion -> put $ newSupportBranch (stringToVersion stringVersion) versionTree
+    mainLoop
+
+  | inp =~ "^\\:newReleaseBranch" = do
+    versionTree <- get
+    versionInput <- getInputLine "\tEnter version, which will be used to append new release branch to: "
+    searchVersion <- case versionInput of
+      Nothing -> put $ newReleaseBranch initialVersion versionTree
+      Just stringVersion -> put $ newReleaseBranch (stringToVersion stringVersion) versionTree
+    mainLoop
+
+  | inp =~ "^\\:newSupportSnapshot" = do
+    versionTree <- get
+    versionInput <- getInputLine "\tEnter version, which will be used to append new support snapshot to: "
+    searchVersion <- case versionInput of
+      Nothing -> put $ newSupportSnapshot initialVersion versionTree
+      Just stringVersion -> put $ newSupportSnapshot (stringToVersion stringVersion) versionTree
+    mainLoop
+
+  | inp =~ "^\\:newReleaseSnapshot" = do
+    versionTree <- get
+    versionInput <- getInputLine "\tEnter version, which will be used to append new support snapshot to: "
+    searchVersion <- case versionInput of
+      Nothing -> put $ newReleaseSnapshot initialVersion versionTree
+      Just stringVersion -> put $ newReleaseSnapshot (stringToVersion stringVersion) versionTree
     mainLoop
 
   | inp =~ ":" = do
