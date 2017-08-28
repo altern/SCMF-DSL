@@ -15,7 +15,7 @@ import Text.Regex.PCRE
 import System.Console.Haskeline
 import System.IO
 import Control.Monad.State.Strict
-
+import Data.List 
 
 versionTree :: VersionTree
 versionTree = initialVersionTree
@@ -24,6 +24,20 @@ instance MonadState s m => MonadState s (InputT m) where
     get = lift get
     put = lift . put
     state = lift . state
+
+wordList = [":help", ":q", ":commands", 
+            ":show", ":save", ":load", 
+            ":edit", ":newSupportBranch", ":newReleaseBranch", 
+            ":newSupportSnapshot", ":newReleaseSnapshot"]
+
+searchFunc :: String -> [Completion]
+searchFunc str = map simpleCompletion $ filter (str `isPrefixOf`) wordList
+
+mySettings :: Settings (StateT VersionTree IO)
+mySettings = Settings { historyFile = Just "myhist"
+                      , complete = completeWord Nothing " \t" $ return . searchFunc
+                      , autoAddHistory = True
+                      }
 
 help :: InputT (StateT VersionTree IO)()
 help = liftIO $ mapM_ putStrLn
@@ -37,11 +51,14 @@ help = liftIO $ mapM_ putStrLn
 commands :: InputT (StateT VersionTree IO)()
 commands = liftIO $ mapM_ putStrLn
        [ ""
-       , ":show     - display version tree "
-       , ":save     - save results to file"
-       , ":edit     - edit version tree"
-       , ":search   - search for specific element in version tree"
-       , ":new      - generate new element in version tree"
+       , ":show                 - display version tree "
+       , ":save                 - save results to file"
+       , ":load                 - load results from file"
+       , ":edit                 - edit version tree"
+       , ":newSupportBranch     - generate new support branch in version tree"
+       , ":newReleaseBranch     - generate new release branch in version tree"
+       , ":newSupportSnapshot   - generate new support snapshot in version tree"
+       , ":newReleaseSnapshot   - generate new release snapshot in version tree"
        , ""
        ]
        
@@ -133,7 +150,7 @@ greet = mapM_ putStrLn
 main :: IO ((), VersionTree)
 main = do 
     greet 
-    runStateT (runInputT defaultSettings mainLoop) initialVersionTree  
+    runStateT (runInputT mySettings mainLoop) initialVersionTree  
     -- tree <- loadArtifactTreeFromFile
     -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     -- let db = (deploy t deploymentRules platformDB )
