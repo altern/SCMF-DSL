@@ -19,7 +19,6 @@ import Data.Attoparsec
 import Data.Attoparsec.Char8
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Lazy as B
-import TH (litFile)
 import Data.Maybe
 import System.IO.Unsafe
 
