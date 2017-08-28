@@ -221,7 +221,7 @@ instance MakeDimensional VersionTreeList where
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then
-        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional 2) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
             previousVersion = findLatestForParentReleaseBranch searchVersion vTree
         in (treeInsert 
               vTree1 
@@ -234,7 +234,7 @@ newReleaseBranch searchVersion vTree =
 newSupportBranch :: Version -> VersionTree -> VersionTree
 newSupportBranch searchVersion vTree = 
     if (isInitial searchVersion) then
-        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional 3) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
             previousVersion = findLatestForParentSupportBranch searchVersion vTree
         in (treeInsert 
               vTree1 
@@ -247,7 +247,7 @@ newSupportBranch searchVersion vTree =
 newReleaseSnapshot :: Version -> VersionTree -> VersionTree
 newReleaseSnapshot searchVersion vTree = 
     if (isReleaseBranch searchVersion) then
-        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional 3) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
             previousVersion = findLatestForParentReleaseSnapshot searchVersion vTree
         in (treeInsert 
               vTree1 
@@ -260,7 +260,7 @@ newReleaseSnapshot searchVersion vTree =
 newSupportSnapshot :: Version -> VersionTree -> VersionTree
 newSupportSnapshot searchVersion vTree = 
     if (isSupportBranch searchVersion) then
-        let vTree1 = (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional 3) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
             previousVersion = findLatestForParentSupportSnapshot searchVersion vTree
         in (treeInsert 
               vTree1 

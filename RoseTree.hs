@@ -5,7 +5,6 @@ import Data.Tree
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.Aeson.Types as AT
-import Control.Applicative
 import Data.Attoparsec.Combinator
 import qualified Data.ByteString.Char8 as BS
 import Control.Monad
@@ -14,7 +13,7 @@ import Data.Attoparsec.ByteString.Char8
 import GHC.Generics (Generic)
 
 data RoseTree a = RoseTree { value :: a, children :: [RoseTree a]}
-                   deriving (Show, Generic, JSON.FromJSON, JSON.ToJSON)
+                   deriving (Show, Generic, Functor, JSON.FromJSON, JSON.ToJSON)
 
 type RoseTreeList a = [RoseTree a]
 
