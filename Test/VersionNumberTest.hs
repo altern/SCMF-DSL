@@ -64,7 +64,7 @@ versionNumberTests = test [
     "test M02"  ~: "1 == 1"                               ~: True        ~=? (Just 1) == (Just 1),
     "test M03"  ~: "5 == 5"                               ~: True        ~=? (Just 5) == (Just 5),
     "test M04"  ~: "3 == 5"                               ~: False    ~=? (Just 3) == (Just 5),
-    "test M05"  ~: "27 == x"                              ~: False    ~=? (Just 27) == (Nothing),
+    "test M05"  ~: "27 == x"                              ~: False    ~=? (Just 27) == Nothing,
     "test M06"  ~: "x.x.3 == x.x.x.x.x.3"                 ~: True        ~=? ( stringToVersionNumber "x.x.3" == stringToVersionNumber "x.x.x.x.x.3" ),
     "test M07"  ~: "26 == x.x.x.26"                       ~: True        ~=? ( stringToVersionNumber "26" == stringToVersionNumber "x.x.x.26" ),
     "test M07"  ~: "x.x.x.33.x == 33.x"                   ~: True        ~=? ( stringToVersionNumber "x.x.x.33.x" == stringToVersionNumber "33.x" ),
@@ -133,9 +133,31 @@ versionNumberTests = test [
     "test X02"  ~: "isExperimentalSnapshot x.5"        ~: True     ~=? ( isExperimentalSnapshot $ stringToVersionNumber "x.5" ) ,
     "test X03"  ~: "isExperimentalSnapshot 32"         ~: True     ~=? ( isExperimentalSnapshot $ stringToVersionNumber "32" ) ,
     "test X04"  ~: "isExperimentalSnapshot x.x"        ~: False    ~=? ( isExperimentalSnapshot $ stringToVersionNumber "x.x" ) ,
+    "test Y00"  ~: "generateNewReleaseBranch x"        ~: "0.x"    ~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "x" ) ,
+    "test Y01"  ~: "generateNewReleaseBranch x.x"      ~: "0.x"    ~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "x.x" ) ,
+    "test Y02"  ~: "generateNewReleaseBranch 0.x"      ~: "1.x"    ~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "0.x" ) ,
+    "test Y03"  ~: "generateNewReleaseBranch 1.3.x"    ~: "1.4.x"  ~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "1.3.x" ) ,
+    "test Y04"  ~: "generateNewReleaseBranch 2.x.x"    ~: "2.0.x"  ~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "2.x.x" ) ,
+    "test Y040" ~: "generateNewReleaseBranch 2.x.x.x"  ~: "2.x.x.x"~=? ( toString $ generateNewReleaseBranch $ stringToVersionNumber "2.x.x.x" ) ,
+    "test Y05"  ~: "generateNewSupportBranch x"        ~: "0.x.x"  ~=? ( toString $ generateNewSupportBranch $ stringToVersionNumber "x" ) ,
+    "test Y06"  ~: "generateNewSupportBranch 1.x.x"    ~: "2.x.x"  ~=? ( toString $ generateNewSupportBranch $ stringToVersionNumber "1.x.x" ) ,
+    "test Y07"  ~: "generateNewSupportBranch 0.3.x.x"  ~: "0.4.x.x"~=? ( toString $ generateNewSupportBranch $ stringToVersionNumber "0.3.x.x" ) ,
+    "test Y08"  ~: "generateNewSupportBranch 1.x.x.x"  ~: "1.x.x.x"~=? ( toString $ generateNewSupportBranch $ stringToVersionNumber "1.x.x.x" ) ,
+    "test Y09"  ~: "generateNewReleaseSnapshot x"      ~: "x"      ~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "x" ) ,
+    "test Y10"  ~: "generateNewReleaseSnapshot 1.0.x"  ~: "1.0.0"  ~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "1.0.x" ) ,
+    "test Y11"  ~: "generateNewReleaseSnapshot 1.0.0"  ~: "1.0.1"  ~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "1.0.0" ) ,
+    "test Y12"  ~: "generateNewReleaseSnapshot 2.3.4.5"~: "2.3.4.6"~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "2.3.4.5" ) ,
+    "test Y13"  ~: "generateNewReleaseSnapshot 1.x.x.0"~: "1.x.x.0"~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "1.x.x.0" ) ,
+    "test Y130" ~: "generateNewReleaseSnapshot 1.x.0"  ~: "1.x.0"  ~=? ( toString $ generateNewReleaseSnapshot $ stringToVersionNumber "1.x.0" ) ,
+    "test Y14"  ~: "generateNewSupportSnapshot x"      ~: "x"      ~=? ( toString $ generateNewSupportSnapshot $ stringToVersionNumber "x" ) ,
+    "test Y15"  ~: "generateNewSupportSnapshot x.1"    ~: "x.1"    ~=? ( toString $ generateNewSupportSnapshot $ stringToVersionNumber "x.1" ) ,
+    "test Y16"  ~: "generateNewSupportSnapshot 1.x.1"  ~: "1.x.2"  ~=? ( toString $ generateNewSupportSnapshot $ stringToVersionNumber "1.x.1" ) ,
+    "test Y17"  ~: "generateNewSupportSnapshot 2.x.x"  ~: "2.x.0"  ~=? ( toString $ generateNewSupportSnapshot $ stringToVersionNumber "2.x.x" ) ,
+    "test Y18"  ~: "generateNewRevision x.1"           ~: "x.2"    ~=? ( toString $ generateNewRevision $ stringToVersionNumber "x.1" ) ,
+    "test Y19"  ~: "generateNewRevision x"             ~: "0"      ~=? ( toString $ generateNewRevision $ stringToVersionNumber "x" ) ,
+    "test Y20"  ~: "generateNewRevision 1.x.0"         ~: "1.x.0"  ~=? ( toString $ generateNewRevision $ stringToVersionNumber "1.x.0" ) ,
     "test _"    ~: "empty test"                        ~: True     ~=? True
     ]
 
 runTests :: IO Counts
-runTests = do
-    runTestTT versionNumberTests
+runTests = runTestTT versionNumberTests
