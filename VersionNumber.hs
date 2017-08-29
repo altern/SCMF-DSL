@@ -166,11 +166,8 @@ instance GenerateNew VersionNumber where
                                              else if (isInitial vn)
                                                 then freezeDimension 1 $ makeNDimensional 1 vn
                                                 else vn
-        generateNewRevision vn = if (isRevision vn)
-                                 then incrementDimension 1 vn
-                                 else if (isInitial vn)
-                                    then freezeDimension 1 $ makeNDimensional 1 vn
-                                    else vn
+        generateNewRevision = generateNewExperimentalSnapshot
+        
         generateNewVersion vn
             | isReleaseBranch vn = generateNewReleaseBranch vn
             | isSupportBranch vn = generateNewSupportBranch vn
