@@ -57,6 +57,8 @@ instance VersionOperations Version where
 instance DimensionOperations Version where
     getNumberOfDimensions (Version vn)                      = getNumberOfDimensions vn
     getNumberOfDimensions (MaturityVersion ml vn)           = getNumberOfDimensions vn
+    getActualNumberOfDimensions (Version vn)                = getActualNumberOfDimensions vn
+    getActualNumberOfDimensions (MaturityVersion ml vn)     = getActualNumberOfDimensions vn
     appendDimension     (Version vn)                        = Version (appendDimension vn)
     appendDimension     (MaturityVersion ml vn)             = MaturityVersion ml (appendDimension vn)
     
@@ -136,8 +138,8 @@ instance Ord Version where
     (Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
 
 instance MakeDimensional Version where
-	makeNDimensional dim (Version version) = Version (makeNDimensional dim version)
-	makeNDimensional dim (MaturityVersion ml version) = MaturityVersion ml (makeNDimensional dim version)
+    makeNDimensional dim (Version version) = Version (makeNDimensional dim version)
+    makeNDimensional dim (MaturityVersion ml version) = MaturityVersion ml (makeNDimensional dim version)
 
 parseVersion :: Parser Version
 parseVersion = do { 
