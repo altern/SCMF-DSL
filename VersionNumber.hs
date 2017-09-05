@@ -26,7 +26,10 @@ class VersionOperations a where
     freeze :: a -> a
     incrementDimension :: Int -> a -> a
     freezeDimension :: Int -> a -> a
+
+class DimensionOperations a where
     getNumberOfDimensions :: a -> Int
+    getActualNumberOfDimensions :: a -> Int
     appendDimension :: a -> a
 
 instance VersionOperations VersionCompound where
@@ -43,7 +46,10 @@ instance VersionOperations VersionCompound where
     incrementDimension _ vc = vc
     freezeDimension 1 vc = freeze vc
     freezeDimension _ vc = vc
+
+instance DimensionOperations VersionCompound where
     getNumberOfDimensions _ = 1
+    getActualNumberOfDimensions _ = 1
     appendDimension vc = vc
 
 instance VersionOperations VersionNumber where
@@ -53,7 +59,10 @@ instance VersionOperations VersionNumber where
     freeze (VersionNumber vn) = VersionNumber ( replaceNth (length vn - 1) (freeze $ last vn) vn)
     incrementDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (increment $ vn!!(length vn - dim)) vn))
     freezeDimension dim (VersionNumber vn) = (VersionNumber ( replaceNth (length vn - dim) (freeze $ vn!!(length vn - dim)) vn))
+
+instance DimensionOperations VersionNumber where
     getNumberOfDimensions (VersionNumber vn) = length vn
+    getActualNumberOfDimensions (VersionNumber vn) = length $ dropWhile (Nothing ==) vn
     appendDimension (VersionNumber vn) = VersionNumber $ [Nothing] ++ vn
     
 instance Eq VersionNumber where

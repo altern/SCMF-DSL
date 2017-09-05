@@ -463,11 +463,11 @@ instance EditArtifactTree ArtifactTreeList where
     editArtifactTree _ _ []= []
     editArtifactTree branchName newDD (x:xs) = (editArtifactTree branchName newDD x ) : (editArtifactTree branchName newDD xs )
 
-instance VersionOperations ArtifactTree where 
+instance DimensionOperations ArtifactTree where 
     appendDimension (RoseTree artifact list ) = RoseTree (appendDimension artifact) (appendDimension list)
     getNumberOfDimensions aTree = getNumberOfDimensions (getArtifactVersion (searchArtifactTree aTree (Version $ VersionNumber [Nothing]) !! 0))
     
-instance VersionOperations ArtifactTreeList where 
+instance DimensionOperations ArtifactTreeList where 
     appendDimension [] = []
     appendDimension (x:xs) = ( appendDimension x ) : (appendDimension xs)
 

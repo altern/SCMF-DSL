@@ -154,11 +154,13 @@ isBranch :: Artifact -> Bool
 isBranch (Artifact (Left (Branch _ _ _))) = True
 isBranch _ = False
 
-instance VersionOperations Artifact where 
+instance DimensionOperations Artifact where 
     appendDimension (Artifact (Left (Branch branchName v document ))) = Artifact (Left (Branch branchName (appendDimension v) document ))
     appendDimension (Artifact (Right (Snapshot timestamp v document ))) = Artifact (Right (Snapshot timestamp (appendDimension v) document ))
     getNumberOfDimensions (Artifact (Left (Branch _ v _))) = getNumberOfDimensions v
     getNumberOfDimensions (Artifact (Right (Snapshot _ v _))) = getNumberOfDimensions v
+    getActualNumberOfDimensions (Artifact (Left (Branch _ v _))) = getActualNumberOfDimensions v
+    getActualNumberOfDimensions (Artifact (Right (Snapshot _ v _))) = getActualNumberOfDimensions v
        
 data AllowedChanges = Any
                     | None

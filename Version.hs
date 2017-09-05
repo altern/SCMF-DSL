@@ -53,6 +53,8 @@ instance VersionOperations Version where
     incrementDimension  num (Version vn)                    = Version (incrementDimension num vn)
     incrementDimension  0 (MaturityVersion ml vn)    = MaturityVersion (increment ml) vn
     incrementDimension  num (MaturityVersion ml vn)         = MaturityVersion ml (incrementDimension num vn)
+
+instance DimensionOperations Version where
     getNumberOfDimensions (Version vn)                      = getNumberOfDimensions vn
     getNumberOfDimensions (MaturityVersion ml vn)           = getNumberOfDimensions vn
     appendDimension     (Version vn)                        = Version (appendDimension vn)

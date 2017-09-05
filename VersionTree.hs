@@ -218,6 +218,13 @@ instance MakeDimensional VersionTreeList where
     makeNDimensional dim [] = []
     makeNDimensional dim (x:xs) = [makeNDimensional dim x] ++ (makeNDimensional dim xs)
 
+instance DimensionOperations VersionTree where
+    getNumberOfDimensions (RoseTree version list) = max (getNumberOfDimensions version) (getNumberOfDimensions list)
+    
+instance DimensionOperations VersionTreeList where
+    getNumberOfDimensions [] = 0
+    getNumberOfDimensions (x:xs) = max (getNumberOfDimensions x) (getNumberOfDimensions xs)
+
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then
