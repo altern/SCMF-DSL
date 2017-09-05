@@ -98,12 +98,16 @@ class MakeDimensional a where
 
 instance MakeDimensional [VersionCompound] where
       makeNDimensional dim vn 
-        | dim <= length vn = vn
+        | dim < length vn = let remainder = dropWhile (Nothing ==) vn 
+          in replicate (dim - length remainder) Nothing ++ remainder 
+        | dim == length vn = vn
         | dim > length vn = replicate (dim - length vn) Nothing ++ vn
 
 instance MakeDimensional VersionNumber where
       makeNDimensional dim (VersionNumber vn) 
-        | dim <= length vn = VersionNumber vn
+        | dim < length vn = let remainder = dropWhile (Nothing ==) vn 
+          in VersionNumber $ replicate (dim - length remainder) Nothing ++ remainder 
+        | dim == length vn = VersionNumber vn
         | dim > length vn = VersionNumber $ replicate (dim - length vn) Nothing ++ vn
 
 class VersionDetection a where
