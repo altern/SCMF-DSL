@@ -75,6 +75,13 @@ showCommand = do
     then displayVersionTree versionTree
     else displayVersionTree $ filterTree isRevision versionTree
 
+newCommand :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()
+newCommand newFunc message = do
+  VersionTreeState versionTree displayRevisionsFlag <- get
+  versionInput <- getInputLine ("\tEnter version, which will be used to append new " ++ message ++ " to: ")
+  case versionInput of
+    Nothing -> put $ VersionTreeState (newFunc initialVersion versionTree) displayRevisionsFlag
+    Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) versionTree) displayRevisionsFlag
 
 parseInput :: String -> InputT (StateT VersionTreeState IO)()
 parseInput inp
@@ -92,45 +99,28 @@ parseInput inp
     mainLoop
     
   | inp =~ "^\\:load" = do
-    {-liftIO $ loadVersionTreeFromFile -}
     VersionTreeState versionTree displayRevisionsFlag <- get
     put $ VersionTreeState loadVersionTreeFromFile displayRevisionsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportBranch" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    versionInput <- getInputLine "\tEnter version, which will be used to append new support branch to: "
-    searchVersion <- case versionInput of
-      Nothing -> put $ VersionTreeState (newSupportBranch initialVersion versionTree) displayRevisionsFlag
-      Just stringVersion -> put $ VersionTreeState (newSupportBranch (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    newCommand newSupportBranch "support branch"
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseBranch" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    versionInput <- getInputLine "\tEnter version, which will be used to append new release branch to: "
-    searchVersion <- case versionInput of
-      Nothing -> put $ VersionTreeState (newReleaseBranch initialVersion versionTree) displayRevisionsFlag
-      Just stringVersion -> put $ VersionTreeState (newReleaseBranch (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    newCommand newReleaseBranch "release branch"
     showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportSnapshot" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    versionInput <- getInputLine "\tEnter version, which will be used to append new support snapshot to: "
-    searchVersion <- case versionInput of
-      Nothing -> put $ VersionTreeState (newSupportSnapshot initialVersion versionTree) displayRevisionsFlag
-      Just stringVersion -> put $ VersionTreeState (newSupportSnapshot (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    newCommand newSupportSnapshot "support snapshot"
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseSnapshot" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    versionInput <- getInputLine "\tEnter version, which will be used to append new release snapshot to: "
-    searchVersion <- case versionInput of
-      Nothing -> put $ VersionTreeState (newReleaseSnapshot initialVersion versionTree) displayRevisionsFlag
-      Just stringVersion -> put $ VersionTreeState (newReleaseSnapshot (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    newCommand newReleaseSnapshot "release snapshot"
     showCommand
     mainLoop
 
