@@ -220,10 +220,16 @@ instance MakeDimensional VersionTreeList where
 
 instance DimensionOperations VersionTree where
     getNumberOfDimensions (RoseTree version list) = max (getNumberOfDimensions version) (getNumberOfDimensions list)
-    
+    getActualNumberOfDimensions (RoseTree version list) = max (getActualNumberOfDimensions version) (getActualNumberOfDimensions list)
+    appendDimension (RoseTree version list) = RoseTree (appendDimension version) (appendDimension list) 
+
 instance DimensionOperations VersionTreeList where
     getNumberOfDimensions [] = 0
     getNumberOfDimensions (x:xs) = max (getNumberOfDimensions x) (getNumberOfDimensions xs)
+    getActualNumberOfDimensions [] = 0
+    getActualNumberOfDimensions (x:xs) = max (getActualNumberOfDimensions x) (getActualNumberOfDimensions xs)
+    appendDimension [] = []
+    appendDimension (x:xs) = [appendDimension x] ++ appendDimension xs
 
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
