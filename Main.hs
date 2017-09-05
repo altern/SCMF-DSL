@@ -68,8 +68,13 @@ commands = liftIO $ mapM_ putStrLn
        , ""
        ]
        
--- showCommand :: InputT (StateT VersionTreeState IO)()
--- showCommand inp = putStrLn $ action Show t :: IO ()
+showCommand :: InputT (StateT VersionTreeState IO)()
+showCommand = do
+  VersionTreeState versionTree displayRevisionsFlag <- get
+  liftIO $ if displayRevisionsFlag 
+    then displayVersionTree versionTree
+    else displayVersionTree $ filterTree isRevision versionTree
+
 
 parseInput :: String -> InputT (StateT VersionTreeState IO)()
 parseInput inp
@@ -79,15 +84,7 @@ parseInput inp
                             
   | inp =~ "^\\:commands" = commands >> mainLoop
   
-  | inp =~ "^\\:show" = do
-    -- outputStrLn $ action Show t :: IO ()
-    -- tree <- loadArtifactTreeFromFile
-    -- displayRepresentationsOfArtifactTree tree
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    liftIO $ if displayRevisionsFlag 
-      then displayVersionTree versionTree
-      else displayVersionTree $ filterTree isRevision versionTree
-    mainLoop 
+  | inp =~ "^\\:show" = showCommand >> mainLoop 
 
   | inp =~ "^\\:save" = do
     VersionTreeState versionTree displayRevisionsFlag <- get 
@@ -98,6 +95,7 @@ parseInput inp
     {-liftIO $ loadVersionTreeFromFile -}
     VersionTreeState versionTree displayRevisionsFlag <- get
     put $ VersionTreeState loadVersionTreeFromFile displayRevisionsFlag
+    showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportBranch" = do
@@ -106,6 +104,7 @@ parseInput inp
     searchVersion <- case versionInput of
       Nothing -> put $ VersionTreeState (newSupportBranch initialVersion versionTree) displayRevisionsFlag
       Just stringVersion -> put $ VersionTreeState (newSupportBranch (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseBranch" = do
@@ -114,6 +113,7 @@ parseInput inp
     searchVersion <- case versionInput of
       Nothing -> put $ VersionTreeState (newReleaseBranch initialVersion versionTree) displayRevisionsFlag
       Just stringVersion -> put $ VersionTreeState (newReleaseBranch (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportSnapshot" = do
@@ -122,6 +122,7 @@ parseInput inp
     searchVersion <- case versionInput of
       Nothing -> put $ VersionTreeState (newSupportSnapshot initialVersion versionTree) displayRevisionsFlag
       Just stringVersion -> put $ VersionTreeState (newSupportSnapshot (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseSnapshot" = do
@@ -130,11 +131,13 @@ parseInput inp
     searchVersion <- case versionInput of
       Nothing -> put $ VersionTreeState (newReleaseSnapshot initialVersion versionTree) displayRevisionsFlag
       Just stringVersion -> put $ VersionTreeState (newReleaseSnapshot (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    showCommand
     mainLoop
 
   | inp =~ "^\\:toggleShowRevisions" = do
     VersionTreeState versionTree displayRevisionsFlag <- get
     put $ VersionTreeState versionTree (not displayRevisionsFlag)
+    showCommand
     mainLoop
 
   | inp =~ ":" = do
