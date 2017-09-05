@@ -234,12 +234,14 @@ instance DimensionOperations VersionTreeList where
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then
-        let vTree1 = (makeNDimensional 2) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentReleaseBranch searchVersion vTree
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewReleaseBranch (if (isInitial previousVersion) then searchVersion else previousVersion)
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
-              (generateNewReleaseBranch (if (isInitial previousVersion) then searchVersion else previousVersion))
+              newVersion
            )
     else 
         vTree
@@ -247,12 +249,14 @@ newReleaseBranch searchVersion vTree =
 newSupportBranch :: Version -> VersionTree -> VersionTree
 newSupportBranch searchVersion vTree = 
     if (isInitial searchVersion) then
-        let vTree1 = (makeNDimensional 3) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentSupportBranch searchVersion vTree
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewSupportBranch (if (isInitial previousVersion) then searchVersion else previousVersion)
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
-              (generateNewSupportBranch (if (isInitial previousVersion) then searchVersion else previousVersion))
+              newVersion
            )
     else 
         vTree
@@ -260,12 +264,14 @@ newSupportBranch searchVersion vTree =
 newReleaseSnapshot :: Version -> VersionTree -> VersionTree
 newReleaseSnapshot searchVersion vTree = 
     if (isReleaseBranch searchVersion) then
-        let vTree1 = (makeNDimensional 2) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentReleaseSnapshot searchVersion vTree
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewReleaseSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion)
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
-              (generateNewReleaseSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion))
+              newVersion
            )
     else 
         vTree
@@ -273,12 +279,14 @@ newReleaseSnapshot searchVersion vTree =
 newSupportSnapshot :: Version -> VersionTree -> VersionTree
 newSupportSnapshot searchVersion vTree = 
     if (isSupportBranch searchVersion) then
-        let vTree1 = (makeNDimensional 3) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+        let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentSupportSnapshot searchVersion vTree
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewSupportSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion)
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
-              (generateNewSupportSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion))
+              newVersion 
            )
     else 
         vTree
