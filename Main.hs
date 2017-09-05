@@ -127,7 +127,7 @@ parseInput inp
 
   | inp =~ "^\\:newReleaseSnapshot" = do
     VersionTreeState versionTree displayRevisionsFlag <- get
-    versionInput <- getInputLine "\tEnter version, which will be used to append new support snapshot to: "
+    versionInput <- getInputLine "\tEnter version, which will be used to append new release snapshot to: "
     searchVersion <- case versionInput of
       Nothing -> put $ VersionTreeState (newReleaseSnapshot initialVersion versionTree) displayRevisionsFlag
       Just stringVersion -> put $ VersionTreeState (newReleaseSnapshot (stringToVersion stringVersion) versionTree) displayRevisionsFlag
