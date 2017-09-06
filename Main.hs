@@ -19,11 +19,15 @@ import Data.List
 
 data VersionTreeState = VersionTreeState {
   versionTree :: VersionTree,
-  displayRevisionsFlag :: Bool
+  displayRevisionsFlag :: Bool,
+  displayMaturityLevelsFlag :: Bool
 }
 
 defaultDisplayRevisionsFlagValue :: Bool
 defaultDisplayRevisionsFlagValue = True
+
+defaultDisplayMaturityLevelsFlagValue :: Bool
+defaultDisplayMaturityLevelsFlagValue = False
 
 instance MonadState s m => MonadState s (InputT m) where
     get = lift get
@@ -33,7 +37,7 @@ instance MonadState s m => MonadState s (InputT m) where
 wordList = [":help", ":q", ":commands", 
             ":show", ":save", ":load", 
             ":edit", ":newSupportBranch", ":newReleaseBranch", ":newRevision",
-            ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleShowRevisions"]
+            ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleRevisions", ":toggleMaturityLevels"]
 
 searchFunc :: String -> [Completion]
 searchFunc str = map simpleCompletion $ filter (str `isPrefixOf`) wordList
@@ -65,24 +69,29 @@ commands = liftIO $ mapM_ putStrLn
        , ":newSupportSnapshot   - generate new support snapshot in version tree"
        , ":newReleaseSnapshot   - generate new release snapshot in version tree"
        , ":newRevision          - generate new revision in version tree"
-       , ":toggleShowRevisions  - toggle display of the revisions in version tree"
+       , ":toggleRevisions      - toggle display of the revisions in version tree"
+       , ":toggleMaturityLevels - toggle display of the maturity levels in version tree"
        , ""
        ]
        
 showCommand :: InputT (StateT VersionTreeState IO)()
 showCommand = do
-  VersionTreeState versionTree displayRevisionsFlag <- get
+  VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
   liftIO $ if displayRevisionsFlag 
-    then displayVersionTree versionTree
-    else displayVersionTree $ filterTree isRevision versionTree
+    then if displayMaturityLevelsFlag 
+      then displayVersionTree $ fmap toMaturityVersion versionTree
+      else displayVersionTree $ fmap toVersion versionTree
+    else if displayMaturityLevelsFlag 
+      then displayVersionTree $ filterTree isRevision $ fmap toMaturityVersion versionTree
+      else displayVersionTree $ filterTree isRevision $ fmap toVersion versionTree
 
 newCommand :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()
 newCommand newFunc message = do
-  VersionTreeState versionTree displayRevisionsFlag <- get
+  VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
   versionInput <- getInputLine ("\tEnter version, which will be used to append new " ++ message ++ " to: ")
   case versionInput of
-    Nothing -> put $ VersionTreeState (newFunc initialVersion versionTree) displayRevisionsFlag
-    Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) versionTree) displayRevisionsFlag
+    Nothing -> put $ VersionTreeState (newFunc initialVersion versionTree) displayRevisionsFlag displayMaturityLevelsFlag
+    Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) versionTree) displayRevisionsFlag displayMaturityLevelsFlag
 
 parseInput :: String -> InputT (StateT VersionTreeState IO)()
 parseInput inp
@@ -95,13 +104,13 @@ parseInput inp
   | inp =~ "^\\:show" = showCommand >> mainLoop 
 
   | inp =~ "^\\:save" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get 
+    VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get 
     liftIO $ saveToFile versionTree
     mainLoop
     
   | inp =~ "^\\:load" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    put $ VersionTreeState loadVersionTreeFromFile displayRevisionsFlag
+    VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ VersionTreeState loadVersionTreeFromFile displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
     mainLoop
 
@@ -130,9 +139,15 @@ parseInput inp
     showCommand
     mainLoop
 
-  | inp =~ "^\\:toggleShowRevisions" = do
-    VersionTreeState versionTree displayRevisionsFlag <- get
-    put $ VersionTreeState versionTree (not displayRevisionsFlag)
+  | inp =~ "^\\:toggleRevisions" = do
+    VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ VersionTreeState versionTree (not displayRevisionsFlag) displayMaturityLevelsFlag
+    showCommand
+    mainLoop
+
+  | inp =~ "^\\:toggleMaturityLevels" = do
+    VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ VersionTreeState versionTree displayRevisionsFlag ( not displayMaturityLevelsFlag )
     showCommand
     mainLoop
 
@@ -162,7 +177,7 @@ greet = mapM_ putStrLn
 main :: IO ((), VersionTreeState)
 main = do 
     greet 
-    runStateT (runInputT mySettings mainLoop) $ VersionTreeState initialVersionTree defaultDisplayRevisionsFlagValue
+    runStateT (runInputT mySettings mainLoop) $ VersionTreeState initialVersionTree defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
     -- tree <- loadArtifactTreeFromFile
     -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     -- let db = (deploy t deploymentRules platformDB )
