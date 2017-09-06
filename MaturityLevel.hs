@@ -1,6 +1,6 @@
 module MaturityLevel where
 
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString.Char8
 import Data.Attoparsec.Combinator
 import Control.Monad
 import Control.Applicative
@@ -30,7 +30,11 @@ stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
     Left _ -> Dev
     
 instance VersionOperations MaturityLevel where
-    increment Prod = Prod
     increment ml = succ ml
-    decrement Dev = Dev
     decrement ml = pred ml
+    freeze ml = ml
+    incrementDimension 1 ml = succ ml
+    incrementDimension _ ml = ml
+    decrementDimension 1 ml = pred ml
+    decrementDimension _ ml = ml
+    freezeDimension _ ml = ml
