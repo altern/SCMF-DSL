@@ -51,8 +51,13 @@ instance VersionOperations Version where
     increment           (Version vn)                        = Version (increment vn)
     increment           (MaturityVersion ml vn)             = MaturityVersion ml (increment vn)
     incrementDimension  num (Version vn)                    = Version (incrementDimension num vn)
-    incrementDimension  0 (MaturityVersion ml vn)    = MaturityVersion (increment ml) vn
+    incrementDimension  0 (MaturityVersion ml vn)           = MaturityVersion (increment ml) vn
     incrementDimension  num (MaturityVersion ml vn)         = MaturityVersion ml (incrementDimension num vn)
+    freeze              (Version vn)                        = Version (freeze vn)
+    freeze              (MaturityVersion ml vn)             = MaturityVersion ml (freeze vn)
+    freezeDimension     num (Version vn)                    = Version (freezeDimension num vn)
+    freezeDimension     0 (MaturityVersion ml vn)           = MaturityVersion (freeze ml) vn
+    freezeDimension     num (MaturityVersion ml vn)         = MaturityVersion ml (freezeDimension num vn)
 
 instance DimensionOperations Version where
     getNumberOfDimensions (Version vn)                      = getNumberOfDimensions vn
@@ -93,6 +98,8 @@ instance GenerateNew Version where
         generateNewRevision (MaturityVersion ml v) = MaturityVersion ml $ generateNewRevision v
         generateNewExperimentalSnapshot (Version v) = Version $ generateNewExperimentalSnapshot v
         generateNewExperimentalSnapshot (MaturityVersion ml v) = MaturityVersion ml $ generateNewExperimentalSnapshot v
+        generateNewVersion (Version v) = Version $ generateNewVersion v
+        generateNewVersion (MaturityVersion ml v) = MaturityVersion ml $ generateNewVersion v
   
 {-incrementReleaseNumberForVersion :: Version -> Version-}
 {-incrementReleaseNumberForVersion (Version v) = Version (incrementReleaseNumber v)-}
