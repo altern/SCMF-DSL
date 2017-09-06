@@ -231,6 +231,13 @@ instance DimensionOperations VersionTreeList where
     appendDimension [] = []
     appendDimension (x:xs) = [appendDimension x] ++ appendDimension xs
 
+newRevision :: Version -> VersionTree -> VersionTree 
+newRevision searchVersion vTree =
+    if (isInitial searchVersion || isSupportBranch searchVersion || isReleaseBranch searchVersion) then
+        (treeInsert vTree searchVersion (generateNewRevision (findLatestRevision vTree)))
+    else 
+        vTree
+
 newReleaseBranch :: Version -> VersionTree -> VersionTree
 newReleaseBranch searchVersion vTree = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then

@@ -32,7 +32,7 @@ instance MonadState s m => MonadState s (InputT m) where
 
 wordList = [":help", ":q", ":commands", 
             ":show", ":save", ":load", 
-            ":edit", ":newSupportBranch", ":newReleaseBranch", 
+            ":edit", ":newSupportBranch", ":newReleaseBranch", ":newRevision",
             ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleShowRevisions"]
 
 searchFunc :: String -> [Completion]
@@ -64,6 +64,7 @@ commands = liftIO $ mapM_ putStrLn
        , ":newReleaseBranch     - generate new release branch in version tree"
        , ":newSupportSnapshot   - generate new support snapshot in version tree"
        , ":newReleaseSnapshot   - generate new release snapshot in version tree"
+       , ":newRevision          - generate new revision in version tree"
        , ":toggleShowRevisions  - toggle display of the revisions in version tree"
        , ""
        ]
@@ -121,6 +122,11 @@ parseInput inp
 
   | inp =~ "^\\:newReleaseSnapshot" = do
     newCommand newReleaseSnapshot "release snapshot"
+    showCommand
+    mainLoop
+
+  | inp =~ "^\\:newRevision" = do
+    newCommand newRevision "revision"
     showCommand
     mainLoop
 
