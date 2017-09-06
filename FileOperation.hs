@@ -6,7 +6,7 @@ import ArtifactTree
 import VersionTree
 import Platform
 
-import Data.Aeson.Encode (encodeToTextBuilder)
+import Data.Aeson.Text (encodeToTextBuilder)
 import Data.Text.Lazy.Builder (toLazyText)
 import Data.Text.Lazy (unpack)
 import System.FilePath
@@ -15,8 +15,8 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Data.Aeson as JSON
-import Data.Attoparsec
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString
+import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Lazy as B
 import Data.Maybe

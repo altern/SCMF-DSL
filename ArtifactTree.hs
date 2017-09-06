@@ -55,7 +55,7 @@ initialArtifactTree = RoseTree ( liftSnapshot $ (Snapshot 0 (Version $ VersionNu
 class ArtifactTreeToStringTree a where 
     artifactTreeToStringTree :: a -> StringTree
     artifactListToStringTreeList :: [a] -> [StringTree]
-    artifactTreeToAllowedChangesTree :: [a] -> [StringTree]
+    {-artifactTreeToAllowedChangesTree :: [a] -> [StringTree]-}
 
 {-instance ArtifactTreeToStringTree ArtifactTree where-}
     {-artifactTreeToStringTree ( RoseTree artifact [] ) = Node (show artifact) []-}
@@ -466,10 +466,13 @@ instance EditArtifactTree ArtifactTreeList where
 instance DimensionOperations ArtifactTree where 
     appendDimension (RoseTree artifact list ) = RoseTree (appendDimension artifact) (appendDimension list)
     getNumberOfDimensions aTree = getNumberOfDimensions (getArtifactVersion (searchArtifactTree aTree (Version $ VersionNumber [Nothing]) !! 0))
+    getActualNumberOfDimensions aTree = getActualNumberOfDimensions (getArtifactVersion (searchArtifactTree aTree (Version $ VersionNumber [Nothing]) !! 0))
     
 instance DimensionOperations ArtifactTreeList where 
     appendDimension [] = []
     appendDimension (x:xs) = ( appendDimension x ) : (appendDimension xs)
+    getNumberOfDimensions (x:xs) = max (getNumberOfDimensions x) (getNumberOfDimensions xs)
+    getActualNumberOfDimensions (x:xs) = max (getActualNumberOfDimensions x) (getActualNumberOfDimensions xs)
 
 {-editArtifact :: BranchName -> Document -> ArtifactTree -> ArtifactTree -}
 {-editArtifact branchName document aTree = searchArtifactTree aTree branchName -}
