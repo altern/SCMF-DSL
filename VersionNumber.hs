@@ -190,6 +190,15 @@ instance GenerateNew VersionNumber where
             | isRevision vn = generateNewRevision vn
             | otherwise = vn
 
+class GetParent a where
+  getParent :: a -> a
+
+instance GetParent VersionNumber where
+  getParent (VersionNumber vn) = let 
+      strippedVN = reverse $ dropWhile (==Nothing) $ reverse vn
+      replaced = replaceNth (length strippedVN - 1) Nothing strippedVN ++ replicate (length vn - length strippedVN) Nothing
+      in VersionNumber $ replaced 
+
 parseVC :: Parser VersionCompound
 parseVC =
      ( string "x"    >> return Nothing)
