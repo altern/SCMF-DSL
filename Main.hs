@@ -10,12 +10,14 @@ import ArtifactTree
 import Platform
 import FileOperation
 import UserOperation
+import MaturityLevel
 
 import Text.Regex.PCRE
 import System.Console.Haskeline
 import System.IO
 import Control.Monad.State.Strict
 import Data.List 
+import Data.Maybe 
 
 data VersionTreeState = VersionTreeState {
   versionTree :: VersionTree,
@@ -36,7 +38,7 @@ instance MonadState s m => MonadState s (InputT m) where
 
 wordList = [":help", ":q", ":commands", 
             ":show", ":save", ":load", 
-            ":edit", ":newSupportBranch", ":newReleaseBranch", ":newRevision",
+            ":edit", ":newSupportBranch", ":newReleaseBranch", ":newRevision", ":promoteSnapshot",
             ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleRevisions", ":toggleMaturityLevels"]
 
 searchFunc :: String -> [Completion]
@@ -69,6 +71,7 @@ commands = liftIO $ mapM_ putStrLn
        , ":newSupportSnapshot   - generate new support snapshot in version tree"
        , ":newReleaseSnapshot   - generate new release snapshot in version tree"
        , ":newRevision          - generate new revision in version tree"
+       , ":promoteSnapshot      - generate new snapshot with incremented maturity level in version tree"
        , ":toggleRevisions      - toggle display of the revisions in version tree"
        , ":toggleMaturityLevels - toggle display of the maturity levels in version tree"
        , ""
@@ -88,10 +91,22 @@ showCommand = do
 newCommand :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()
 newCommand newFunc message = do
   VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
-  versionInput <- getInputLine ("\tEnter version, which will be used to append new " ++ message ++ " to: ")
+  versionInput <- getInputLine (message)
   case versionInput of
     Nothing -> put $ VersionTreeState (newFunc initialVersion versionTree) displayRevisionsFlag displayMaturityLevelsFlag
     Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) versionTree) displayRevisionsFlag displayMaturityLevelsFlag
+
+{-newCommandMaturityLevel :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()-}
+{-newCommandMaturityLevel newFunc message = do-}
+  {-VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get-}
+  {-versionInput <- getInputLine ("\tEnter version, which will be used to append new " ++ message ++ " to: ")-}
+  {-maturityLevelInput <- getInputLine "\tEnter maturity level for the new version: "-}
+  {-let (maturityLevel) = case maturityLevelInput of-}
+        {-Nothing -> Dev-}
+        {-Just stringMaturityLevel -> read stringMaturityLevel -}
+  {-case versionInput of-}
+    {-Nothing -> put $ VersionTreeState (newFunc initialVersion maturityLevel versionTree) displayRevisionsFlag displayMaturityLevelsFlag-}
+    {-Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) maturityLevel versionTree) displayRevisionsFlag displayMaturityLevelsFlag-}
 
 parseInput :: String -> InputT (StateT VersionTreeState IO)()
 parseInput inp
@@ -115,27 +130,32 @@ parseInput inp
     mainLoop
 
   | inp =~ "^\\:newSupportBranch" = do
-    newCommand newSupportBranch "support branch"
+    newCommand newSupportBranch "\tEnter version, which will be used to append new support branch to: "
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseBranch" = do
-    newCommand newReleaseBranch "release branch"
+    newCommand newReleaseBranch "\tEnter version, which will be used to append new release branch to: "
     showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportSnapshot" = do
-    newCommand newSupportSnapshot "support snapshot"
+    newCommand newSupportSnapshot "\tEnter version, which will be used to append new support snapshot to: "
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseSnapshot" = do
-    newCommand newReleaseSnapshot "release snapshot"
+    newCommand newReleaseSnapshot "\tEnter version, which will be used to append new release snapshot to: "
     showCommand
     mainLoop
 
   | inp =~ "^\\:newRevision" = do
-    newCommand newRevision "revision"
+    newCommand newRevision "\tEnter version, which will be used to append new revision to: "
+    showCommand
+    mainLoop
+
+  | inp =~ "^\\:promoteSnapshot " = do
+    newCommand promoteSnapshot "\tEnter version of the snapshot you want to be promoted: "
     showCommand
     mainLoop
 
