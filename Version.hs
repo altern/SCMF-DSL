@@ -148,6 +148,10 @@ instance MakeDimensional Version where
     makeNDimensional dim (Version version) = Version (makeNDimensional dim version)
     makeNDimensional dim (MaturityVersion ml version) = MaturityVersion ml (makeNDimensional dim version)
 
+instance GetParent Version where
+    getParent (Version version) = Version (getParent version)
+    getParent (MaturityVersion ml version) = MaturityVersion ml (getParent version)
+
 parseVersion :: Parser Version
 parseVersion = do { 
         maturity <- parseMaturity
@@ -176,3 +180,7 @@ toVersion :: Version -> Version
 toVersion (MaturityVersion Dev v) = Version v
 toVersion (MaturityVersion ml v) = MaturityVersion ml v
 toVersion (Version v) = Version v
+
+promoteVersion :: Version -> Version
+promoteVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
+promoteVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
