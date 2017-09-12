@@ -185,20 +185,28 @@ instance FindLatest VersionTreeList where
         else (findLatestForParentExperimentalSnapshot parentVersion xs)
     findLatestForParentRevision = findLatestForParentExperimentalSnapshot
     
-class FindParentVersion a where 
+class FindVersion a where 
     findParentVersion :: a -> Version -> Version
+    findVersion :: a -> Version -> Version
 
-instance FindParentVersion VersionTree where
+instance FindVersion VersionTree where
     findParentVersion ( RoseTree _ [] ) _ = Version $ createVersionNumberByNumberOfDimensions 0
     findParentVersion ( RoseTree parentVersion list ) version = case (searchVersionTreeChildren list version) of
         True -> parentVersion
         False -> findParentVersion list version
+    findVersion (RoseTree version list) searchVersion = if (version == searchVersion) 
+        then version
+        else findVersion list searchVersion
         
-instance FindParentVersion VersionTreeList where
+instance FindVersion VersionTreeList where
     findParentVersion [] _ = Version $ createVersionNumberByNumberOfDimensions 0
     findParentVersion (x:xs) version = case ( isInitial (findParentVersion x version) ) of
         True -> findParentVersion xs version
         False -> findParentVersion x version
+    findVersion [] _ = Version $ createVersionNumberByNumberOfDimensions 0
+    findVersion (x:xs) searchVersion = case ( isInitial (findVersion x searchVersion)) of
+        True -> findVersion xs searchVersion
+        False -> findVersion x searchVersion
 
 class SearchVersionTreeChildren a where
     searchVersionTreeChildren :: VersionTreeList -> a -> Bool    
@@ -209,7 +217,6 @@ instance SearchVersionTreeChildren Version where
 
 appendNewVersion :: VersionTree -> Version -> VersionTree 
 appendNewVersion vTree version = treeInsert vTree version ( increment version ) 
-
 
 instance MakeDimensional VersionTree where
     makeNDimensional dim (RoseTree version list) = RoseTree (makeNDimensional dim version) (makeNDimensional dim list)
@@ -304,7 +311,9 @@ promoteSnapshot promotedVersion vTree =
         let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree ( getParent promotedVersion ) (generateNewRevision (findLatestRevision vTree)))
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentSupportSnapshot (getParent promotedVersion) vTree
-            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ promoteVersion (if (isInitial previousVersion) then promotedVersion else previousVersion) 
+            promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ promoteVersion (MaturityVersion promotedVersionMaturity promotedOrPreviousVersionNumber) 
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
@@ -314,7 +323,9 @@ promoteSnapshot promotedVersion vTree =
         let vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree ( getParent promotedVersion ) (generateNewRevision (findLatestRevision vTree)))
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentReleaseSnapshot (getParent promotedVersion) vTree
-            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ promoteVersion (if (isInitial previousVersion) then promotedVersion else previousVersion) 
+            promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ promoteVersion (MaturityVersion promotedVersionMaturity promotedOrPreviousVersionNumber) 
         in (treeInsert 
               vTree1 
               (findLatestRevision vTree1)
