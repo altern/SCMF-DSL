@@ -132,9 +132,9 @@ selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
 
 instance Eq Version where
     (Version vn1) == (Version vn2) = (vn1 == vn2)
-    (Version vn1) == (MaturityVersion ml vn2) = (ml == Dev) && vn1 == vn2
-    (MaturityVersion ml vn1) == (Version vn2) = (ml == Dev) && vn1 == vn2
-    (MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2)      = ( ml1 == ml2 ) && (vn1 == vn2)
+    (Version vn1) == (MaturityVersion ml vn2) = vn1 == vn2
+    (MaturityVersion ml vn1) == (Version vn2) = vn1 == vn2
+    (MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2) = (vn1 == vn2)
     
 instance Ord Version where
     (MaturityVersion ml1 vn1) `compare` (MaturityVersion ml2 vn2) = case vn1 == vn2 of 
@@ -184,3 +184,11 @@ toVersion (Version v) = Version v
 promoteVersion :: Version -> Version
 promoteVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
 promoteVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
+
+getMaturity :: Version -> MaturityLevel 
+getMaturity (Version _) = Dev
+getMaturity (MaturityVersion ml _) = ml
+
+getVersionNumber :: Version -> VersionNumber
+getVersionNumber (Version v) = v
+getVersionNumber (MaturityVersion _ v) = v
