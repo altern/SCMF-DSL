@@ -185,6 +185,11 @@ promoteVersion :: Version -> Version
 promoteVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
 promoteVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
 
+promoteSupportVersion :: Version -> Version
+promoteSupportVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
+promoteSupportVersion (MaturityVersion User v) = MaturityVersion User (generateNewVersion v)
+promoteSupportVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
+
 getMaturity :: Version -> MaturityLevel 
 getMaturity (Version _) = Dev
 getMaturity (MaturityVersion ml _) = ml
