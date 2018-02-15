@@ -38,7 +38,7 @@ instance MonadState s m => MonadState s (InputT m) where
 
 wordList = [":help", ":q", ":commands", 
             ":show", ":save", ":load", 
-            ":edit", ":newSupportBranch", ":newReleaseBranch", ":newRevision", ":promoteSnapshot",
+            ":newSupportBranch", ":newReleaseBranch", ":newRevision", ":promoteSnapshot",
             ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleRevisions", ":toggleMaturityLevels"]
 
 searchFunc :: String -> [Completion]
@@ -65,7 +65,6 @@ commands = liftIO $ mapM_ putStrLn
        , ":show                 - display version tree "
        , ":save                 - save results to file"
        , ":load                 - load results from file"
-       , ":edit                 - edit version tree"
        , ":newSupportBranch     - generate new support branch in version tree"
        , ":newReleaseBranch     - generate new release branch in version tree"
        , ":newSupportSnapshot   - generate new support snapshot in version tree"
@@ -91,7 +90,7 @@ showCommand = do
 newCommand :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()
 newCommand newFunc message = do
   VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get
-  versionInput <- getInputLine (message)
+  versionInput <- getInputLine message
   case versionInput of
     Nothing -> put $ VersionTreeState (newFunc initialVersion versionTree) displayRevisionsFlag displayMaturityLevelsFlag
     Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) versionTree) displayRevisionsFlag displayMaturityLevelsFlag
