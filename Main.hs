@@ -37,7 +37,7 @@ instance MonadState s m => MonadState s (InputT m) where
     state = lift . state
 
 wordList = [":help", ":q", ":commands", 
-            ":show", ":save", ":load", 
+            ":show", ":init", ":save", ":load", 
             ":newSupportBranch", ":newReleaseBranch", ":newRevision", ":promoteSnapshot",
             ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleRevisions", ":toggleMaturityLevels"]
 
@@ -63,6 +63,7 @@ commands :: InputT (StateT VersionTreeState IO)()
 commands = liftIO $ mapM_ putStrLn
        [ ""
        , ":show                 - display version tree "
+       , ":init                 - init version tree (replace existing)"
        , ":save                 - save results to file"
        , ":load                 - load results from file"
        , ":newSupportBranch     - generate new support branch in version tree"
@@ -86,6 +87,11 @@ showCommand = do
     else if displayMaturityLevelsFlag 
       then displayVersionTree $ filterTree isRevision $ fmap toMaturityVersion versionTree
       else displayVersionTree $ filterTree isRevision $ fmap toVersion versionTree
+
+initCommand :: InputT (StateT VersionTreeState IO) ()
+initCommand = do
+  VersionTreeState _ displayRevisionsFlag displayMaturityLevelsFlag <-get
+  put $ VersionTreeState initialVersionTree displayRevisionsFlag displayMaturityLevelsFlag
 
 newCommand :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()
 newCommand newFunc message = do
@@ -116,6 +122,11 @@ parseInput inp
   | inp =~ "^\\:commands" = commands >> mainLoop
   
   | inp =~ "^\\:show" = showCommand >> mainLoop 
+
+  | inp =~ "^\\:init" = do
+    initCommand 
+    showCommand
+    mainLoop 
 
   | inp =~ "^\\:save" = do
     VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get 
