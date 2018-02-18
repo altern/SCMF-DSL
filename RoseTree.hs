@@ -20,6 +20,8 @@ type RoseTreeList a = [RoseTree a]
 type StringTree = Tree String
 type StringTreeList = [StringTree]
 
+class DisplayTree a where 
+    displayTree :: a -> IO ()
 
 -- data RoseTree2 = RoseNode Int [RoseTree2] deriving (Show)
 
@@ -113,6 +115,9 @@ treeListUpdate (x:xs) find replace
 extractChild :: RoseTree a -> RoseTree a
 extractChild (RoseTree _ (x:[])) = x
 extractChild rTree = rTree
+
+extract :: RoseTree a -> a
+extract (RoseTree val _) = val
 
 filterTree :: ( a -> Bool ) -> RoseTree a -> RoseTree a
 filterTree condition rTree@(RoseTree a list) = 

@@ -19,3 +19,5 @@ replaceNth n newval xs = (element n .~ newval) xs
 
 lastN :: Int -> [a] -> [a]
 lastN n xs = let m = length xs in drop (m-n) xs
+
+

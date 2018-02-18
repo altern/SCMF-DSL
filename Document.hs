@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings , DeriveFunctor,DeriveAnyClass, DeriveGeneric #-}
 
 module Document where
 
@@ -9,16 +9,26 @@ import Control.Monad
 import Data.ByteString.Lazy as B
 import qualified Data.HashMap.Strict as HashMap
 import Data.ByteString.Lazy.Char8 as BLS
+import GHC.Generics (Generic)
 
 type DocumentName = String
 type DirectoryName = String
 type DocumentContent = String
 
-data Document = Document DocumentName DocumentContent deriving (Eq)
+data Document = Document {name :: DocumentName, content :: DocumentContent } 
+      deriving (Eq, Generic,  JSON.FromJSON, JSON.ToJSON)
 data Directory = Directory DirectoryName [DocumentOrDirectory] deriving (Eq)
 newtype DocumentOrDirectory = DocumentOrDirectory (Either Document Directory) deriving (Eq)
 
-emptyDocument = ( Document "" "" )
+emptyDocument = Document "" "" 
+
+class GetDocument a where 
+  getDocumentName :: a -> String
+  getDocumentContent :: a -> String
+
+instance GetDocument Document where
+  getDocumentName (Document name _) = name
+  getDocumentContent (Document _ content) = content 
 
 instance Show Document where
     show (Document name content) = "Document name: " ++ name ++ ", Content: " ++ content ++ ""
@@ -41,10 +51,10 @@ editDirectory :: Directory -> DocumentOrDirectory -> DocumentOrDirectory
 editDirectory newDir (DocumentOrDirectory (Right dir)) = DocumentOrDirectory (Right newDir)
 
 -- ToJSON
-instance JSON.ToJSON Document where
-  toJSON (Document name content) = JSON.object [ "document" JSON..= JSON.object [
-    "name"    JSON..= name,
-    "content" JSON..= content ]]
+{-instance JSON.ToJSON Document where-}
+  {-toJSON (Document name content) = JSON.object [ "document" JSON..= JSON.object [-}
+    {-"name"    JSON..= name,-}
+    {-"content" JSON..= content ]]-}
  
 instance JSON.ToJSON Directory where
   toJSON (Directory name content) = JSON.object [ "directory" JSON..= JSON.object [
@@ -56,12 +66,12 @@ instance JSON.ToJSON DocumentOrDirectory where
   toJSON (DocumentOrDirectory (Right d)) = JSON.toJSON d
     
 -- FromJSON 
-instance JSON.FromJSON Document where
-  parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "document" v
-    where parser (JSON.Object v') = Document <$> v' JSON..: "name"
-                                        <*> v' JSON..: "content"
-          parser _           = mzero
-  parseJSON _          = mzero
+{-instance JSON.FromJSON Document where-}
+  {-parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "document" v-}
+    {-where parser (JSON.Object v') = Document <$> v' JSON..: "name"-}
+                                        {-<*> v' JSON..: "content"-}
+          {-parser _           = mzero-}
+  {-parseJSON _          = mzero-}
 
 instance JSON.FromJSON Directory where
   parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "directory" v

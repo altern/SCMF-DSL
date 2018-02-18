@@ -400,7 +400,9 @@ vTree5 = RoseTree (Version $ VersionNumber [Nothing, Nothing, Nothing]) [
                 RoseTree (Version $ VersionNumber [Just 3, Nothing, Nothing]) []
             ]
          ]
+  
 -- HELPER FUNCTIONS --
+instance DisplayTree VersionTree where 
+    displayTree t = putStrLn $ drawVerticalTree (versionTreeToStringTree t)
 
-displayVersionTree t = putStrLn $ drawVerticalTree (versionTreeToStringTree t)
 displayAllowedChanges t = putStrLn $ drawVerticalTree (versionTreeToAllowedChangesTree t)

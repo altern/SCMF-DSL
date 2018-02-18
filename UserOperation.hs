@@ -4,8 +4,10 @@ module UserOperation where
 
 import Artifact
 import ArtifactTree
+import RoseTree
 import Version
 import VersionTree
+import VersionDocumentTree
 import Platform
 import FileOperation
 import Document 
@@ -83,16 +85,27 @@ instance Action ArtifactTree ( IO () ) where
     action List aTree = displayArtifactTree aTree 
     action Explain aTree = displayArtifactTree aTree 
 
+instance Action VersionDocumentTree ( IO () ) where
+    action Save vTree = saveToFile vTree
+    action Store vTree = saveToFile vTree
+
+    action Describe aTree = displayTree aTree 
+    action Display aTree = displayTree aTree 
+    action Show aTree = displayTree aTree 
+    action Output aTree = displayTree aTree 
+    action List aTree = displayTree aTree 
+    action Explain aTree = displayTree aTree
+    
 instance Action VersionTree ( IO () ) where
     action Save vTree = saveToFile vTree
     action Store vTree = saveToFile vTree
 
-    action Describe aTree = displayVersionTree aTree 
-    action Display aTree = displayVersionTree aTree 
-    action Show aTree = displayVersionTree aTree 
-    action Output aTree = displayVersionTree aTree 
-    action List aTree = displayVersionTree aTree 
-    action Explain aTree = displayVersionTree aTree
+    action Describe aTree = displayTree aTree 
+    action Display aTree = displayTree aTree 
+    action Show aTree = displayTree aTree 
+    action Output aTree = displayTree aTree 
+    action List aTree = displayTree aTree 
+    action Explain aTree = displayTree aTree
     
 instance Action PlatformDB ( IO () ) where
     action Save db = saveToFile db

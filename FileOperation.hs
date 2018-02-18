@@ -3,6 +3,7 @@
 module FileOperation where
 
 import ArtifactTree
+import VersionDocumentTree
 import VersionTree
 import Platform
 
@@ -34,9 +35,9 @@ platformDBFile = "platforms.json"
 deploymentRulesFile :: FilePath
 deploymentRulesFile = "deploymentRules.json"
 
-{-# NOINLINE loadVersionTreeFromFile #-} 
-loadVersionTreeFromFile :: VersionTree
-loadVersionTreeFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile versionTreeFile
+{-# NOINLINE loadVersionDocumentTreeFromFile #-} 
+loadVersionDocumentTreeFromFile :: VersionDocumentTree
+loadVersionDocumentTreeFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile versionTreeFile
 {-loadVersionTreeFromFile :: VersionTree-}
 {-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]-}
 
@@ -53,6 +54,10 @@ instance SaveToFile ArtifactTree where
 instance SaveToFile VersionTree where
     saveToFile vTree = do
       withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)
+
+instance SaveToFile VersionDocumentTree where
+    saveToFile vDocTree = do
+      withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vDocTree)
 
 instance SaveToFile PlatformDB where
     saveToFile db = do
