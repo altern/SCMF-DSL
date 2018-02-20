@@ -4,7 +4,7 @@ module VersionDocumentTree where
 
 import Data.Tree
 import Data.Tree.Pretty
-
+import Data.Maybe
 import RoseTree
 import VersionNumber
 import Version
@@ -276,25 +276,37 @@ hasVersion version1 (VersionDocument version2 _) = version1 == version2
 
 getDocumentByVersion :: Version -> VersionDocumentTree -> Document
 getDocumentByVersion searchVersion vTree = 
-    let searchVersionDocument = extract (filterTree (not . hasVersion searchVersion) vTree)
-    in (getDocument searchVersionDocument)
+    let searchVersionDocument = (searchTree (hasVersion searchVersion) vTree)
+    in (case searchVersionDocument of
+      Nothing -> emptyDocument
+      Just document -> getDocument document
+    )
 
 getNameByVersion :: Version -> VersionDocumentTree -> String
 getNameByVersion searchVersion vTree = 
-    let searchVersionDocument = extract (filterTree (not . hasVersion searchVersion) vTree)
-    in (getDocumentName searchVersionDocument)
+    let searchVersionDocument = (searchTree (hasVersion searchVersion) vTree)
+    in (case searchVersionDocument of
+      Nothing -> ""
+      Just document -> getDocumentName document
+    )
 
 getContentByVersion :: Version -> VersionDocumentTree -> String
 getContentByVersion searchVersion vTree = 
-    let searchVersionDocument = extract (filterTree (not . hasVersion searchVersion) vTree)
-    in (getDocumentContent searchVersionDocument)
+    let searchVersionDocument = (searchTree (hasVersion searchVersion) vTree)
+    in (case searchVersionDocument of
+      Nothing -> ""
+      Just document -> getDocumentContent document
+    )
 
 editBranch :: Version -> String -> String -> VersionDocumentTree -> VersionDocumentTree
 editBranch searchVersion name contents vTree = 
-    let searchVersionDocument = extract (filterTree (not . hasVersion searchVersion) vTree)
+    let searchVersionDocument = (searchTree (hasVersion searchVersion) vTree)
     in (treeUpdate 
         vTree 
-        searchVersionDocument
+        (case searchVersionDocument of
+         Nothing -> VersionDocument initialVersion emptyDocument
+         Just document -> document
+        )
         (VersionDocument searchVersion (Document name contents))
     )
 
@@ -400,5 +412,8 @@ instance DisplayTree VersionDocumentTree where
 
 vDocumentTree :: VersionDocumentTree 
 vDocumentTree = RoseTree (VersionDocument (Version $ VersionNumber [Just 0]) (Document "" ""))
-                [RoseTree (VersionDocument (Version $ VersionNumber [Nothing]) (Document "" "")) []]
+                [RoseTree (VersionDocument (Version $ VersionNumber [Nothing]) (Document "" "")) [
+                  RoseTree (VersionDocument (Version $ VersionNumber [Just 1]) (Document "" "")) [],
+                  RoseTree (VersionDocument (Version $ VersionNumber [Just 2]) (Document "" "")) []
+                ]]
 

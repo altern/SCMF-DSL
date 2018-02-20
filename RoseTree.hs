@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances, OverloadedStrings, DeriveFunctor, DeriveAnyClass,DeriveGeneric #-}
 module RoseTree where
-
+import Util
+import Data.Maybe
 import Data.Tree
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
@@ -116,9 +117,6 @@ extractChild :: RoseTree a -> RoseTree a
 extractChild (RoseTree _ (x:[])) = x
 extractChild rTree = rTree
 
-extract :: RoseTree a -> a
-extract (RoseTree val _) = val
-
 filterTree :: ( a -> Bool ) -> RoseTree a -> RoseTree a
 filterTree condition rTree@(RoseTree a list) = 
     if (condition $ a) 
@@ -129,3 +127,17 @@ filterTreeList :: (a -> Bool) -> [RoseTree a] -> [RoseTree a]
 filterTreeList condition [] = []
 filterTreeList condition (x:xs) = [filterTree condition x] ++ (filterTreeList condition xs)
 
+searchTree :: ( a -> Bool ) -> RoseTree a -> Maybe a
+searchTree condition rTree@(RoseTree a list) = 
+    if (condition $ a)
+       then (Just a)
+       else let l = filter (isJust) $ searchTreeList condition list
+         in (
+            if length l == 0 
+            then Nothing
+            else l!!0
+         )
+         
+searchTreeList :: ( a -> Bool ) -> [RoseTree a] -> [Maybe a] 
+searchTreeList condition [] = []
+searchTreeList condition (x:xs) = [searchTree condition x] ++ (searchTreeList condition xs)
