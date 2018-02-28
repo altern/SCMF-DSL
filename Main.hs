@@ -157,8 +157,8 @@ parseInput inp
             outputStrLn $ "You should enter branch version. Aborting operation"
             put $ VersionDocumentTreeState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag
           else do 
-            newNameInput <- getInputLine "\tEnter new name of the file: "
-            newContentInput <- getInputLine "\tEnter new contents of the file: "
+            newNameInput <- getInputLineWithInitial "\tEnter new name of the file: " (getNameByVersion branchVersion versionDocumentTree, "")
+            newContentInput <- getInputLineWithInitial "\tEnter new contents of the file: " (getContentByVersion branchVersion versionDocumentTree, "")
             case newNameInput of 
               Nothing -> case newContentInput of
                 Nothing -> put $ VersionDocumentTreeState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag  
