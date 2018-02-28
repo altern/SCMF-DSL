@@ -52,7 +52,8 @@ initialVersionDocumentTree = RoseTree (VersionDocument (Version $ VersionNumber 
 -- VERSION TREE CONVERSION TO STRING --
 instance ToString VersionDocument where 
     toString (VersionDocument version (Document documentName documentContent)) = if (not (isRevision version) )
-      then (toString version) ++ "(" ++ documentName ++  ")"
+      {-then (toString version) ++ "(" ++ documentName ++  ")"-}
+      then (toString version) 
       else (toString version) 
 
 instance GetDocument VersionDocument where
