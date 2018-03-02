@@ -157,15 +157,10 @@ parseInput inp
             outputStrLn $ "You should enter branch version. Aborting operation"
             put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag
           else do 
-            newNameInput <- getInputLineWithInitial "\tEnter new name of the file: " (getNameByVersion branchVersion repository, "")
-            newContentInput <- getInputLineWithInitial "\tEnter new contents of the file: " (getContentByVersion branchVersion repository, "")
-            case newNameInput of 
-              Nothing -> case newContentInput of
-                Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag  
-                Just newContent -> put $ RepositoryState (editBranch branchVersion (getNameByVersion branchVersion repository) newContent repository) displayRevisionsFlag displayMaturityLevelsFlag
-              Just newName -> case newContentInput of
-                Nothing -> put $ RepositoryState (editBranch branchVersion newName (getContentByVersion branchVersion repository) repository) displayRevisionsFlag displayMaturityLevelsFlag
-                Just newContent -> put $ RepositoryState (editBranch branchVersion newName newContent repository) displayRevisionsFlag displayMaturityLevelsFlag
+            newContentInput <- getInputLineWithInitial "\tEnter new contents of the branch: " (getRepositoryContentByVersion branchVersion repository, "")
+            case newContentInput of
+              Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag  
+              Just newContent -> put $ RepositoryState (editBranch branchVersion newContent repository) displayRevisionsFlag displayMaturityLevelsFlag
           {-showContentsCommand-}
     mainLoop
 
@@ -176,9 +171,9 @@ parseInput inp
       Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
-        document = getDocumentByVersion version repository 
+        content = getRepositoryContentByVersion version repository 
         in ( do
-          outputStrLn $ show document
+          outputStrLn $ show content
           put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag 
         )
     mainLoop
