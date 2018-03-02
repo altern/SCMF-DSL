@@ -30,25 +30,6 @@ initialRepository :: Repository
 initialRepository = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0] ) emptyDocument)
   [ RoseTree (RepositoryNode initialVersion emptyDocument) []]
 
--- VERSION TREE OPERATIONS --
-
--- data VersionTreeOperation  = First
-                            -- | Last
-                            -- | Previous
-                            -- | Next
-                            -- | Parent -- do we really need it here?
-                            -- | Children -- do we really need it here?
-                            -- | Merge -- ?
-
--- initialVersionTree :: VersionTree
--- initialVersionTree = RoseTree (Version (Number 0))  
---    [ RoseTree ( Version NumberPlaceholder ) [] ]
-
--- isInitialVersionTree :: VersionTree -> Bool
--- isInitialVersionTree vTree = case vTree of 
---    ( RoseTree (Version (Number 0)) [ RoseTree ( Version NumberPlaceholder ) [] ] ) -> True
---    _ -> False
-
 -- VERSION TREE CONVERSION TO STRING --
 instance ToString RepositoryNode where 
     toString (RepositoryNode version (Document documentName documentContent)) = if (not (isRevision version) )
@@ -72,42 +53,6 @@ versionDocumentTreeToStringTree :: Repository -> StringTree
 versionDocumentTreeToStringTree (RoseTree num []) = Node (toString num) []
 versionDocumentTreeToStringTree (RoseTree num (x:[])) = Node (toString num) [ versionDocumentTreeToStringTree x ]
 versionDocumentTreeToStringTree (RoseTree num (x:xs)) = Node (toString num) ( (versionDocumentTreeToStringTree x) : (versionListToStringTreeList xs) )
-
-{--- TODO: implement toJSON and FromJSON for versionTrees-}
-{--- instance JSON.ToJSON VersionTree where-}
-    {--- toJSON (RoseTree version children) = -}
-        {--- JSON.object [ T.pack "version" JSON..= (T.pack $ show version)]-}
-        {--- JSON.object [ T.pack "children" JSON..= (JSON.toJSON children)]-}
-
-{--- instance JSON.FromJSON VersionTree where-}
-    {--- parseJSON (JSON.Object vTree) = liftM stringToVersion ( vTree JSON..: T.pack "versionTree" )-}
-    {--- parseJSON _ = mzero-}
-
-{--- VERSION TREE CONVERSION TO ALLOWED CHANGES ---}
-
-{-versionListToAllowedChangesList :: VersionTreeList -> StringTreeList-}
-{-versionListToAllowedChangesList [] = []-}
-{-versionListToAllowedChangesList(x:[]) = [versionTreeToAllowedChangesTree x]-}
-{-versionListToAllowedChangesList (x:xs) = (versionTreeToAllowedChangesTree x):(versionListToAllowedChangesList xs) -}
-
-{-versionTreeToAllowedChangesTree :: VersionTree -> StringTree-}
-{-versionTreeToAllowedChangesTree (RoseTree num []) = Node (allowedChangesToString ( detectAllowedChanges num)) []-}
-{-versionTreeToAllowedChangesTree (RoseTree num (x:[])) = Node (allowedChangesToString ( detectAllowedChanges num)) [ versionTreeToAllowedChangesTree x ]-}
-{-versionTreeToAllowedChangesTree (RoseTree num (x:xs)) = Node (allowedChangesToString ( detectAllowedChanges num)) ( (versionTreeToAllowedChangesTree x) : (versionListToAllowedChangesList xs) )-}
-
-{-class VersionTreeAppend structure where-}
-    {-versionTreeAppend :: structure -> structure-}
-
-{-{-instance VersionTreeAppend VersionTreeList where -}-}
-    {-{-versionTreeAppend [] = [RoseTree (Version (VersionCompound (Number 0)) []]-}-}
-    {-{-versionTreeAppend v@((RoseTree (Version (VersionCompound (Number n))) []):[]) = v ++ [(RoseTree (Version (VersionCompound (Number (n + 1)))) [] )]-}-}
-    {-{-versionTreeAppend v@((RoseTree (Version (VersionCompound NumberPlaceholder)) []):[]) = v-}-}
-    {-{-versionTreeAppend ((RoseTree (Version (VersionCompound NumberPlaceholder)) x):[]) = ((RoseTree (Version (VersionCompound NumberPlaceholder)) (versionTreeAppend x)):[])-}-}
-    {-{-versionTreeAppend (x:xs) = [x] ++ (versionTreeAppend xs)-}-}
-
-{-{-instance VersionTreeAppend VersionTree where -}-}
-    {-{-versionTreeAppend (RoseTree (Version (VersionCompound NumberPlaceholder)) list) = (RoseTree (Version (VersionCompound NumberPlaceholder)) (versionTreeAppend list))-}-}
-    {-{-versionTreeAppend a@(RoseTree (Version (VersionCompound (Number n))) list) = a-}-}
 
 class FindLatest a where 
     findLatestVersion :: a -> Version
@@ -235,8 +180,6 @@ instance SearchRepositoryChildren Version where
     searchRepositoryChildren [] _ = False
     searchRepositoryChildren ((RoseTree (RepositoryNode version1 document) _):xs) version2 = (version1 == version2) || (searchRepositoryChildren xs version2)
 
-{-appendNewVersion :: Repository -> Version -> Repository -}
-{-appendNewVersion vTree version = treeInsert vTree version ( increment version ) -}
 instance MakeDimensional RepositoryNode where
     makeNDimensional dim (RepositoryNode version document) = RepositoryNode (makeNDimensional dim version) document
 
@@ -409,7 +352,6 @@ promoteSnapshot promotedVersion vTree =
 {--- HELPER FUNCTIONS ---}
 instance DisplayTree Repository where 
     displayTree t = putStrLn $ drawVerticalTree (versionDocumentTreeToStringTree t)
-{-displayAllowedChanges t = putStrLn $ drawVerticalTree (versionTreeToAllowedChangesTree t)-}
 
 vDocumentTree :: Repository 
 vDocumentTree = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0]) (Document "" ""))
