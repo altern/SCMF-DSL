@@ -7,7 +7,7 @@ import ArtifactTree
 import RoseTree
 import Version
 import VersionTree
-import VersionDocumentTree
+import Repository
 import Platform
 import FileOperation
 import Document 
@@ -85,7 +85,7 @@ instance Action ArtifactTree ( IO () ) where
     action List aTree = displayArtifactTree aTree 
     action Explain aTree = displayArtifactTree aTree 
 
-instance Action VersionDocumentTree ( IO () ) where
+instance Action Repository ( IO () ) where
     action Save vTree = saveToFile vTree
     action Store vTree = saveToFile vTree
 

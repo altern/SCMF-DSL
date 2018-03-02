@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, DeriveGeneric, DeriveAnyClass #-}
 
-module VersionDocumentTree where
+module Repository where
 
 import Data.Tree
 import Data.Tree.Pretty
@@ -23,11 +23,11 @@ import GHC.Generics (Generic)
 
 data RepositoryNode = RepositoryNode Version Document
     deriving (Eq, Show, JSON.FromJSON, JSON.ToJSON, Generic)
-type VersionDocumentTree = RoseTree RepositoryNode
-type VersionDocumentTreeList = [VersionDocumentTree]
+type Repository = RoseTree RepositoryNode
+type RepositoryList = [Repository]
 
-initialVersionDocumentTree :: VersionDocumentTree
-initialVersionDocumentTree = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0] ) emptyDocument)
+initialRepository :: Repository
+initialRepository = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0] ) emptyDocument)
   [ RoseTree (RepositoryNode initialVersion emptyDocument) []]
 
 -- VERSION TREE OPERATIONS --
@@ -63,12 +63,12 @@ instance GetDocument RepositoryNode where
 getDocument :: RepositoryNode -> Document  
 getDocument (RepositoryNode version document) = document
 
-versionListToStringTreeList :: VersionDocumentTreeList -> StringTreeList
+versionListToStringTreeList :: RepositoryList -> StringTreeList
 versionListToStringTreeList [] = []
 versionListToStringTreeList (x:[]) = [versionDocumentTreeToStringTree x]
 versionListToStringTreeList (x:xs) = (versionDocumentTreeToStringTree x):(versionListToStringTreeList xs) 
 
-versionDocumentTreeToStringTree :: VersionDocumentTree -> StringTree
+versionDocumentTreeToStringTree :: Repository -> StringTree
 versionDocumentTreeToStringTree (RoseTree num []) = Node (toString num) []
 versionDocumentTreeToStringTree (RoseTree num (x:[])) = Node (toString num) [ versionDocumentTreeToStringTree x ]
 versionDocumentTreeToStringTree (RoseTree num (x:xs)) = Node (toString num) ( (versionDocumentTreeToStringTree x) : (versionListToStringTreeList xs) )
@@ -126,7 +126,7 @@ class FindLatest a where
     findLatestForParentExperimentalSnapshot :: Version -> a -> Version
 
 
-instance FindLatest VersionDocumentTree where    
+instance FindLatest Repository where    
     findLatestVersion ( RoseTree (RepositoryNode version document)  [] ) = version
     findLatestVersion ( RoseTree (RepositoryNode version1 document) list ) = if ( version1 > ( findLatestVersion list ) ) then version1 else findLatestVersion list
     findLatestSupportBranch (RoseTree (RepositoryNode version document) []) = if (isSupportBranch version) then version else Version $ createVersionNumberByNumberOfDimensions 0
@@ -147,7 +147,7 @@ instance FindLatest VersionDocumentTree where
     findLatestForParentReleaseSnapshot parentVersion (RoseTree (RepositoryNode version document) list) = if (parentVersion == version) then findLatestReleaseSnapshot list else findLatestForParentReleaseSnapshot parentVersion list
     findLatestForParentExperimentalSnapshot parentVersion (RoseTree (RepositoryNode version document) list) = if (parentVersion == version) then findLatestExperimentalSnapshot list else findLatestForParentExperimentalSnapshot parentVersion list
     findLatestForParentRevision = findLatestForParentExperimentalSnapshot
-instance FindLatest VersionDocumentTreeList where
+instance FindLatest RepositoryList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestVersion (x:[]) = findLatestVersion x
     findLatestVersion (x:xs) = if ((findLatestVersion x) > (findLatestVersion xs)) then (findLatestVersion x) else (findLatestVersion xs)
@@ -209,16 +209,16 @@ class FindVersion a where
     findParentVersion :: a -> Version -> Version
     findVersion :: a -> Version -> Version
 
-instance FindVersion VersionDocumentTree where
+instance FindVersion Repository where
     findParentVersion ( RoseTree _ [] ) _ = Version $ createVersionNumberByNumberOfDimensions 0
-    findParentVersion ( RoseTree (RepositoryNode parentVersion document) list ) version = case (searchVersionDocumentTreeChildren list version) of
+    findParentVersion ( RoseTree (RepositoryNode parentVersion document) list ) version = case (searchRepositoryChildren list version) of
         True -> parentVersion
         False -> findParentVersion list version
     findVersion (RoseTree (RepositoryNode version document) list) searchVersion = if (version == searchVersion) 
         then version
         else findVersion list searchVersion
         
-instance FindVersion VersionDocumentTreeList where
+instance FindVersion RepositoryList where
     findParentVersion [] _ = Version $ createVersionNumberByNumberOfDimensions 0
     findParentVersion (x:xs) version = case ( isInitial (findParentVersion x version) ) of
         True -> findParentVersion xs version
@@ -228,31 +228,31 @@ instance FindVersion VersionDocumentTreeList where
         True -> findVersion xs searchVersion
         False -> findVersion x searchVersion
 
-class SearchVersionDocumentTreeChildren a where
-    searchVersionDocumentTreeChildren :: VersionDocumentTreeList -> a -> Bool    
+class SearchRepositoryChildren a where
+    searchRepositoryChildren :: RepositoryList -> a -> Bool    
     
-instance SearchVersionDocumentTreeChildren Version where
-    searchVersionDocumentTreeChildren [] _ = False
-    searchVersionDocumentTreeChildren ((RoseTree (RepositoryNode version1 document) _):xs) version2 = (version1 == version2) || (searchVersionDocumentTreeChildren xs version2)
+instance SearchRepositoryChildren Version where
+    searchRepositoryChildren [] _ = False
+    searchRepositoryChildren ((RoseTree (RepositoryNode version1 document) _):xs) version2 = (version1 == version2) || (searchRepositoryChildren xs version2)
 
-{-appendNewVersion :: VersionDocumentTree -> Version -> VersionDocumentTree -}
+{-appendNewVersion :: Repository -> Version -> Repository -}
 {-appendNewVersion vTree version = treeInsert vTree version ( increment version ) -}
 instance MakeDimensional RepositoryNode where
     makeNDimensional dim (RepositoryNode version document) = RepositoryNode (makeNDimensional dim version) document
 
-instance MakeDimensional VersionDocumentTree where
+instance MakeDimensional Repository where
     makeNDimensional dim (RoseTree (RepositoryNode version document) list) = RoseTree (RepositoryNode (makeNDimensional dim version) document) (makeNDimensional dim list)
     
-instance MakeDimensional VersionDocumentTreeList where
+instance MakeDimensional RepositoryList where
     makeNDimensional dim [] = []
     makeNDimensional dim (x:xs) = [makeNDimensional dim x] ++ (makeNDimensional dim xs)
 
-instance DimensionOperations VersionDocumentTree where
+instance DimensionOperations Repository where
     getNumberOfDimensions (RoseTree (RepositoryNode version document) list) = max (getNumberOfDimensions version) (getNumberOfDimensions list)
     getActualNumberOfDimensions (RoseTree (RepositoryNode version document) list) = max (getActualNumberOfDimensions version) (getActualNumberOfDimensions list)
     appendDimension (RoseTree (RepositoryNode version document) list) = RoseTree (RepositoryNode (appendDimension version) document) (appendDimension list) 
 
-instance DimensionOperations VersionDocumentTreeList where
+instance DimensionOperations RepositoryList where
     getNumberOfDimensions [] = 0
     getNumberOfDimensions (x:xs) = max (getNumberOfDimensions x) (getNumberOfDimensions xs)
     getActualNumberOfDimensions [] = 0
@@ -260,7 +260,7 @@ instance DimensionOperations VersionDocumentTreeList where
     appendDimension [] = []
     appendDimension (x:xs) = [appendDimension x] ++ appendDimension xs
 
-newRevision :: Version -> VersionDocumentTree -> VersionDocumentTree 
+newRevision :: Version -> Repository -> Repository 
 newRevision searchVersion vTree = let
     document = getDocumentByVersion searchVersion vTree
     in if (isInitial searchVersion || isSupportBranch searchVersion || isReleaseBranch searchVersion) then
@@ -275,7 +275,7 @@ newRevision searchVersion vTree = let
 hasVersion :: Version -> RepositoryNode -> Bool
 hasVersion version1 (RepositoryNode version2 _) = version1 == version2
 
-getDocumentByVersion :: Version -> VersionDocumentTree -> Document
+getDocumentByVersion :: Version -> Repository -> Document
 getDocumentByVersion searchVersion vTree = 
     let searchRepositoryNode = (searchTree (hasVersion searchVersion) vTree)
     in (case searchRepositoryNode of
@@ -283,7 +283,7 @@ getDocumentByVersion searchVersion vTree =
       Just document -> getDocument document
     )
 
-getNameByVersion :: Version -> VersionDocumentTree -> String
+getNameByVersion :: Version -> Repository -> String
 getNameByVersion searchVersion vTree = 
     let searchRepositoryNode = (searchTree (hasVersion searchVersion) vTree)
     in (case searchRepositoryNode of
@@ -291,7 +291,7 @@ getNameByVersion searchVersion vTree =
       Just document -> getDocumentName document
     )
 
-getContentByVersion :: Version -> VersionDocumentTree -> String
+getContentByVersion :: Version -> Repository -> String
 getContentByVersion searchVersion vTree = 
     let searchRepositoryNode = (searchTree (hasVersion searchVersion) vTree)
     in (case searchRepositoryNode of
@@ -299,7 +299,7 @@ getContentByVersion searchVersion vTree =
       Just document -> getDocumentContent document
     )
 
-editBranch :: Version -> String -> String -> VersionDocumentTree -> VersionDocumentTree
+editBranch :: Version -> String -> String -> Repository -> Repository
 editBranch searchVersion name contents vTree = 
     let searchRepositoryNode = (searchTree (hasVersion searchVersion) vTree)
     in (treeUpdate 
@@ -311,7 +311,7 @@ editBranch searchVersion name contents vTree =
         (RepositoryNode searchVersion (Document name contents))
     )
 
-newReleaseBranch :: Version -> VersionDocumentTree -> VersionDocumentTree
+newReleaseBranch :: Version -> Repository -> Repository
 newReleaseBranch searchVersion vTree = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then
         let document = getDocumentByVersion searchVersion vTree
@@ -327,7 +327,7 @@ newReleaseBranch searchVersion vTree =
     else 
         vTree
 
-newSupportBranch :: Version -> VersionDocumentTree -> VersionDocumentTree
+newSupportBranch :: Version -> Repository -> Repository
 newSupportBranch searchVersion vTree = 
     if (isInitial searchVersion) then
         let document = getDocumentByVersion searchVersion vTree
@@ -343,7 +343,7 @@ newSupportBranch searchVersion vTree =
     else 
         vTree
 
-newReleaseSnapshot :: Version -> VersionDocumentTree -> VersionDocumentTree
+newReleaseSnapshot :: Version -> Repository -> Repository
 newReleaseSnapshot searchVersion vTree = 
     if (isReleaseBranch searchVersion) then
         let document = getDocumentByVersion searchVersion vTree
@@ -359,7 +359,7 @@ newReleaseSnapshot searchVersion vTree =
     else 
         vTree
 
-newSupportSnapshot :: Version -> VersionDocumentTree -> VersionDocumentTree
+newSupportSnapshot :: Version -> Repository -> Repository
 newSupportSnapshot searchVersion vTree = 
     if (isSupportBranch searchVersion) then
         let document = getDocumentByVersion searchVersion vTree
@@ -375,7 +375,7 @@ newSupportSnapshot searchVersion vTree =
     else 
         vTree
 
-promoteSnapshot :: Version -> VersionDocumentTree -> VersionDocumentTree
+promoteSnapshot :: Version -> Repository -> Repository
 promoteSnapshot promotedVersion vTree =
     if (isSupportSnapshot promotedVersion ) then
         let document = getDocumentByVersion promotedVersion vTree
@@ -407,11 +407,11 @@ promoteSnapshot promotedVersion vTree =
         vTree
 
 {--- HELPER FUNCTIONS ---}
-instance DisplayTree VersionDocumentTree where 
+instance DisplayTree Repository where 
     displayTree t = putStrLn $ drawVerticalTree (versionDocumentTreeToStringTree t)
 {-displayAllowedChanges t = putStrLn $ drawVerticalTree (versionTreeToAllowedChangesTree t)-}
 
-vDocumentTree :: VersionDocumentTree 
+vDocumentTree :: Repository 
 vDocumentTree = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0]) (Document "" ""))
                 [RoseTree (RepositoryNode (Version $ VersionNumber [Nothing]) (Document "" "")) [
                   RoseTree (RepositoryNode (Version $ VersionNumber [Just 1]) (Document "" "")) [],
