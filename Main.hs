@@ -21,7 +21,7 @@ import Data.List
 import Data.Maybe 
 
 data RepositoryState = RepositoryState {
-  versionDocumentTree :: Repository,
+  repository :: Repository,
   displayRevisionsFlag :: Bool,
   displayMaturityLevelsFlag :: Bool
 }
@@ -83,15 +83,15 @@ commands = liftIO $ mapM_ putStrLn
        
 showCommand :: InputT (StateT RepositoryState IO)()
 showCommand = do
-  RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
-  liftIO $ displayTree versionDocumentTree
+  RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
+  liftIO $ displayTree repository
 {-  liftIO $ if displayRevisionsFlag -}
     {-then if displayMaturityLevelsFlag -}
-      {-then displayTree $ fmap toMaturityVersion versionDocumentTree-}
-      {-else displayTree $ fmap toVersion versionDocumentTree-}
+      {-then displayTree $ fmap toMaturityVersion repository-}
+      {-else displayTree $ fmap toVersion repository-}
     {-else if displayMaturityLevelsFlag -}
-      {-then displayTree $ filterTree isRevision $ fmap toMaturityVersion versionDocumentTree-}
-      {-else displayTree $ filterTree isRevision $ fmap toVersion versionDocumentTree-}
+      {-then displayTree $ filterTree isRevision $ fmap toMaturityVersion repository-}
+      {-else displayTree $ filterTree isRevision $ fmap toVersion repository-}
  
 initCommand :: InputT (StateT RepositoryState IO) ()
 initCommand = do
@@ -100,11 +100,11 @@ initCommand = do
 
 newCommand :: (Version -> Repository -> Repository) -> String -> InputT (StateT RepositoryState IO) ()
 newCommand newFunc message = do
-  RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+  RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
   versionInput <- getInputLine message
   case versionInput of
-    Nothing -> put $ RepositoryState (newFunc initialVersion versionDocumentTree) displayRevisionsFlag displayMaturityLevelsFlag
-    Just stringVersion -> put $ RepositoryState (newFunc (stringToVersion stringVersion) versionDocumentTree) displayRevisionsFlag displayMaturityLevelsFlag
+    Nothing -> put $ RepositoryState (newFunc initialVersion repository) displayRevisionsFlag displayMaturityLevelsFlag
+    Just stringVersion -> put $ RepositoryState (newFunc (stringToVersion stringVersion) repository) displayRevisionsFlag displayMaturityLevelsFlag
 
 {-newCommandMaturityLevel :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()-}
 {-newCommandMaturityLevel newFunc message = do-}
@@ -133,53 +133,53 @@ parseInput inp
     mainLoop 
 
   | inp =~ "^\\:save" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get 
-    liftIO $ saveToFile versionDocumentTree
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get 
+    liftIO $ saveToFile repository
     mainLoop
     
   | inp =~ "^\\:load" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
     put $ RepositoryState loadRepositoryFromFile displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:editBranch" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
     branchVersionInput <- getInputLine "\tEnter version of the branch to edit: "
     case branchVersionInput of
-      Nothing -> put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag
+      Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag
       Just stringBranchVersion -> if (null stringBranchVersion) then do
         outputStrLn $ "Version cannot be empty. Aborting operation"
-        put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag
+        put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag
         else 
           let branchVersion = stringToVersion stringBranchVersion in 
           if (isRevision branchVersion) then do 
             outputStrLn $ "You should enter branch version. Aborting operation"
-            put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag
+            put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag
           else do 
-            newNameInput <- getInputLineWithInitial "\tEnter new name of the file: " (getNameByVersion branchVersion versionDocumentTree, "")
-            newContentInput <- getInputLineWithInitial "\tEnter new contents of the file: " (getContentByVersion branchVersion versionDocumentTree, "")
+            newNameInput <- getInputLineWithInitial "\tEnter new name of the file: " (getNameByVersion branchVersion repository, "")
+            newContentInput <- getInputLineWithInitial "\tEnter new contents of the file: " (getContentByVersion branchVersion repository, "")
             case newNameInput of 
               Nothing -> case newContentInput of
-                Nothing -> put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag  
-                Just newContent -> put $ RepositoryState (editBranch branchVersion (getNameByVersion branchVersion versionDocumentTree) newContent versionDocumentTree) displayRevisionsFlag displayMaturityLevelsFlag
+                Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag  
+                Just newContent -> put $ RepositoryState (editBranch branchVersion (getNameByVersion branchVersion repository) newContent repository) displayRevisionsFlag displayMaturityLevelsFlag
               Just newName -> case newContentInput of
-                Nothing -> put $ RepositoryState (editBranch branchVersion newName (getContentByVersion branchVersion versionDocumentTree) versionDocumentTree) displayRevisionsFlag displayMaturityLevelsFlag
-                Just newContent -> put $ RepositoryState (editBranch branchVersion newName newContent versionDocumentTree) displayRevisionsFlag displayMaturityLevelsFlag
+                Nothing -> put $ RepositoryState (editBranch branchVersion newName (getContentByVersion branchVersion repository) repository) displayRevisionsFlag displayMaturityLevelsFlag
+                Just newContent -> put $ RepositoryState (editBranch branchVersion newName newContent repository) displayRevisionsFlag displayMaturityLevelsFlag
           {-showContentsCommand-}
     mainLoop
 
   | inp =~ "^\\:showContent" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
     versionInput <- getInputLine "\tEnter version of the node to show: "
     case versionInput of 
-      Nothing -> put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag 
+      Nothing -> put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
-        document = getDocumentByVersion version versionDocumentTree 
+        document = getDocumentByVersion version repository 
         in ( do
           outputStrLn $ show document
-          put $ RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag 
+          put $ RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag 
         )
     mainLoop
 
@@ -216,14 +216,14 @@ parseInput inp
     mainLoop
 
   | inp =~ "^\\:toggleRevisions" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryState versionDocumentTree (not displayRevisionsFlag) displayMaturityLevelsFlag
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryState repository (not displayRevisionsFlag) displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:toggleMaturityLevels" = do
-    RepositoryState versionDocumentTree displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryState versionDocumentTree displayRevisionsFlag ( not displayMaturityLevelsFlag )
+    RepositoryState repository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryState repository displayRevisionsFlag ( not displayMaturityLevelsFlag )
     showCommand
     mainLoop
 
