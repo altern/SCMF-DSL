@@ -24,6 +24,7 @@ import Data.Maybe
 
 data RepositoryMapState = RepositoryMapState {
   repositoryMap :: RepositoryMap,
+  selectedRepository :: String,
   displayRevisionsFlag :: Bool,
   displayMaturityLevelsFlag :: Bool
 }
@@ -39,18 +40,41 @@ instance MonadState s m => MonadState s (InputT m) where
     put = lift . put
     state = lift . state
 
-wordList = [":help", ":q", ":commands", 
-            ":show", ":init", ":save", ":load", 
-            ":editBranch", ":showContent", 
-            ":newSupportBranch", ":newReleaseBranch", ":newRevision", ":promoteSnapshot",
-            ":newSupportSnapshot", ":newReleaseSnapshot", ":toggleRevisions", ":toggleMaturityLevels"]
+repositoryMapCommands = [
+            ":help", 
+            ":q",
+            ":commands", 
+            ":show", 
+            ":init",
+            ":save",
+            ":load",
+            ":edit", 
+            ":new", 
+            ":toggleRevisions", 
+            ":toggleMaturityLevels"
+          ]
+repositoryCommands = [
+            ":help", 
+            ":q", 
+            ":commands", 
+            ":editBranch", 
+            ":showContent", 
+            ":newSupportBranch", 
+            ":newReleaseBranch", 
+            ":newRevision", 
+            ":promoteSnapshot",
+            ":newSupportSnapshot", 
+            ":newReleaseSnapshot"
+          ]
 
-searchFunc :: String -> [Completion]
-searchFunc str = map simpleCompletion $ filter (str `isPrefixOf`) wordList
+searchFunc :: RepositoryMapState -> String -> [Completion]
+searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`) ( repositoryMapCommands ++ ( M.elems $ M.mapWithKey (\k v -> ":" ++ k) repositoryMap ) )
 
 mySettings :: Settings (StateT RepositoryMapState IO)
 mySettings = Settings { historyFile = Just "myhist"
-                      , complete = completeWord Nothing " \t" $ return . searchFunc
+                      , complete = completeWord Nothing " \t" $ \str -> do 
+                          data_ <- get
+                          return $ searchFunc data_ str
                       , autoAddHistory = True
                       }
 
@@ -85,7 +109,7 @@ commands = liftIO $ mapM_ putStrLn
        
 showCommand :: InputT (StateT RepositoryMapState IO)()
 showCommand = do
-  RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
+  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   liftIO $ displayRepositoryMap repositoryMap 
 {-  liftIO $ if displayRevisionsFlag -}
     {-then if displayMaturityLevelsFlag -}
@@ -97,16 +121,16 @@ showCommand = do
  
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
-  RepositoryMapState _ displayRevisionsFlag displayMaturityLevelsFlag <-get
-  put $ RepositoryMapState initialRepositoryMap displayRevisionsFlag displayMaturityLevelsFlag
+  RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
+  put $ RepositoryMapState initialRepositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
 newCommand :: (Version -> Repository -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
 newCommand newFunc message = do
-  RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
+  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   versionInput <- getInputLine message
   case versionInput of
-    Nothing -> put $ RepositoryMapState ( M.singleton "" (newFunc initialVersion (fromJust $ M.lookup "" repositoryMap ))) displayRevisionsFlag displayMaturityLevelsFlag
-    Just stringVersion -> put $ RepositoryMapState ( M.singleton "" (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup "" repositoryMap ))) displayRevisionsFlag displayMaturityLevelsFlag
+    Nothing -> put $ RepositoryMapState ( M.insert "" (newFunc initialVersion (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+    Just stringVersion -> put $ RepositoryMapState ( M.insert "" (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
 {-newCommandMaturityLevel :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()-}
 {-newCommandMaturityLevel newFunc message = do-}
@@ -135,48 +159,48 @@ parseInput inp
     mainLoop 
 
   | inp =~ "^\\:save" = do
-    RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get 
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get 
     liftIO $ saveToFile repositoryMap
     mainLoop
     
   | inp =~ "^\\:load" = do
-    RepositoryMapState _ displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState ( loadRepositoryMapFromFile ) displayRevisionsFlag displayMaturityLevelsFlag
+    RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:editBranch" = do
-    RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
     branchVersionInput <- getInputLine "\tEnter version of the branch to edit: "
     case branchVersionInput of
-      Nothing -> put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
       Just stringBranchVersion -> if (null stringBranchVersion) then do
         outputStrLn $ "Version cannot be empty. Aborting operation"
-        put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag
+        put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
         else 
           let branchVersion = stringToVersion stringBranchVersion in 
           if (isRevision branchVersion) then do 
             outputStrLn $ "You should enter branch version. Aborting operation"
-            put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag
+            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
           else do 
             newContentInput <- getInputLineWithInitial "\tEnter new contents of the branch: " ( getRepositoryContentByVersion branchVersion (fromJust $ M.lookup "" repositoryMap), "" )
             case newContentInput of
-              Nothing -> put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag  
-              Just newContent -> put $ RepositoryMapState (M.singleton "" (editBranch branchVersion newContent (fromJust $ M.lookup "" repositoryMap ))) displayRevisionsFlag displayMaturityLevelsFlag
+              Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag  
+              Just newContent -> put $ RepositoryMapState (M.singleton "" (editBranch branchVersion newContent (fromJust $ M.lookup "" repositoryMap ))) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
           {-showContentsCommand-}
     mainLoop
 
   | inp =~ "^\\:showContent" = do
-    RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
     versionInput <- getInputLine "\tEnter version of the node to show: "
     case versionInput of 
-      Nothing -> put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
         content = getRepositoryContentByVersion version (fromJust $ M.lookup "" repositoryMap ) 
         in ( do
           outputStrLn $ show content
-          put $ RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag 
+          put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
         )
     mainLoop
 
@@ -213,14 +237,14 @@ parseInput inp
     mainLoop
 
   | inp =~ "^\\:toggleRevisions" = do
-    RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState repositoryMap (not displayRevisionsFlag) displayMaturityLevelsFlag
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryMapState repositoryMap selectedRepository (not displayRevisionsFlag) displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:toggleMaturityLevels" = do
-    RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState repositoryMap displayRevisionsFlag ( not displayMaturityLevelsFlag )
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag ( not displayMaturityLevelsFlag )
     showCommand
     mainLoop
 
@@ -250,7 +274,7 @@ greet = mapM_ putStrLn
 main :: IO ((), RepositoryMapState)
 main = do 
     greet 
-    runStateT (runInputT mySettings mainLoop) $ RepositoryMapState initialRepositoryMap defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
+    runStateT (runInputT mySettings mainLoop) $ RepositoryMapState initialRepositoryMap "" defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
     -- tree <- loadArtifactTreeFromFile
     -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
     -- let db = (deploy t deploymentRules platformDB )
