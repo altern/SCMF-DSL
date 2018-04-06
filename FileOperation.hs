@@ -4,6 +4,7 @@ module FileOperation where
 
 import ArtifactTree
 import Repository
+import RepositoryMap
 import VersionTree
 import Platform
 
@@ -23,6 +24,12 @@ import qualified Data.ByteString.Lazy as B
 import Data.Maybe
 import System.IO.Unsafe
 
+repositoryMapFile :: FilePath
+repositoryMapFile = "repositoryMap.json"
+
+repositoryFile :: FilePath
+repositoryFile = "repository.json"
+
 versionTreeFile :: FilePath
 versionTreeFile = "versionTree.json"
 
@@ -37,7 +44,11 @@ deploymentRulesFile = "deploymentRules.json"
 
 {-# NOINLINE loadRepositoryFromFile #-} 
 loadRepositoryFromFile :: Repository
-loadRepositoryFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile versionTreeFile
+loadRepositoryFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile repositoryFile 
+
+loadRepositoryMapFromFile :: RepositoryMap
+loadRepositoryMapFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile repositoryMapFile
+
 {-loadVersionTreeFromFile :: VersionTree-}
 {-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]-}
 
@@ -47,6 +58,10 @@ v2s = unpack . toLazyText . encodeToTextBuilder
 class SaveToFile a where
     saveToFile :: a -> IO ()
     
+instance SaveToFile RepositoryMap where
+    saveToFile repositoryMap = do
+      withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
+
 instance SaveToFile ArtifactTree where
     saveToFile aTree = do
       withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON aTree)
