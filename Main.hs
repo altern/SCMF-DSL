@@ -86,7 +86,7 @@ commands = liftIO $ mapM_ putStrLn
 showCommand :: InputT (StateT RepositoryMapState IO)()
 showCommand = do
   RepositoryMapState repositoryMap displayRevisionsFlag displayMaturityLevelsFlag <- get
-  liftIO $ displayTree (fromJust $ M.lookup "" repositoryMap )
+  liftIO $ displayRepositoryMap repositoryMap 
 {-  liftIO $ if displayRevisionsFlag -}
     {-then if displayMaturityLevelsFlag -}
       {-then displayTree $ fmap toMaturityVersion repositoryMap-}
