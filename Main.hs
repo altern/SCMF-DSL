@@ -40,35 +40,37 @@ instance MonadState s m => MonadState s (InputT m) where
     put = lift . put
     state = lift . state
 
-repositoryMapCommands = [
-            ":help", 
-            ":q",
-            ":commands", 
-            ":show", 
-            ":init",
-            ":save",
-            ":load",
-            ":edit", 
-            ":new", 
-            ":toggleRevisions", 
-            ":toggleMaturityLevels"
+repositoryMapCommands = M.fromList [
+            (":help",""), 
+            (":q",""),
+            (":commands",""), 
+            (":show",""), 
+            (":init",""),
+            (":save",""),
+            (":load",""),
+            (":edit",""), 
+            (":new",""), 
+            (":toggleRevisions",""), 
+            (":toggleMaturityLevels","")
           ]
-repositoryCommands = [
-            ":help", 
-            ":q", 
-            ":commands", 
-            ":editBranch", 
-            ":showContent", 
-            ":newSupportBranch", 
-            ":newReleaseBranch", 
-            ":newRevision", 
-            ":promoteSnapshot",
-            ":newSupportSnapshot", 
-            ":newReleaseSnapshot"
+repositoryCommands = M.fromList [
+            (":help",""), 
+            (":q",""), 
+            (":commands",""), 
+            (":editBranch",""), 
+            (":showContent",""), 
+            (":newSupportBranch",""), 
+            (":newReleaseBranch",""), 
+            (":newRevision",""), 
+            (":promoteSnapshot",""),
+            (":newSupportSnapshot",""), 
+            (":newReleaseSnapshot","")
           ]
 
 searchFunc :: RepositoryMapState -> String -> [Completion]
-searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`) ( repositoryMapCommands ++ ( M.elems $ M.mapWithKey (\k v -> ":" ++ k) repositoryMap ) )
+searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion 
+      $ filter (str `isPrefixOf`)
+      $ if null selectedRepository then M.keys repositoryMapCommands else M.keys repositoryCommands
 
 mySettings :: Settings (StateT RepositoryMapState IO)
 mySettings = Settings { historyFile = Just "myhist"
