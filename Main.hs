@@ -94,14 +94,7 @@ showCommand :: InputT (StateT RepositoryMapState IO)()
 showCommand = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   liftIO $ displayRepositoryMap repositoryMap 
-{-  liftIO $ if displayRevisionsFlag -}
-    {-then if displayMaturityLevelsFlag -}
-      {-then displayTree $ fmap toMaturityVersion repositoryMap-}
-      {-else displayTree $ fmap toVersion repositoryMap-}
-    {-else if displayMaturityLevelsFlag -}
-      {-then displayTree $ filterTree isRevision $ fmap toMaturityVersion repositoryMap-}
-      {-else displayTree $ filterTree isRevision $ fmap toVersion repositoryMap-}
- 
+
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
   RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
@@ -114,18 +107,6 @@ newCommand newFunc message = do
   case versionInput of
     Nothing -> put $ RepositoryMapState ( M.insert "" (newFunc initialVersion (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
     Just stringVersion -> put $ RepositoryMapState ( M.insert "" (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
-
-{-newCommandMaturityLevel :: (Version -> VersionTree -> VersionTree) -> String -> InputT (StateT VersionTreeState IO) ()-}
-{-newCommandMaturityLevel newFunc message = do-}
-  {-VersionTreeState versionTree displayRevisionsFlag displayMaturityLevelsFlag <- get-}
-  {-versionInput <- getInputLine ("\tEnter version, which will be used to append new " ++ message ++ " to: ")-}
-  {-maturityLevelInput <- getInputLine "\tEnter maturity level for the new version: "-}
-  {-let (maturityLevel) = case maturityLevelInput of-}
-        {-Nothing -> Dev-}
-        {-Just stringMaturityLevel -> read stringMaturityLevel -}
-  {-case versionInput of-}
-    {-Nothing -> put $ VersionTreeState (newFunc initialVersion maturityLevel versionTree) displayRevisionsFlag displayMaturityLevelsFlag-}
-    {-Just stringVersion -> put $ VersionTreeState (newFunc (stringToVersion stringVersion) maturityLevel versionTree) displayRevisionsFlag displayMaturityLevelsFlag-}
 
 parseInput :: String -> InputT (StateT RepositoryMapState IO)()
 parseInput inp
@@ -258,32 +239,4 @@ main :: IO ((), RepositoryMapState)
 main = do 
     greet 
     runStateT (runInputT mySettings mainLoop) $ RepositoryMapState initialRepositoryMap "" defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
-    -- tree <- loadArtifactTreeFromFile
-    -- let t = (generateSnapshot artifactTree3 ( searchArtifactTree artifactTree3 (Version NumberPlaceholder) ) )
-    -- let db = (deploy t deploymentRules platformDB )
-    -- displayRepresentationsOfArtifactTree tree
-    -- displayPlatformsForArtifactTree t
-    -- putStrLn $ show deploymentRules
-    -- putStrLn ""
-    -- putStrLn $ show db
-    -- putStrLn ""
-    -- -- displayArtifactTree t
-    -- print ("Searching artifact tree for version " ++ (show v1) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 v1)
-    -- print ("")
-    -- print ("Searching artifact tree for version " ++ (show v2) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 v2)
-    -- print ("")
-    -- print ("Searching artifact tree for version " ++ (show v3) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 v3)
-    -- print ("")
-    -- print ("Searching artifact tree for artifact " ++ (show artifact1) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 artifact1)
-    -- print ("")
-    -- print ("Searching artifact tree for artifact " ++ (show artifact2) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 artifact2)
-    -- print ("")
-    -- print ("Searching artifact tree for artifact " ++ (show artifact3) ++ "... Result: ")
-    -- print (searchArtifactTree artifactTree3 artifact3)
---  print $ parseOnly stringToVersionNumber "1"
-    
+   
