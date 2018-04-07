@@ -57,6 +57,7 @@ repositoryCommands = M.fromList [
             (":help","displays this help"), 
             (":q","quits repository editing mode"), 
             (":commands","displays the list of available commands"), 
+            (":show", "displays version tree of the currently selected repository"),
             (":editBranch","edits contents of the specific branch"), 
             (":showContent","shows contents of the specific branch"), 
             (":newSupportBranch","adds new support branch to the version tree"), 
@@ -95,7 +96,9 @@ commands = do
 showCommand :: InputT (StateT RepositoryMapState IO)()
 showCommand = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-  liftIO $ displayRepositoryMap repositoryMap 
+  if null selectedRepository 
+    then liftIO $ displayRepositoryMap repositoryMap 
+    else liftIO $ displayTree (fromJust $ M.lookup selectedRepository repositoryMap)
 
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
