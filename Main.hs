@@ -224,6 +224,19 @@ parseInput inp
     showCommand
     mainLoop
 
+  | inp =~ "^\\:edit" = do
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    selectedRepositoryInput <- getInputLine "\tEnter name of the repository to edit: "
+    case selectedRepositoryInput of
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+      Just selectedRepositoryName ->
+        if elem selectedRepositoryName (M.keys repositoryMap)
+          then put $ RepositoryMapState repositoryMap selectedRepositoryName displayRevisionsFlag displayMaturityLevelsFlag 
+          else do 
+            liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryName ++ "' found in repositories map"
+            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+    mainLoop
+
   | inp =~ ":" = do
     outputStrLn $ "\nNo command \"" ++ inp ++ "\"\n"
     mainLoop
