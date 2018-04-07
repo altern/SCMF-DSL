@@ -3,6 +3,8 @@ module Util where
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Control.Lens
+import Data.List 
+import Data.Char (isSpace)
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
@@ -20,4 +22,4 @@ replaceNth n newval xs = (element n .~ newval) xs
 lastN :: Int -> [a] -> [a]
 lastN n xs = let m = length xs in drop (m-n) xs
 
-
+trim = dropWhileEnd isSpace . dropWhile isSpace

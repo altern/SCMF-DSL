@@ -13,6 +13,7 @@ import FileOperation
 import UserOperation
 import MaturityLevel
 import Document 
+import Util
 
 import Text.Regex.PCRE
 import System.Console.Haskeline
@@ -233,10 +234,11 @@ parseInput inp
     case selectedRepositoryInput of
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just selectedRepositoryName ->
-        if elem selectedRepositoryName (M.keys repositoryMap)
-          then put $ RepositoryMapState repositoryMap selectedRepositoryName displayRevisionsFlag displayMaturityLevelsFlag 
+        let selectedRepositoryNameTrimmed = trim selectedRepositoryName in
+        if elem selectedRepositoryNameTrimmed (M.keys repositoryMap)
+          then put $ RepositoryMapState repositoryMap selectedRepositoryNameTrimmed displayRevisionsFlag displayMaturityLevelsFlag 
           else do 
-            liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryName ++ "' found in repositories map"
+            liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryNameTrimmed ++ "' found in repositories map"
             put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
     mainLoop
 
