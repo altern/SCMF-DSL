@@ -214,6 +214,16 @@ parseInput inp
     showCommand
     mainLoop
 
+  | inp =~ "^\\:new" = do
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    repositoryNameInput <- getInputLine "\tEnter name of the repository to create: "
+    case repositoryNameInput of 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+      Just repositoryName -> 
+        put $ RepositoryMapState ( M.insert repositoryName initialRepository repositoryMap ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+    showCommand
+    mainLoop
+
   | inp =~ ":" = do
     outputStrLn $ "\nNo command \"" ++ inp ++ "\"\n"
     mainLoop
