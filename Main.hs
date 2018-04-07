@@ -70,7 +70,9 @@ repositoryCommands = M.fromList [
 searchFunc :: RepositoryMapState -> String -> [Completion]
 searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion 
       $ filter (str `isPrefixOf`)
-      $ if null selectedRepository then M.keys repositoryMapCommands else M.keys repositoryCommands
+      $ if null selectedRepository 
+          then M.keys repositoryMapCommands ++ M.keys repositoryMap
+          else M.keys repositoryCommands
 
 mySettings :: Settings (StateT RepositoryMapState IO)
 mySettings = Settings { historyFile = Just "myhist"
