@@ -41,30 +41,30 @@ instance MonadState s m => MonadState s (InputT m) where
     state = lift . state
 
 repositoryMapCommands = M.fromList [
-            (":help",""), 
-            (":q",""),
-            (":commands",""), 
-            (":show",""), 
-            (":init",""),
-            (":save",""),
-            (":load",""),
-            (":edit",""), 
-            (":new",""), 
-            (":toggleRevisions",""), 
-            (":toggleMaturityLevels","")
+            (":help","displays this help"), 
+            (":q","quits the application"),
+            (":commands","displays the list of available commands"), 
+            (":show","shows the list of repositories with their version trees"), 
+            (":init","initializes repository map from scratch"),
+            (":save","saves repository map to a file"),
+            (":load","loads repository map from a file"),
+            (":edit","enters edit mode for specific repository selected by its name"), 
+            (":new","adds new empty repository to the list"), 
+            (":toggleRevisions","turns on/off display of revisions for version trees"), 
+            (":toggleMaturityLevels","turns on/off display of maturity levels for version trees")
           ]
 repositoryCommands = M.fromList [
-            (":help",""), 
-            (":q",""), 
-            (":commands",""), 
-            (":editBranch",""), 
-            (":showContent",""), 
-            (":newSupportBranch",""), 
-            (":newReleaseBranch",""), 
-            (":newRevision",""), 
-            (":promoteSnapshot",""),
-            (":newSupportSnapshot",""), 
-            (":newReleaseSnapshot","")
+            (":help","displays this help"), 
+            (":q","quits repository editing mode"), 
+            (":commands","displays the list of available commands"), 
+            (":editBranch","edits contents of the specific branch"), 
+            (":showContent","shows contents of the specific branch"), 
+            (":newSupportBranch","adds new support branch to the version tree"), 
+            (":newReleaseBranch","adds new release branch to the version tree"), 
+            (":newRevision","adds new revision to the version tree"), 
+            (":promoteSnapshot","promotes specific snapshot to the next maturity level"),
+            (":newSupportSnapshot","adds new support snapshot to the version tree"), 
+            (":newReleaseSnapshot","adds new release snapshot to the version tree")
           ]
 
 searchFunc :: RepositoryMapState -> String -> [Completion]
@@ -81,33 +81,14 @@ mySettings = Settings { historyFile = Just "myhist"
                       }
 
 help :: InputT (StateT RepositoryMapState IO)()
-help = liftIO $ mapM_ putStrLn
-       [ ""
-       , ":help     - this help"
-       , ":q        - quit"
-       , ":commands - list available commands"
-       , ""
-       ]
+help = commands
        
 commands :: InputT (StateT RepositoryMapState IO)()
-commands = liftIO $ mapM_ putStrLn
-       [ ""
-       , ":show                 - display version tree "
-       , ":init                 - init version tree (replace existing)"
-       , ":save                 - save results to file"
-       , ":load                 - load results from file"
-       , ":editBranch           - edit tree element name and content" 
-       , ":showContent          - show tree element name and content" 
-       , ":newSupportBranch     - generate new support branch in version tree"
-       , ":newReleaseBranch     - generate new release branch in version tree"
-       , ":newSupportSnapshot   - generate new support snapshot in version tree"
-       , ":newReleaseSnapshot   - generate new release snapshot in version tree"
-       , ":newRevision          - generate new revision in version tree"
-       , ":promoteSnapshot      - generate new snapshot with incremented maturity level in version tree"
-       , ":toggleRevisions      - toggle display of the revisions in version tree"
-       , ":toggleMaturityLevels - toggle display of the maturity levels in version tree"
-       , ""
-       ]
+commands = do 
+        (RepositoryMapState _ selectedRepository _ _ ) <- get
+        liftIO $ mapM_ putStrLn $ if null selectedRepository 
+            then M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryMapCommands
+            else M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryCommands
        
 showCommand :: InputT (StateT RepositoryMapState IO)()
 showCommand = do
