@@ -116,7 +116,13 @@ newCommand newFunc message = do
 
 parseInput :: String -> InputT (StateT RepositoryMapState IO)()
 parseInput inp
-  | inp =~ "^\\:q"        = return ()
+  | inp =~ "^\\:q" = do
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    if null selectedRepository 
+      then return () 
+      else do 
+        put $ RepositoryMapState repositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag 
+        mainLoop
                             
   | inp =~ "^\\:he"       = help >> mainLoop
                             
