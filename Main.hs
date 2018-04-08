@@ -77,7 +77,7 @@ searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map s
           else M.keys repositoryCommands
 
 mySettings :: Settings (StateT RepositoryMapState IO)
-mySettings = Settings { historyFile = Just "myhist"
+mySettings = Settings { historyFile = Just "hist"
                       , complete = completeWord Nothing " \t" $ \str -> do 
                           data_ <- get
                           return $ searchFunc data_ str
@@ -114,8 +114,20 @@ newCommand newFunc message = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   versionInput <- getInputLine message
   case versionInput of
-    Nothing -> put $ RepositoryMapState ( M.insert "" (newFunc initialVersion (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
-    Just stringVersion -> put $ RepositoryMapState ( M.insert "" (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup "" repositoryMap )) repositoryMap) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+    Nothing -> put $ RepositoryMapState 
+      ( M.insert selectedRepository 
+                 (newFunc initialVersion (fromJust $ M.lookup selectedRepository repositoryMap )) 
+                 repositoryMap)
+      selectedRepository 
+      displayRevisionsFlag 
+      displayMaturityLevelsFlag
+    Just stringVersion -> put $ RepositoryMapState 
+      ( M.insert selectedRepository 
+                 (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup selectedRepository repositoryMap ))
+                 repositoryMap) 
+      selectedRepository 
+      displayRevisionsFlag 
+      displayMaturityLevelsFlag
 
 parseInput :: String -> InputT (StateT RepositoryMapState IO)()
 parseInput inp
@@ -165,7 +177,13 @@ parseInput inp
             newContentInput <- getInputLineWithInitial "\tEnter new contents of the branch: " ( getRepositoryContentByVersion branchVersion (fromJust $ M.lookup "" repositoryMap), "" )
             case newContentInput of
               Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag  
-              Just newContent -> put $ RepositoryMapState (M.singleton "" (editBranch branchVersion newContent (fromJust $ M.lookup "" repositoryMap ))) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+              Just newContent -> put $ RepositoryMapState 
+                  (M.insert selectedRepository 
+                            (editBranch branchVersion newContent (fromJust $ M.lookup selectedRepository repositoryMap ))
+                            repositoryMap ) 
+                  selectedRepository 
+                  displayRevisionsFlag 
+                  displayMaturityLevelsFlag
           {-showContentsCommand-}
     mainLoop
 
@@ -176,7 +194,7 @@ parseInput inp
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
-        content = getRepositoryContentByVersion version (fromJust $ M.lookup "" repositoryMap ) 
+        content = getRepositoryContentByVersion version (fromJust $ M.lookup selectedRepository repositoryMap ) 
         in ( do
           outputStrLn $ show content
           put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
