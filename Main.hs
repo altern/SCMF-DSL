@@ -102,7 +102,14 @@ showCommand = do
     else liftIO $ let repository = (fromJust $ M.lookup selectedRepository repositoryMap) in
       do 
         putStrLn $ selectedRepository ++ " => "
-        displayTree repository
+        displayTree $ repository
+        {-if displayRevisionsFlag -}
+        {-then if displayMaturityLevelsFlag -}
+          {-then displayTree $ fmap toMaturityVersion repository-}
+          {-else displayTree $ fmap toVersion repository-}
+        {-else if displayMaturityLevelsFlag -}
+          {-then displayTree $ filterTree isRevision $ fmap toMaturityVersion repository-}
+          {-else displayTree $ filterTree isRevision $ fmap toVersion repository-}
 
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
