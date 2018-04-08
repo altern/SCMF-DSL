@@ -60,7 +60,7 @@ class SaveToFile a where
     
 instance SaveToFile RepositoryMap where
     saveToFile repositoryMap = do
-      withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
+      withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
 
 instance SaveToFile ArtifactTree where
     saveToFile aTree = do
