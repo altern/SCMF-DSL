@@ -173,7 +173,9 @@ parseInput inp
             outputStrLn $ "You should enter branch version. Aborting operation"
             put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
           else do 
-            newContentInput <- getInputLineWithInitial "\tEnter new contents of the branch: " ( getRepositoryContentByVersion branchVersion (fromJust $ M.lookup "" repositoryMap), "" )
+            newContentInput <- getInputLineWithInitial 
+              "\tEnter new contents of the branch: " 
+              ( getRepositoryContentByVersion branchVersion (fromJust $ M.lookup selectedRepository repositoryMap), "" )
             case newContentInput of
               Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag  
               Just newContent -> put $ RepositoryMapState 
