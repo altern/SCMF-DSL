@@ -41,6 +41,22 @@ instance ToString RepositoryNode where
       then (toString version) 
       else (toString version) 
 
+instance VersionDetection RepositoryNode where
+    isInitial (RepositoryNode version content) = isInitial version
+    isExperimentalBranch (RepositoryNode version content) = isExperimentalBranch version
+    isReleaseBranch (RepositoryNode version content) = isReleaseBranch version
+    isSupportBranch (RepositoryNode version content) = isSupportBranch version
+    isExperimentalSnapshot (RepositoryNode version content) = isExperimentalSnapshot version
+    isReleaseSnapshot (RepositoryNode version content) = isReleaseSnapshot version
+    isSupportSnapshot (RepositoryNode version content) = isSupportSnapshot version
+    isRevision (RepositoryNode version content) = isRevision version
+
+toMaturityNode :: RepositoryNode -> RepositoryNode
+toMaturityNode (RepositoryNode version content) = RepositoryNode (toMaturityVersion version) content
+
+toNode :: RepositoryNode -> RepositoryNode
+toNode (RepositoryNode version content) = RepositoryNode (toVersion version) content
+
 getRepositoryContent :: RepositoryNode -> RepositoryContent  
 getRepositoryContent (RepositoryNode version content) = content
 
@@ -336,6 +352,17 @@ promoteSnapshot promotedVersion vTree =
 {--- HELPER FUNCTIONS ---}
 instance DisplayTree Repository where 
     displayTree t = putStrLn $ drawVerticalTree (versionDocumentTreeToStringTree t)
+
+displayRepository :: Repository -> Bool -> Bool -> IO ()
+displayRepository repository displayRevisionsFlag displayMaturityLevelsFlag = do
+  if displayRevisionsFlag 
+  then if displayMaturityLevelsFlag 
+    then displayTree $ fmap toMaturityNode repository
+    else displayTree $ fmap toNode repository
+  else if displayMaturityLevelsFlag 
+    then displayTree $ filterTree isRevision $ fmap toMaturityNode repository
+    else displayTree $ filterTree isRevision $ fmap toNode repository
+
 
 vDocumentTree :: Repository 
 vDocumentTree = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0]) "")

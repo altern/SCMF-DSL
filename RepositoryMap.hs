@@ -10,5 +10,9 @@ type RepositoryMap = M.Map String Repository
 initialRepositoryMap :: RepositoryMap 
 initialRepositoryMap = M.fromList [("", initialRepository)]
 
-displayRepositoryMap :: RepositoryMap -> IO ()
-displayRepositoryMap map = mapWithKeyM_ (\k v -> do { putStrLn $ show k ++ " => "; displayTree v } ) map
+displayRepositoryMap :: RepositoryMap -> Bool -> Bool -> IO ()
+displayRepositoryMap map displayRevisionsFlag displayMaturityLevelsFlag = 
+    mapWithKeyM_ (\k v -> do { 
+      putStrLn $ show k ++ " => "; 
+      displayRepository v displayRevisionsFlag displayMaturityLevelsFlag
+    } ) map
