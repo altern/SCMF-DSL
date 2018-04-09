@@ -78,7 +78,7 @@ searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map s
 
 mySettings :: Settings (StateT RepositoryMapState IO)
 mySettings = Settings { historyFile = Just "hist"
-                      , complete = completeWord Nothing " \t" $ \str -> do 
+                      , complete = completeWord Nothing "\t" $ \str -> do 
                           data_ <- get
                           return $ searchFunc data_ str
                       , autoAddHistory = True
