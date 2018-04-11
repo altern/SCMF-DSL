@@ -8,7 +8,7 @@ import Data.Key
 
 type RepositoryMap = M.Map String Repository
 initialRepositoryMap :: RepositoryMap 
-initialRepositoryMap = M.fromList [("", initialRepository)]
+initialRepositoryMap = M.fromList []
 
 displayRepositoryMap :: RepositoryMap -> Bool -> Bool -> IO ()
 displayRepositoryMap map displayRevisionsFlag displayMaturityLevelsFlag = 
