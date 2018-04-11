@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DataKinds #-}
+{-# LANGUAGE OverloadedStrings, DataKinds, DeriveAnyClass, DeriveGeneric #-}
 
 module Version where 
 
@@ -13,25 +13,26 @@ import Data.Attoparsec.ByteString.Char8
 import Data.Attoparsec.Combinator
 import Control.Monad
 import Control.Applicative
+import GHC.Generics (Generic)
 
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
      | Version VersionNumber
+    deriving (JSON.ToJSON, JSON.FromJSON, Generic)
+{-instance JSON.ToJSON Version where-}
+    {-toJSON version = -}
+        {-JSON.object [ "version" JSON..= (T.pack $ show version)]-}
 
-instance JSON.ToJSON Version where
-    toJSON version = 
-        JSON.object [ "version" JSON..= (T.pack $ show version)]
-
-instance JSON.FromJSON Version where
-    parseJSON (JSON.Object v) = liftM stringToVersion ( v JSON..: "version" )
-    parseJSON _ = mzero
+{-instance JSON.FromJSON Version where-}
+    {-parseJSON (JSON.Object v) = liftM stringToVersion ( v JSON..: "version" )-}
+    {-parseJSON _ = mzero-}
  
-parseVersionFromJSON :: String -> Version
-parseVersionFromJSON s = 
-    let bs = BS.pack s in case parse JSON.json bs of
-               (Done rest r) -> case AT.parseMaybe JSON.parseJSON r of
-                    (Just x) -> x
-                    Nothing  -> Version $ VersionNumber [Nothing]
-               _             -> Version $ VersionNumber [Nothing]
+{-parseVersionFromJSON :: String -> Version-}
+{-parseVersionFromJSON s = -}
+    {-let bs = BS.pack s in case parse JSON.json bs of-}
+               {-(Done rest r) -> case AT.parseMaybe JSON.parseJSON r of-}
+                    {-(Just x) -> x-}
+                    {-Nothing  -> Version $ VersionNumber [Nothing]-}
+               {-_             -> Version $ VersionNumber [Nothing]-}
 
 type VersionList = [Version]
 

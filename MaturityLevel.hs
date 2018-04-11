@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric #-}
 module MaturityLevel where
 
 import Data.Attoparsec.ByteString.Char8
@@ -6,6 +7,8 @@ import Control.Monad
 import Control.Applicative
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Aeson as JSON
+import GHC.Generics (Generic)
 import VersionNumber 
 
 data MaturityLevel = Dev
@@ -13,7 +16,7 @@ data MaturityLevel = Dev
                    | User
                    | ReleaseCandidate
                    | Prod
-                   deriving (Show, Enum, Ord, Eq, Read)
+                   deriving (Show, Enum, Ord, Eq, Read, JSON.ToJSON, JSON.FromJSON, Generic)
 
 initialMaturity :: MaturityLevel
 initialMaturity = Dev
@@ -26,10 +29,10 @@ parseMaturity =
     <|> ( string (BS.pack "ReleaseCandidate") >> return ReleaseCandidate)
     <|> ( string (BS.pack "Prod") >> return Prod)
     
-stringToMaturity :: String -> MaturityLevel
-stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
-    Right a -> a
-    Left _ -> initialMaturity
+{-stringToMaturity :: String -> MaturityLevel-}
+{-stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of-}
+    {-Right a -> a-}
+    {-Left _ -> initialMaturity-}
 
 instance VersionOperations MaturityLevel where
     increment Prod = Prod

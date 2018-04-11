@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances, DeriveAnyClass, DeriveGeneric #-}
 
 module VersionNumber where
 
@@ -11,13 +11,14 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Function(on)
 import Data.Maybe
+import GHC.Generics (Generic)
 
 type VersionCompound = Maybe Int
 
 type NumberOfDimensions = Int
 
 data VersionNumber = VersionNumber [VersionCompound]
-    deriving (Show)
+    deriving (Show, JSON.FromJSON, JSON.ToJSON, Generic)
 
 class VersionOperations a where
     decrement :: a -> a
