@@ -107,7 +107,7 @@ showCommand = do
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
   RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
-  put $ RepositoryMapState initialRepositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+  put $ RepositoryMapState initialRepositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag
 
 newCommand :: (Version -> Repository -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
 newCommand newFunc message = do
