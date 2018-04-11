@@ -67,7 +67,8 @@ repositoryCommands = M.fromList [
             (":newRevision","adds new revision to the version tree"), 
             (":promoteSnapshot","promotes specific snapshot to the next maturity level"),
             (":newSupportSnapshot","adds new support snapshot to the version tree"), 
-            (":newReleaseSnapshot","adds new release snapshot to the version tree")
+            (":newReleaseSnapshot","adds new release snapshot to the version tree"),
+            (":reSnapshot","recreates snapshot with the same maturity level")
           ]
 
 searchFunc :: RepositoryMapState -> String -> [Completion]
@@ -227,6 +228,11 @@ parseInput inp
 
   | inp =~ "^\\:newRevision" = do
     newCommand newRevision "\tEnter version, which will be used to append new revision to: "
+    showCommand
+    mainLoop
+
+  | inp =~ "^\\:reSnapshot" = do
+    newCommand reSnapshot "\tEnter version of the snapshot you want to be re-created with the same maturity level: "
     showCommand
     mainLoop
 

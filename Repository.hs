@@ -375,6 +375,49 @@ promoteSnapshot promotedVersion vTree =
     else
         vTree
 
+reSnapshot :: Version -> Repository -> Repository
+reSnapshot promotedVersion vTree =
+    if (isSupportSnapshot promotedVersion ) then
+        let document = getRepositoryContentByVersion (getParent promotedVersion) vTree
+            vTree1 = (makeNDimensional dimensions) 
+                 <$> (treeInsert 
+                        vTree 
+                        ( RepositoryNode (getParent promotedVersion) document )
+                        ( RepositoryNode (generateNewRevision (findLatestRevision vTree)) document )
+                      ) 
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
+            previousVersion = findLatestForParentSupportSnapshot (getParent promotedVersion) vTree
+            promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
+                       $ (MaturityVersion promotedVersionMaturity (generateNewVersion promotedOrPreviousVersionNumber) ) 
+        in (treeInsert 
+              vTree1 
+              (RepositoryNode (findLatestRevision vTree1) document)
+              (RepositoryNode newVersion document)
+           )
+    else if (isReleaseSnapshot promotedVersion ) then
+        let document = getRepositoryContentByVersion (getParent promotedVersion) vTree
+            vTree1 = (makeNDimensional dimensions) 
+                 <$> (treeInsert 
+                        vTree 
+                        ( RepositoryNode (getParent promotedVersion) document )
+                        ( RepositoryNode (generateNewRevision (findLatestRevision vTree)) document )
+                      )
+            dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
+            previousVersion = findLatestForParentReleaseSnapshot (getParent promotedVersion) vTree
+            promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
+                       $ (MaturityVersion promotedVersionMaturity (generateNewVersion promotedOrPreviousVersionNumber) )
+        in (treeInsert 
+              vTree1 
+              (RepositoryNode (findLatestRevision vTree1) document)
+              (RepositoryNode newVersion document)
+           )
+    else
+        vTree
+
 {--- HELPER FUNCTIONS ---}
 instance DisplayTree Repository where 
     displayTree t = putStrLn $ drawVerticalTree (versionDocumentTreeToStringTree t)
