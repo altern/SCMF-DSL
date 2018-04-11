@@ -50,6 +50,7 @@ repositoryMapCommands = M.fromList [
             (":save","saves repository map to a file"),
             (":load","loads repository map from a file"),
             (":edit","enters edit mode for specific repository selected by its name"), 
+            (":rename","renames repository"), 
             (":new","adds new empty repository to the list"), 
             (":toggleRevisions","turns on/off display of revisions for version trees"), 
             (":toggleMaturityLevels","turns on/off display of maturity levels for version trees")
@@ -269,6 +270,42 @@ parseInput inp
             liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryNameTrimmed ++ "' found in repositories map"
             put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
     mainLoop
+  
+  | inp =~ "^\\:rename" = do
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    selectedRepositoryInput <- getInputLine "\tEnter name of the repository to rename: "
+    case selectedRepositoryInput of
+      Nothing -> do
+        put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+        mainLoop
+      Just selectedRepositoryName -> 
+        let selectedRepositoryNameTrimmed = trim selectedRepositoryName in
+        if not $ elem selectedRepositoryNameTrimmed (M.keys repositoryMap)
+          then do
+            liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryNameTrimmed ++ "' found in repositories map"
+            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+            mainLoop
+          else do
+            newRepositoryNameInput <- getInputLine "\tEnter new name of the repository: "
+            case newRepositoryNameInput of
+              Nothing -> do
+                liftIO $ putStrLn $ "Repository name has not been changed"
+                put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+                mainLoop
+              Just newRepositoryName -> 
+                let newRepositoryNameTrimmed = trim newRepositoryName 
+                    renamedRecord = fromJust $ M.lookup selectedRepositoryNameTrimmed repositoryMap
+                    mapWithoutRenamedRecord = M.delete selectedRepositoryNameTrimmed repositoryMap 
+                    newSelectedRepository = if selectedRepository == selectedRepositoryNameTrimmed 
+                      then selectedRepositoryNameTrimmed 
+                      else selectedRepository 
+                in do 
+                   put $ RepositoryMapState 
+                         (M.insert newRepositoryNameTrimmed renamedRecord mapWithoutRenamedRecord)
+                         newSelectedRepository
+                         displayRevisionsFlag 
+                         displayMaturityLevelsFlag 
+                   mainLoop
 
   | inp =~ ":" = do
     outputStrLn $ "\nNo command \"" ++ inp ++ "\"\n"
