@@ -298,7 +298,7 @@ newReleaseSnapshot searchVersion vTree =
                                                                 then searchVersion 
                                                                 else previousVersion)
             newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
-                       $ generateNewReleaseSnapshot (MaturityVersion Dev searchOrPreviousVersionNumber) 
+                       $ generateNewReleaseSnapshot (MaturityVersion Test searchOrPreviousVersionNumber) 
         in (treeInsert 
               vTree1 
               (RepositoryNode (findLatestRevision vTree1) document)
