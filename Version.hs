@@ -173,20 +173,20 @@ initialVersion :: Version
 initialVersion = Version $ initialVersionNumber
 
 toMaturityVersion :: Version -> Version
-toMaturityVersion (Version v) = MaturityVersion Dev v
+toMaturityVersion (Version v) = MaturityVersion initialMaturity v
 toMaturityVersion (MaturityVersion ml v) = MaturityVersion ml v
 
 toVersion :: Version -> Version
-toVersion (MaturityVersion Dev v) = Version v
+toVersion (MaturityVersion initialMaturity v) = Version v
 toVersion (MaturityVersion ml v) = MaturityVersion ml v
 toVersion (Version v) = Version v
 
 promoteVersion :: Version -> Version
-promoteVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
+promoteVersion (Version v) = MaturityVersion (increment initialMaturity) (generateNewVersion v)
 promoteVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
 
 promoteSupportVersion :: Version -> Version
-promoteSupportVersion (Version v) = MaturityVersion (increment Dev) (generateNewVersion v)
+promoteSupportVersion (Version v) = MaturityVersion (increment initialMaturity) (generateNewVersion v)
 promoteSupportVersion (MaturityVersion User v) = MaturityVersion User (generateNewVersion v)
 promoteSupportVersion (MaturityVersion ml v) = MaturityVersion (increment ml) (generateNewVersion v)
 

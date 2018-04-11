@@ -14,6 +14,10 @@ data MaturityLevel = Dev
                    | ReleaseCandidate
                    | Prod
                    deriving (Show, Enum, Ord, Eq, Read)
+
+initialMaturity :: MaturityLevel
+initialMaturity = Dev
+
 parseMaturity :: Parser MaturityLevel
 parseMaturity = 
         ( string (BS.pack "Dev") >> return Dev)
@@ -25,7 +29,7 @@ parseMaturity =
 stringToMaturity :: String -> MaturityLevel
 stringToMaturity str = case (parseOnly parseMaturity $ BS.pack str) of
     Right a -> a
-    Left _ -> Dev
+    Left _ -> initialMaturity
 
 instance VersionOperations MaturityLevel where
     increment Prod = Prod
