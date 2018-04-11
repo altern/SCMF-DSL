@@ -43,53 +43,53 @@ liftBranch = Artifact . Left
 liftSnapshot :: Snapshot -> Artifact
 liftSnapshot = Artifact . Right
 
-instance JSON.ToJSON Branch where
-    toJSON (Branch branchName version document) = JSON.object [ "branch" JSON..= JSON.object [ 
-      "version"  JSON..= JSON.toJSON version,
-      "name" JSON..= branchName,
-      "artifact"  JSON..= JSON.toJSON document ]]
+{-instance JSON.ToJSON Branch where-}
+    {-toJSON (Branch branchName version document) = JSON.object [ "branch" JSON..= JSON.object [ -}
+      {-"version"  JSON..= JSON.toJSON version,-}
+      {-"name" JSON..= branchName,-}
+      {-"artifact"  JSON..= JSON.toJSON document ]]-}
     
-instance JSON.ToJSON Snapshot where        
-    toJSON (Snapshot timestamp version document) = JSON.object [ "snapshot" JSON..= JSON.object [ 
-      "version"  JSON..= JSON.toJSON version,
-      "timestamp" JSON..= timestamp,
-      "artifact"  JSON..= JSON.toJSON document ]]
+{-instance JSON.ToJSON Snapshot where        -}
+    {-toJSON (Snapshot timestamp version document) = JSON.object [ "snapshot" JSON..= JSON.object [ -}
+      {-"version"  JSON..= JSON.toJSON version,-}
+      {-"timestamp" JSON..= timestamp,-}
+      {-"artifact"  JSON..= JSON.toJSON document ]]-}
       
-instance JSON.ToJSON Snapshot2 where        
-    toJSON (Snapshot2 timestamp document) = JSON.object [ "snapshot" JSON..= JSON.object [ 
-      "timestamp" JSON..= timestamp,
-      "artifact"  JSON..= JSON.toJSON document ]]
+{-instance JSON.ToJSON Snapshot2 where        -}
+    {-toJSON (Snapshot2 timestamp document) = JSON.object [ "snapshot" JSON..= JSON.object [ -}
+      {-"timestamp" JSON..= timestamp,-}
+      {-"artifact"  JSON..= JSON.toJSON document ]]-}
 
-instance JSON.ToJSON Artifact where
-  toJSON (Artifact (Left d))  = JSON.toJSON d
-  toJSON (Artifact (Right d)) = JSON.toJSON d
+{-instance JSON.ToJSON Artifact where-}
+  {-toJSON (Artifact (Left d))  = JSON.toJSON d-}
+  {-toJSON (Artifact (Right d)) = JSON.toJSON d-}
 
 -- FromJSON 
-instance JSON.FromJSON Branch where
-  parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "branch" v
-    where parser (JSON.Object v') = Branch <$> v' JSON..: "name"
-                                             <*> v' JSON..: "version"
-                                             <*> v' JSON..: "artifact"
-          parser _                = mzero
-  parseJSON _          = mzero
+{-instance JSON.FromJSON Branch where-}
+  {-parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "branch" v-}
+    {-where parser (JSON.Object v') = Branch <$> v' JSON..: "name"-}
+                                             {-<*> v' JSON..: "version"-}
+                                             {-<*> v' JSON..: "artifact"-}
+          {-parser _                = mzero-}
+  {-parseJSON _          = mzero-}
   
-instance JSON.FromJSON Snapshot where
-  parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "snapshot" v
-    where parser (JSON.Object v') = Snapshot <$> v' JSON..: "timestamp"
-                                             <*> v' JSON..: "version"
-                                             <*> v' JSON..: "artifact"
-          parser _                = mzero
-  parseJSON _          = mzero
+{-instance JSON.FromJSON Snapshot where-}
+  {-parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "snapshot" v-}
+    {-where parser (JSON.Object v') = Snapshot <$> v' JSON..: "timestamp"-}
+                                             {-<*> v' JSON..: "version"-}
+                                             {-<*> v' JSON..: "artifact"-}
+          {-parser _                = mzero-}
+  {-parseJSON _          = mzero-}
   
-instance JSON.FromJSON Snapshot2 where
-  parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "snapshot" v
-    where parser (JSON.Object v') = Snapshot2 <$> v' JSON..: "timestamp"
-                                             <*> v' JSON..: "artifact"
-          parser _                = mzero
-  parseJSON _          = mzero
+{-instance JSON.FromJSON Snapshot2 where-}
+  {-parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "snapshot" v-}
+    {-where parser (JSON.Object v') = Snapshot2 <$> v' JSON..: "timestamp"-}
+                                             {-<*> v' JSON..: "artifact"-}
+          {-parser _                = mzero-}
+  {-parseJSON _          = mzero-}
 
-instance JSON.FromJSON Artifact where
-  parseJSON json = (liftBranch <$> JSON.parseJSON json) <|> (liftSnapshot <$> JSON.parseJSON json)
+{-instance JSON.FromJSON Artifact where-}
+  {-parseJSON json = (liftBranch <$> JSON.parseJSON json) <|> (liftSnapshot <$> JSON.parseJSON json)-}
 
 type ArtifactList = [Artifact]
 

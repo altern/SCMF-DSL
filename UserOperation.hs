@@ -75,8 +75,8 @@ instance Action ArtifactTree ArtifactList where
     action Last aTree = (searchArtifactTree aTree (findVersionOfLatestSnapshot aTree))
 
 instance Action ArtifactTree ( IO () ) where
-    action Save aTree = saveToFile aTree 
-    action Store aTree = saveToFile aTree 
+    {-action Save aTree = saveToFile aTree -}
+    {-action Store aTree = saveToFile aTree -}
     
     action Describe aTree = displayArtifactTree aTree 
     action Display aTree = displayArtifactTree aTree 
@@ -119,8 +119,8 @@ instance Action PlatformDB ( IO () ) where
     action Explain db = displayPlatformDB db  
     
 instance Action DeploymentRules ( IO () ) where
-    action Save rules = saveToFile rules
-    action Store rules = saveToFile rules
+    {-action Save rules = saveToFile rules-}
+    {-action Store rules = saveToFile rules-}
 
     action Describe rules = displayDeploymentRules rules 
     action Display rules = displayDeploymentRules rules 

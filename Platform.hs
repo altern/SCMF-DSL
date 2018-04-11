@@ -102,15 +102,15 @@ data DeploymentRule = DeploymentRuleVersion Version PlatformName
                     | DeploymentRuleArtifact Artifact PlatformName
                     deriving (Show)
 
-instance JSON.ToJSON DeploymentRule where
-    toJSON (DeploymentRuleVersion version platformName) = JSON.object 
-        [ "platformName" JSON..= ( T.pack $ id platformName )
-        , "version" JSON..= ( T.pack $ show version)
-        ]
-    toJSON (DeploymentRuleArtifact artifact platformName) = JSON.object 
-        [ "platformName" JSON..= ( T.pack $ id platformName )
-        , "artifact" JSON..= JSON.toJSON artifact
-        ]
+{-instance JSON.ToJSON DeploymentRule where-}
+    {-toJSON (DeploymentRuleVersion version platformName) = JSON.object -}
+        {-[ "platformName" JSON..= ( T.pack $ id platformName )-}
+        {-, "version" JSON..= ( T.pack $ show version)-}
+        {-]-}
+    {-toJSON (DeploymentRuleArtifact artifact platformName) = JSON.object -}
+        {-[ "platformName" JSON..= ( T.pack $ id platformName )-}
+        {-, "artifact" JSON..= JSON.toJSON artifact-}
+        {-]-}
 
 type DeploymentRules = [DeploymentRule]
     

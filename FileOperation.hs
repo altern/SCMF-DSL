@@ -62,9 +62,9 @@ instance SaveToFile RepositoryMap where
     saveToFile repositoryMap = do
       withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
 
-instance SaveToFile ArtifactTree where
-    saveToFile aTree = do
-      withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON aTree)
+{-instance SaveToFile ArtifactTree where-}
+    {-saveToFile aTree = do-}
+      {-withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON aTree)-}
 
 instance SaveToFile VersionTree where
     saveToFile vTree = do
@@ -78,7 +78,7 @@ instance SaveToFile PlatformDB where
     saveToFile db = do
       withFile platformDBFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
 
-instance SaveToFile DeploymentRules where
-    saveToFile rules = do
-      withFile deploymentRulesFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON rules)
+{-instance SaveToFile DeploymentRules where-}
+    {-saveToFile rules = do-}
+      {-withFile deploymentRulesFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON rules)-}
   
