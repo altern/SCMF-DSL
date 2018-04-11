@@ -7,6 +7,7 @@ import Data.Tree.Pretty
 import Data.Maybe
 import RoseTree
 import VersionNumber
+import MaturityLevel
 import Version
 import Document 
 import Artifact
@@ -293,7 +294,11 @@ newReleaseSnapshot searchVersion vTree =
             vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree (RepositoryNode searchVersion document) (RepositoryNode (generateNewRevision (findLatestRevision vTree)) document))
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentReleaseSnapshot searchVersion vTree
-            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewReleaseSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion) 
+            searchOrPreviousVersionNumber = getVersionNumber $ (if (isInitial previousVersion) 
+                                                                then searchVersion 
+                                                                else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
+                       $ generateNewReleaseSnapshot (MaturityVersion Dev searchOrPreviousVersionNumber) 
         in (treeInsert 
               vTree1 
               (RepositoryNode (findLatestRevision vTree1) document)
@@ -306,10 +311,19 @@ newSupportSnapshot :: Version -> Repository -> Repository
 newSupportSnapshot searchVersion vTree = 
     if (isSupportBranch searchVersion) then
         let document = getRepositoryContentByVersion searchVersion vTree
-            vTree1 = (makeNDimensional dimensions) <$> (treeInsert vTree (RepositoryNode searchVersion document ) (RepositoryNode (generateNewRevision (findLatestRevision vTree)) document ))
+            vTree1 = (makeNDimensional dimensions) 
+                  <$> (treeInsert 
+                          vTree 
+                          ( RepositoryNode searchVersion document )
+                          ( RepositoryNode (generateNewRevision (findLatestRevision vTree)) document )
+                       )
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentSupportSnapshot searchVersion vTree
-            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewSupportSnapshot (if (isInitial previousVersion) then searchVersion else previousVersion) 
+            searchOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) 
+                                                              then searchVersion 
+                                                              else previousVersion)
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
+                       $ generateNewSupportSnapshot (MaturityVersion Dev searchOrPreviousVersionNumber) 
         in (treeInsert 
               vTree1 
               (RepositoryNode (findLatestRevision vTree1) document)
