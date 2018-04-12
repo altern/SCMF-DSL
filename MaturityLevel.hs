@@ -45,3 +45,8 @@ instance VersionOperations MaturityLevel where
     decrementDimension 1 ml = pred ml
     decrementDimension _ ml = ml
     freezeDimension _ ml = ml
+    
+incrementSupport :: MaturityLevel -> MaturityLevel
+incrementSupport User = User
+incrementSupport ml = increment ml
+
