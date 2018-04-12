@@ -141,8 +141,12 @@ instance Ord Version where
     (MaturityVersion ml1 vn1) `compare` (MaturityVersion ml2 vn2) = case vn1 == vn2 of 
         True -> ml1 `compare` ml2
         False -> vn1 `compare` vn2
-    (MaturityVersion _ vn1) `compare` (Version vn2) = vn1 `compare` vn2
-    (Version vn1) `compare` (MaturityVersion _ vn2) = vn1 `compare` vn2
+    (MaturityVersion ml vn1) `compare` (Version vn2) = case vn1 == vn2 of 
+        True -> ml `compare` Dev 
+        False -> vn1 `compare` vn2
+    (Version vn1) `compare` (MaturityVersion ml vn2) = case vn1 == vn2 of
+        True -> Dev `compare` ml
+        False -> vn1 `compare` vn2 
     (Version vn1) `compare` (Version vn2) = vn1 `compare` vn2
 
 instance MakeDimensional Version where

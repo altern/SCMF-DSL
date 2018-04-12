@@ -24,9 +24,9 @@ versionTests = test [
     "test A02"    ~: "toString x.x.x"                    ~: "x.x.x"                                                    ~=? ( toString $ Version $ VersionNumber [Nothing, Nothing, Nothing] ),
     "test A03"    ~: "toString Dev/x.x.x"                ~: "Dev/x.x.x"                                                ~=? ( toString $ MaturityVersion Dev $ VersionNumber [Nothing, Nothing, Nothing] ),
     "test A04"    ~: "toString Prod/1.0.3"               ~: "Prod/1.0.3"                                                ~=? ( toString $ MaturityVersion Prod $ VersionNumber [Just 1, Just 0, Just 3] ),
-    "test B01"    ~: "JSON.toJSON x"                            ~: "{\"version\":\"x\"}"                                    ~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON ( Version ( VersionNumber [Nothing] ) ) ),
+    {-"test B01"    ~: "JSON.toJSON x"                            ~: "{\"version\":\"x\"}"                                    ~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON ( Version ( VersionNumber [Nothing] ) ) ),-}
     {-"test C01"    ~: "JSON.FromJSON Test/1.0.x"                ~: MaturityVersion Test ( VersionNumber (Number 1) (VersionNumber (Number 0) (VersionCompound (NumberPlaceholder ) ) ) )    ~=? ( parseVersionFromJSON "{\"version\": \"Test/1.0.x\"}" ),-}
-    "test C02"    ~: "JSON.FromJSON 2.x"                        ~: (Version $ VersionNumber [Just 2, Nothing] )    ~=? ( parseVersionFromJSON "{\"version\": \"2.x\"}" ),
+    {-"test C02"    ~: "JSON.FromJSON 2.x"                        ~: (Version $ VersionNumber [Just 2, Nothing] )    ~=? ( parseVersionFromJSON "{\"version\": \"2.x\"}" ),-}
     -- "test C02"    ~: "JSON.FromJSON x"                        ~: "x"                                                        ~=? ( BS.unpack $ lazyToStrictBS $ JSON.encode $ JSON.toJSON ( Version ( VersionCompound NumberPlaceholder ) ) ),
     "test D01"    ~: "stringToVersion x"                        ~: (Version $ VersionNumber [Nothing])                        ~=? ( stringToVersion "x" ),
     "test D02"    ~: "stringToVersion 1"                        ~: (Version $ VersionNumber [Just 1])                            ~=? ( stringToVersion "1" ),
@@ -54,6 +54,8 @@ versionTests = test [
     {-"test I05"    ~: "Dev/1.x.3 < Prod/1.0.9"    ~: assertError       "Cannot compare number placeholders and numbers"                ( stringToVersion "Dev/1.x.3" > stringToVersion "Prod/1.0.9" ),-}
     "test I05"    ~: "Dev/1.x.3 < Prod/1.0.9"                    ~: True                                                        ~=? ( stringToVersion "Dev/1.x.3" < stringToVersion "Prod/1.0.9" ),
     "test I06"    ~: "Dev/1.3.7 < Prod/1.3.7"                    ~: True                                                        ~=? ( stringToVersion "Dev/1.3.7" < stringToVersion "Prod/1.3.7" ),
+    "test I07"    ~: "1.3.7 < Test/1.3.7"                        ~: True                                                        ~=? ( stringToVersion "1.3.7" < stringToVersion "Test/1.3.7" ),
+    "test I07"    ~: "User/1.3.7 > Test/1.3.7"                   ~: True                                                        ~=? ( stringToVersion "User/1.3.7" > stringToVersion "Test/1.3.7" ),
     "test J01"    ~: "Test/1.3.4 == Test/1.3.4"                ~: True                                                        ~=? ( stringToVersion "Test/1.3.4" == stringToVersion "Test/1.3.4" ),
     "test J02"    ~: "Prod/4 == Prod/4"                        ~: True                                                        ~=? ( stringToVersion "Prod/4" == stringToVersion "Prod/4" ),
     "test J03"    ~: "3 == 3"                                    ~: True                                                        ~=? ( stringToVersion "3" == stringToVersion "3" ),
