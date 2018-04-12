@@ -102,7 +102,7 @@ showCommand = do
   if null selectedRepository 
     then liftIO $ displayRepositoryMap repositoryMap displayRevisionsFlag displayMaturityLevelsFlag 
     else liftIO $ let repository = (fromJust $ M.lookup selectedRepository repositoryMap) in
-      do putStrLn $ selectedRepository ++ " => "
+      do putStrLn $ show selectedRepository ++ " => "
          displayRepository repository displayRevisionsFlag displayMaturityLevelsFlag
 
 initCommand :: InputT (StateT RepositoryMapState IO) ()
