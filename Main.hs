@@ -59,6 +59,7 @@ repositoryCommands = M.fromList [
             (":help","displays this help"), 
             (":q","quits repository editing mode"), 
             (":commands","displays the list of available commands"), 
+            (":init", "initializes repository with an initial"),
             (":show", "displays version tree of the currently selected repository"),
             (":editBranch","edits contents of the specific branch"), 
             (":showContent","shows contents of the specific branch"), 
@@ -107,8 +108,13 @@ showCommand = do
 
 initCommand :: InputT (StateT RepositoryMapState IO) ()
 initCommand = do
-  RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
-  put $ RepositoryMapState initialRepositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag
+  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
+  if (null selectedRepository) then
+    put $ RepositoryMapState initialRepositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag
+  else
+    put $ RepositoryMapState 
+          (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
+          selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
 newCommand :: (Version -> Repository -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
 newCommand newFunc message = do
