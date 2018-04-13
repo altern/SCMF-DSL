@@ -400,9 +400,10 @@ reSnapshot promotedVersion vTree =
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentSupportSnapshot (getParent promotedVersion) vTree
             promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
-            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            promotedOrPrevious = (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber promotedOrPrevious 
             newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
-                       $ (MaturityVersion promotedVersionMaturity (generateNewVersion promotedOrPreviousVersionNumber) ) 
+                       $ (MaturityVersion (getMaturity promotedOrPrevious) (generateNewVersion promotedOrPreviousVersionNumber) ) 
         in (treeInsert 
               vTree1 
               (RepositoryNode (findLatestRevision vTree1) document)
@@ -419,9 +420,10 @@ reSnapshot promotedVersion vTree =
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
             previousVersion = findLatestForParentReleaseSnapshot (getParent promotedVersion) vTree
             promotedVersionMaturity = getMaturity (findVersion vTree promotedVersion)
-            promotedOrPreviousVersionNumber = getVersionNumber (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            promotedOrPrevious = (if (isInitial previousVersion) then promotedVersion else previousVersion)
+            promotedOrPreviousVersionNumber = getVersionNumber promotedOrPrevious
             newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
-                       $ (MaturityVersion promotedVersionMaturity (generateNewVersion promotedOrPreviousVersionNumber) )
+                       $ (MaturityVersion (getMaturity promotedOrPrevious) (generateNewVersion promotedOrPreviousVersionNumber) )
         in (treeInsert 
               vTree1 
               (RepositoryNode (findLatestRevision vTree1) document)
