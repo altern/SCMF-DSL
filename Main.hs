@@ -164,7 +164,7 @@ parseInput inp
       outputStrLn $ "Saved repository map to file"
     else do
       liftIO $ saveToFileWithName (selectedRepository ++ ".json") (fromJust $ M.lookup selectedRepository repositoryMap)
-      outputStrLn $ "Saved repository map to file " ++ (show (selectedRepository ++ ".json"))
+      outputStrLn $ "Saved repository file " ++ (show (selectedRepository ++ ".json"))
     mainLoop
     
   | inp =~ "^\\:load" = do
