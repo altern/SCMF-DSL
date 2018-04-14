@@ -26,8 +26,20 @@ type RepositoryContent = String
 emptyRepositoryContent :: RepositoryContent
 emptyRepositoryContent = ""
 
-data RepositoryNode = RepositoryNode Version RepositoryContent
-    deriving (Eq, Show, JSON.FromJSON, JSON.ToJSON, Generic)
+data RepositoryNode = RepositoryNode {version :: Version, content :: RepositoryContent}
+    {-deriving (Eq, Show, JSON.FromJSON, JSON.ToJSON, Generic)-}
+    deriving (Eq, Show)
+
+instance JSON.ToJSON RepositoryNode where 
+    toJSON (RepositoryNode version content) = JSON.object ["version" JSON..= (show version), "content" JSON..= content]
+
+instance JSON.FromJSON RepositoryNode where
+    parseJSON (JSON.Object v) = 
+        RepositoryNode <$> liftM stringToVersion (v JSON..: "version")
+                       <*> v JSON..: "content"
+    parseJSON _ = mzero
+
+
 type Repository = RoseTree RepositoryNode
 type RepositoryList = [Repository]
 
