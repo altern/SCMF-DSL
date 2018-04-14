@@ -57,9 +57,12 @@ v2s = unpack . toLazyText . encodeToTextBuilder
 
 class SaveToFile a where
     saveToFile :: a -> IO ()
+    saveToFileWithName :: String -> a -> IO ()
     
 instance SaveToFile RepositoryMap where
     saveToFile repositoryMap = do
+      withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
+    saveToFileWithName repositoryMapFile repositoryMap = do
       withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
 
 {-instance SaveToFile ArtifactTree where-}
@@ -69,14 +72,21 @@ instance SaveToFile RepositoryMap where
 instance SaveToFile VersionTree where
     saveToFile vTree = do
       withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)
+    saveToFileWithName versionTreeFile versionTree = do
+      withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON versionTree)
 
 instance SaveToFile Repository where
     saveToFile vDocTree = do
       withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vDocTree)
+    saveToFileWithName repositoryFile repository = do
+      withFile repositoryFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repository)
 
 instance SaveToFile PlatformDB where
     saveToFile db = do
       withFile platformDBFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
+    saveToFileWithName dbFile db = do
+      withFile dbFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
+
 
 {-instance SaveToFile DeploymentRules where-}
     {-saveToFile rules = do-}

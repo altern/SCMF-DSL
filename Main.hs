@@ -61,6 +61,7 @@ repositoryCommands = M.fromList [
             (":commands","displays the list of available commands"), 
             (":init", "initializes repository with an initial"),
             (":show", "displays version tree of the currently selected repository"),
+            (":save", "saves version tree of the currently selected repository into a JSON file with repository name"),
             (":editBranch","edits contents of the specific branch"), 
             (":showContent","shows contents of the specific branch"), 
             (":newSupportBranch","adds new support branch to the version tree"), 
@@ -158,7 +159,12 @@ parseInput inp
 
   | inp =~ "^\\:save" = do
     RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get 
-    liftIO $ saveToFile repositoryMap
+    if (null selectedRepository) then do
+      liftIO $ saveToFile repositoryMap
+      outputStrLn $ "Saved repository map to file"
+    else do
+      liftIO $ saveToFileWithName (selectedRepository ++ ".json") (fromJust $ M.lookup selectedRepository repositoryMap)
+      outputStrLn $ "Saved repository map to file " ++ (show (selectedRepository ++ ".json"))
     mainLoop
     
   | inp =~ "^\\:load" = do
