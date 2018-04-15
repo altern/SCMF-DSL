@@ -49,6 +49,9 @@ loadRepositoryFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.rea
 loadRepositoryMapFromFile :: RepositoryMap
 loadRepositoryMapFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile repositoryMapFile
 
+loadRepositoryFromFileWithName :: String -> Repository
+loadRepositoryFromFileWithName filename = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile filename
+
 {-loadVersionTreeFromFile :: VersionTree-}
 {-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]-}
 

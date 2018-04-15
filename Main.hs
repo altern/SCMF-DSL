@@ -62,6 +62,7 @@ repositoryCommands = M.fromList [
             (":init", "initializes repository with an initial"),
             (":show", "displays version tree of the currently selected repository"),
             (":save", "saves version tree of the currently selected repository into a JSON file with repository name"),
+            (":load", "loads repository from JSON file with repository name"),
             (":editBranch","edits contents of the specific branch"), 
             (":showContent","shows contents of the specific branch"), 
             (":newSupportBranch","adds new support branch to the version tree"), 
@@ -168,8 +169,13 @@ parseInput inp
     mainLoop
     
   | inp =~ "^\\:load" = do
-    RepositoryMapState _ selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    if (null selectedRepository) then
+      put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+    else
+      put $ RepositoryMapState
+            (M.adjust (\x->loadRepositoryFromFileWithName $ selectedRepository ++ ".json") selectedRepository repositoryMap)
+            selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
     mainLoop
 
