@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances#-}
 module Main where
 
 import RoseTree
@@ -6,8 +6,6 @@ import Version
 import VersionNumber
 import Repository
 import RepositoryMap
-import Artifact
-import ArtifactTree
 import Platform
 import FileOperation
 import UserOperation
@@ -22,6 +20,7 @@ import Control.Monad.State.Strict
 import Data.List 
 import qualified Data.Map as M
 import Data.Maybe 
+import Data.Time.Clock.POSIX
 
 data RepositoryMapState = RepositoryMapState {
   repositoryMap :: RepositoryMap,
@@ -118,21 +117,23 @@ initCommand = do
           (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
           selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
-newCommand :: (Version -> Repository -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
+newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
 newCommand newFunc message = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+  timestamp <- liftIO $ getPOSIXTime
   versionInput <- getInputLine message
+  let timestampStr = timestampToString timestamp 
   case versionInput of
     Nothing -> put $ RepositoryMapState 
       ( M.insert selectedRepository 
-                 (newFunc initialVersion (fromJust $ M.lookup selectedRepository repositoryMap )) 
+                 (newFunc initialVersion (fromJust $ M.lookup selectedRepository repositoryMap ) timestampStr) 
                  repositoryMap)
       selectedRepository 
       displayRevisionsFlag 
       displayMaturityLevelsFlag
     Just stringVersion -> put $ RepositoryMapState 
       ( M.insert selectedRepository 
-                 (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup selectedRepository repositoryMap ))
+                 (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup selectedRepository repositoryMap ) timestampStr)
                  repositoryMap) 
       selectedRepository 
       displayRevisionsFlag 
