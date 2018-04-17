@@ -41,6 +41,7 @@ executable SCMF
   build-depends:      base == 4.* ,
                       containers == 0.5.*,
                       bytestring,
+                      keys,
                       ghc,
                       text,
                       aeson,
