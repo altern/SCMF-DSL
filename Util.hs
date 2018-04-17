@@ -1,3 +1,4 @@
+{-#LANGUAGE FlexibleContexts #-}
 module Util where
 
 import qualified Data.ByteString.Char8 as BS
@@ -5,6 +6,8 @@ import qualified Data.ByteString.Lazy as LBS
 import Control.Lens
 import Data.List 
 import Data.Char (isSpace)
+import Data.Time.Clock.POSIX 
+import Data.Time.Format
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
@@ -23,3 +26,6 @@ lastN :: Int -> [a] -> [a]
 lastN n xs = let m = length xs in drop (m-n) xs
 
 trim = dropWhileEnd isSpace . dropWhile isSpace
+
+timestampToString :: POSIXTime -> String
+timestampToString ptime = formatTime defaultTimeLocale "%s" (posixSecondsToUTCTime ptime)
