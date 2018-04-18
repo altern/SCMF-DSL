@@ -10,7 +10,6 @@ import Platform
 import FileOperation
 import UserOperation
 import MaturityLevel
-import Document 
 import Util
 
 import Text.Regex.PCRE
@@ -62,6 +61,7 @@ repositoryCommands = M.fromList [
             (":show", "displays version tree of the currently selected repository"),
             (":save", "saves version tree of the currently selected repository into a JSON file with repository name"),
             (":load", "loads repository from JSON file with repository name"),
+            (":print", "prints repository as a valid Haskell code"),
             (":editBranch","edits contents of the specific branch"), 
             (":showContent","shows contents of the specific branch"), 
             (":newSupportBranch","adds new support branch to the version tree"), 
@@ -332,10 +332,15 @@ parseInput inp
                          displayMaturityLevelsFlag 
                    mainLoop
 
+  | inp =~ ":print" = do
+    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    liftIO $ print (fromJust $ M.lookup selectedRepository repositoryMap)
+    mainLoop
+   
   | inp =~ ":" = do
     outputStrLn $ "\nNo command \"" ++ inp ++ "\"\n"
     mainLoop
-    
+   
   | otherwise = handleInput inp
 
 handleInput :: String -> InputT (StateT RepositoryMapState IO)()

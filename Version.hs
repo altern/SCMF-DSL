@@ -17,7 +17,7 @@ import GHC.Generics (Generic)
 
 data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1.x.3, User/1.x.4, User/2.5.1, ...
      | Version VersionNumber
-    deriving (JSON.ToJSON, JSON.FromJSON, Generic)
+    deriving (Show, JSON.ToJSON, JSON.FromJSON, Generic)
 {-instance JSON.ToJSON Version where-}
     {-toJSON version = -}
         {-JSON.object [ "version" JSON..= (T.pack $ show version)]-}
@@ -36,8 +36,8 @@ data Version = MaturityVersion MaturityLevel VersionNumber  -- Dev/1.x.0, Test/1
 
 type VersionList = [Version]
 
-instance Show Version where
-    show version = toString version
+{-instance Show Version where-}
+    {-show version = toString version-}
 
 instance ToString Version where
     toString (MaturityVersion maturityLevel versionNumber) = (show maturityLevel) ++ "/" ++ (toString versionNumber)
