@@ -31,7 +31,8 @@ data RepositoryNode = RepositoryNode {version :: Version, content :: RepositoryC
     deriving (Eq, Show)
 
 instance JSON.ToJSON RepositoryNode where 
-    toJSON (RepositoryNode version content timestamp) = JSON.object ["version" JSON..= (show version), "content" JSON..= content, "timestamp" JSON..= timestamp]
+    toJSON (RepositoryNode version content timestamp) = 
+        JSON.object ["version" JSON..= (toString version), "content" JSON..= content, "timestamp" JSON..= timestamp]
 
 instance JSON.FromJSON RepositoryNode where
     parseJSON (JSON.Object v) = 
