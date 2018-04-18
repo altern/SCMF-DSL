@@ -40,7 +40,7 @@ instance JSON.FromJSON RepositoryNode where
                        <*> v JSON..: "timestamp"
     parseJSON _ = mzero
 
-type Repository = RoseTree RepositoryNode
+type Repository = RoseTree RepositoryNode 
 type RepositoryList = [Repository]
 
 initialRepository :: Repository
@@ -87,6 +87,7 @@ class FindLatest a where
     findLatestVersion :: a -> Version
     findLatestSupportBranch :: a -> Version
     findLatestReleaseBranch :: a -> Version
+    findLatestReleaseBranchWithParent :: Version -> a -> Version
     findLatestSupportSnapshot :: a -> Version
     findLatestReleaseSnapshot :: a -> Version
     findLatestRevision :: a -> Version
@@ -107,6 +108,16 @@ instance FindLatest Repository where
     findLatestSupportBranch (RoseTree (RepositoryNode version _ _) list) = if (isSupportBranch version && (version > findLatestSupportBranch list)) then version else findLatestSupportBranch list
     findLatestReleaseBranch (RoseTree (RepositoryNode version _ _) []) = if (isReleaseBranch version) then version else Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseBranch (RoseTree (RepositoryNode version _ _) list) = if (isReleaseBranch version && (version > findLatestReleaseBranch list)) then version else findLatestReleaseBranch list
+    findLatestReleaseBranchWithParent parentVersion (RoseTree (RepositoryNode version _ _) []) = 
+        if (isReleaseBranch version && parentVersion == (getParent version)) 
+          then version 
+          else Version $ createVersionNumberByNumberOfDimensions 0
+    findLatestReleaseBranchWithParent parentVersion (RoseTree (RepositoryNode version _ _) list) = 
+        if (isReleaseBranch version 
+            && parentVersion == (getParent version) 
+            && (version > findLatestReleaseBranchWithParent parentVersion list)) 
+          then version 
+          else findLatestReleaseBranchWithParent parentVersion list
     findLatestSupportSnapshot (RoseTree (RepositoryNode version _ _) []) = if (isSupportSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
     findLatestSupportSnapshot (RoseTree (RepositoryNode version _ _) list) = if (isSupportSnapshot version && (version > findLatestSupportSnapshot list)) then version else findLatestSupportSnapshot list
     findLatestReleaseSnapshot (RoseTree (RepositoryNode version _ _) []) = if (isReleaseSnapshot version) then version else Version $ createVersionNumberByNumberOfDimensions 0
@@ -116,7 +127,10 @@ instance FindLatest Repository where
     findLatestRevision = findLatestExperimentalSnapshot
     findLatestForParentVersion parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestVersion list else findLatestForParentVersion parentVersion list
     findLatestForParentSupportBranch parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestSupportBranch list else findLatestForParentSupportBranch parentVersion list
-    findLatestForParentReleaseBranch parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestReleaseBranch list else findLatestForParentReleaseBranch parentVersion list
+    findLatestForParentReleaseBranch parentVersion (RoseTree (RepositoryNode version _ _) list) = 
+        if (parentVersion == version) 
+          then findLatestReleaseBranch list 
+          else findLatestForParentReleaseBranch parentVersion list
     findLatestForParentSupportSnapshot parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestSupportSnapshot list else findLatestForParentSupportSnapshot parentVersion list
     findLatestForParentReleaseSnapshot parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestReleaseSnapshot list else findLatestForParentReleaseSnapshot parentVersion list
     findLatestForParentExperimentalSnapshot parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestExperimentalSnapshot list else findLatestForParentExperimentalSnapshot parentVersion list
@@ -131,6 +145,11 @@ instance FindLatest RepositoryList where
     findLatestReleaseBranch [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestReleaseBranch (x:[]) = findLatestReleaseBranch x
     findLatestReleaseBranch (x:xs) = if ((findLatestReleaseBranch x) > (findLatestReleaseBranch xs)) then (findLatestReleaseBranch x) else (findLatestReleaseBranch xs)
+    findLatestReleaseBranchWithParent parentVersion (x:[]) = findLatestReleaseBranchWithParent parentVersion x
+    findLatestReleaseBranchWithParent parentVersion (x:xs) = 
+        if ((findLatestReleaseBranchWithParent parentVersion x) > (findLatestReleaseBranchWithParent parentVersion xs)) 
+          then (findLatestReleaseBranchWithParent parentVersion x) 
+          else (findLatestReleaseBranchWithParent parentVersion xs)
     findLatestSupportSnapshot [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestSupportSnapshot (x:[]) = findLatestSupportSnapshot x
     findLatestSupportSnapshot (x:xs) = if ((findLatestSupportSnapshot x) > (findLatestSupportSnapshot xs)) then (findLatestSupportSnapshot x) else (findLatestSupportSnapshot xs)
@@ -279,8 +298,9 @@ newReleaseBranch searchVersion vTree timestamp =
                     (RepositoryNode (generateNewRevision (findLatestRevision vTree)) document timestamp)
                 )
             dimensions = max (getActualNumberOfDimensions vTree) (getActualNumberOfDimensions newVersion)
-            previousVersion = findLatestForParentReleaseBranch searchVersion vTree
-            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) $ generateNewReleaseBranch (if (isInitial previousVersion) then searchVersion else previousVersion)
+            previousVersion = findLatestReleaseBranchWithParent searchVersion vTree
+            newVersion = makeNDimensional (getActualNumberOfDimensions vTree) 
+                $ generateNewReleaseBranch (if (isInitial previousVersion) then searchVersion else previousVersion)
         in (treeInsert 
               vTree1 
               (fromJust $ searchTree (hasVersion (findLatestRevision vTree1)) vTree1)
