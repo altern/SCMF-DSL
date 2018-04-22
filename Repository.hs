@@ -21,18 +21,26 @@ import Control.Monad
 import Control.Applicative
 import GHC.Generics (Generic)
 
-type RepositoryContent = String 
+type RepositoryNodeContent = String 
 type Timestamp = String 
-emptyRepositoryContent :: RepositoryContent
-emptyRepositoryContent = ""
+type RepositoryNodeName = String 
 
-data RepositoryNode = RepositoryNode {version :: Version, content :: RepositoryContent, timestamp :: Timestamp}
+emptyRepositoryNodeContent :: RepositoryNodeContent
+emptyRepositoryNodeContent = ""
+
+data RepositoryNode = RepositoryNode {
+    version :: Version, 
+    content :: RepositoryNodeContent,
+    timestamp :: Timestamp
+}
     {-deriving (Eq, Show, JSON.FromJSON, JSON.ToJSON, Generic)-}
     deriving (Eq, Show)
 
 instance JSON.ToJSON RepositoryNode where 
     toJSON (RepositoryNode version content timestamp) = 
-        JSON.object ["version" JSON..= (toString version), "content" JSON..= content, "timestamp" JSON..= timestamp]
+        JSON.object ["version" JSON..= (toString version), 
+                     "content" JSON..= content,
+                     "timestamp" JSON..= timestamp]
 
 instance JSON.FromJSON RepositoryNode where
     parseJSON (JSON.Object v) = 
@@ -45,8 +53,8 @@ type Repository = RoseTree RepositoryNode
 type RepositoryList = [Repository]
 
 initialRepository :: Repository
-initialRepository = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0] ) emptyRepositoryContent "0")
-  [ RoseTree (RepositoryNode initialVersion emptyRepositoryContent "1") []]
+initialRepository = RoseTree (RepositoryNode (Version $ VersionNumber [Just 0] ) emptyRepositoryNodeContent "0")
+  [ RoseTree (RepositoryNode initialVersion emptyRepositoryNodeContent "1") []]
 
 -- VERSION TREE CONVERSION TO STRING --
 instance ToString RepositoryNode where 
@@ -71,8 +79,8 @@ toMaturityNode (RepositoryNode version content timestamp) = RepositoryNode (toMa
 toNode :: RepositoryNode -> RepositoryNode
 toNode (RepositoryNode version content timestamp) = RepositoryNode (toVersion version) content timestamp
 
-getRepositoryContent :: RepositoryNode -> RepositoryContent  
-getRepositoryContent (RepositoryNode _ content _) = content
+getRepositoryNodeContent :: RepositoryNode -> RepositoryNodeContent  
+getRepositoryNodeContent (RepositoryNode _ content _) = content
 
 versionListToStringTreeList :: RepositoryList -> StringTreeList
 versionListToStringTreeList [] = []
@@ -254,7 +262,7 @@ instance DimensionOperations RepositoryList where
 
 newRevision :: Version -> Repository -> Timestamp -> Repository 
 newRevision searchVersion vTree timestamp = let
-    document = getRepositoryContentByVersion searchVersion vTree
+    document = getRepositoryNodeContentByVersion searchVersion vTree
     in if (isInitial searchVersion || isSupportBranch searchVersion || isReleaseBranch searchVersion) then
         (treeInsert 
           vTree 
@@ -267,12 +275,12 @@ newRevision searchVersion vTree timestamp = let
 hasVersion :: Version -> RepositoryNode -> Bool
 hasVersion version1 (RepositoryNode version2 _ _) = version1 == version2
 
-getRepositoryContentByVersion :: Version -> Repository -> RepositoryContent
-getRepositoryContentByVersion searchVersion vTree = 
+getRepositoryNodeContentByVersion :: Version -> Repository -> RepositoryNodeContent
+getRepositoryNodeContentByVersion searchVersion vTree = 
     let searchRepositoryNode = (searchTree (hasVersion searchVersion) vTree)
     in (case searchRepositoryNode of
-      Nothing -> emptyRepositoryContent
-      Just node -> getRepositoryContent node
+      Nothing -> emptyRepositoryNodeContent
+      Just node -> getRepositoryNodeContent node
     )
 
 editBranch :: Version -> String -> Repository -> Repository
@@ -281,7 +289,7 @@ editBranch searchVersion content vTree =
     in (treeUpdate 
         vTree 
         (case searchRepositoryNode of
-         Nothing -> RepositoryNode initialVersion emptyRepositoryContent "0"
+         Nothing -> RepositoryNode initialVersion emptyRepositoryNodeContent "0"
          Just node -> node
         )
         (RepositoryNode searchVersion content "")
@@ -290,7 +298,7 @@ editBranch searchVersion content vTree =
 newReleaseBranch :: Version -> Repository -> Timestamp -> Repository
 newReleaseBranch searchVersion vTree timestamp = 
     if (isInitial searchVersion || isSupportBranch searchVersion) then
-        let document = getRepositoryContentByVersion searchVersion vTree
+        let document = getRepositoryNodeContentByVersion searchVersion vTree
             vTree1 = (makeNDimensional dimensions) <$> 
                 (treeInsert 
                     vTree 
@@ -313,7 +321,7 @@ newReleaseBranch searchVersion vTree timestamp =
 newSupportBranch :: Version -> Repository -> Timestamp -> Repository
 newSupportBranch searchVersion vTree timestamp = 
     if (isInitial searchVersion) then
-        let document = getRepositoryContentByVersion searchVersion vTree
+        let document = getRepositoryNodeContentByVersion searchVersion vTree
             vTree1 = (makeNDimensional dimensions) <$> 
                 (treeInsert 
                     vTree 
@@ -335,7 +343,7 @@ newSupportBranch searchVersion vTree timestamp =
 newReleaseSnapshot :: Version -> Repository -> Timestamp -> Repository
 newReleaseSnapshot searchVersion vTree timestamp = 
     if (isReleaseBranch searchVersion) then
-        let document = getRepositoryContentByVersion searchVersion vTree
+        let document = getRepositoryNodeContentByVersion searchVersion vTree
             vTree1 = (makeNDimensional dimensions) <$> 
                 (treeInsert 
                     vTree 
@@ -361,7 +369,7 @@ newReleaseSnapshot searchVersion vTree timestamp =
 newSupportSnapshot :: Version -> Repository -> Timestamp -> Repository
 newSupportSnapshot searchVersion vTree timestamp = 
     if (isSupportBranch searchVersion) then
-        let document = getRepositoryContentByVersion searchVersion vTree
+        let document = getRepositoryNodeContentByVersion searchVersion vTree
             vTree1 = (makeNDimensional dimensions) 
                   <$> (treeInsert 
                           vTree 
@@ -387,8 +395,8 @@ newSupportSnapshot searchVersion vTree timestamp =
 promoteSnapshot :: Version -> Repository -> Timestamp -> Repository
 promoteSnapshot promotedVersion vTree timestamp =
     if (isSupportSnapshot promotedVersion ) then
-        let parentContent = getRepositoryContentByVersion (getParent promotedVersion) vTree
-            promotedContent = getRepositoryContentByVersion promotedVersion vTree
+        let parentContent = getRepositoryNodeContentByVersion (getParent promotedVersion) vTree
+            promotedContent = getRepositoryNodeContentByVersion promotedVersion vTree
             vTree1 = (makeNDimensional dimensions) 
                  <$> (treeInsert 
                         vTree 
@@ -413,8 +421,8 @@ promoteSnapshot promotedVersion vTree timestamp =
               (RepositoryNode newVersion parentContent timestamp)
            )
     else if (isReleaseSnapshot promotedVersion ) then
-        let parentContent = getRepositoryContentByVersion (getParent promotedVersion) vTree
-            promotedContent = getRepositoryContentByVersion promotedVersion vTree
+        let parentContent = getRepositoryNodeContentByVersion (getParent promotedVersion) vTree
+            promotedContent = getRepositoryNodeContentByVersion promotedVersion vTree
             vTree1 = (makeNDimensional dimensions) 
                  <$> (treeInsert 
                         vTree 
@@ -444,7 +452,7 @@ promoteSnapshot promotedVersion vTree timestamp =
 reSnapshot :: Version -> Repository -> Timestamp -> Repository
 reSnapshot promotedVersion vTree timestamp =
     if (isSupportSnapshot promotedVersion ) then
-        let document = getRepositoryContentByVersion (getParent promotedVersion) vTree
+        let document = getRepositoryNodeContentByVersion (getParent promotedVersion) vTree
             vTree1 = (makeNDimensional dimensions) 
                  <$> (treeInsert 
                         vTree 
@@ -465,7 +473,7 @@ reSnapshot promotedVersion vTree timestamp =
               (RepositoryNode newVersion document timestamp)
            )
     else if (isReleaseSnapshot promotedVersion ) then
-        let document = getRepositoryContentByVersion (getParent promotedVersion) vTree
+        let document = getRepositoryNodeContentByVersion (getParent promotedVersion) vTree
             vTree1 = (makeNDimensional dimensions) 
                  <$> (treeInsert 
                         vTree 

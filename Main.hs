@@ -196,7 +196,7 @@ parseInput inp
           else do 
             newContentInput <- getInputLineWithInitial 
               "\tEnter new contents of the branch: " 
-              ( getRepositoryContentByVersion branchVersion (fromJust $ M.lookup selectedRepository repositoryMap), "" )
+              ( getRepositoryNodeContentByVersion branchVersion (fromJust $ M.lookup selectedRepository repositoryMap), "" )
             case newContentInput of
               Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag  
               Just newContent -> put $ RepositoryMapState 
@@ -216,7 +216,7 @@ parseInput inp
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
-        content = getRepositoryContentByVersion version (fromJust $ M.lookup selectedRepository repositoryMap ) 
+        content = getRepositoryNodeContentByVersion version (fromJust $ M.lookup selectedRepository repositoryMap ) 
         in ( do
           outputStrLn $ show content
           put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
