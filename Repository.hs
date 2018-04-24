@@ -92,7 +92,7 @@ versionDocumentTreeToStringTree (RoseTree num []) = Node (toString num) []
 versionDocumentTreeToStringTree (RoseTree num (x:[])) = Node (toString num) [ versionDocumentTreeToStringTree x ]
 versionDocumentTreeToStringTree (RoseTree num (x:xs)) = Node (toString num) ( (versionDocumentTreeToStringTree x) : (versionListToStringTreeList xs) )
 
-class FindLatest a where 
+class Find a where 
     findLatestVersion :: a -> Version
     findLatestSupportBranch :: a -> Version
     findLatestReleaseBranch :: a -> Version
@@ -108,9 +108,12 @@ class FindLatest a where
     findLatestForParentReleaseSnapshot :: Version -> a -> Version
     findLatestForParentRevision :: Version -> a -> Version
     findLatestForParentExperimentalSnapshot :: Version -> a -> Version
+    findAllSupportBranches :: a -> [Version]
+    findAllSupportSnapshots :: a -> [Version]
+    findAllReleaseBranches :: a -> [Version]
+    findAllReleaseSnapshots :: a -> [Version]
 
-
-instance FindLatest Repository where    
+instance Find Repository where    
     findLatestVersion ( RoseTree (RepositoryNode version _ _)  [] ) = version
     findLatestVersion ( RoseTree (RepositoryNode version1 _ _) list ) = if ( version1 > ( findLatestVersion list ) ) then version1 else findLatestVersion list
     findLatestSupportBranch (RoseTree (RepositoryNode version _ _) []) = if (isSupportBranch version) then version else Version $ createVersionNumberByNumberOfDimensions 0
@@ -144,7 +147,16 @@ instance FindLatest Repository where
     findLatestForParentReleaseSnapshot parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestReleaseSnapshot list else findLatestForParentReleaseSnapshot parentVersion list
     findLatestForParentExperimentalSnapshot parentVersion (RoseTree (RepositoryNode version _ _) list) = if (parentVersion == version) then findLatestExperimentalSnapshot list else findLatestForParentExperimentalSnapshot parentVersion list
     findLatestForParentRevision = findLatestForParentExperimentalSnapshot
-instance FindLatest RepositoryList where
+    findAllSupportBranches (RoseTree (RepositoryNode version _ _) []) = if isSupportBranch version then [version] else []
+    findAllSupportBranches (RoseTree (RepositoryNode version _ _) list) = if isSupportBranch version then [version] ++ findAllSupportBranches list else findAllSupportBranches list
+    findAllSupportSnapshots (RoseTree (RepositoryNode version _ _) []) = if isSupportSnapshot version then [version] else []
+    findAllSupportSnapshots (RoseTree (RepositoryNode version _ _) list) = if isSupportSnapshot version then [version] ++ findAllSupportSnapshots list else findAllSupportSnapshots list
+    findAllReleaseBranches (RoseTree (RepositoryNode version _ _) []) = if isReleaseBranch version then [version] else []
+    findAllReleaseBranches (RoseTree (RepositoryNode version _ _) list) = if isReleaseBranch version then [version] ++ findAllReleaseBranches list else findAllReleaseBranches list
+    findAllReleaseSnapshots (RoseTree (RepositoryNode version _ _) []) = if isReleaseSnapshot version then [version] else []
+    findAllReleaseSnapshots (RoseTree (RepositoryNode version _ _) list) = if isReleaseSnapshot version then [version] ++ findAllReleaseSnapshots list else findAllReleaseSnapshots list
+
+instance Find RepositoryList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
     findLatestVersion (x:[]) = findLatestVersion x
     findLatestVersion (x:xs) = if ((findLatestVersion x) > (findLatestVersion xs)) then (findLatestVersion x) else (findLatestVersion xs)
@@ -206,6 +218,18 @@ instance FindLatest RepositoryList where
         then (findLatestForParentExperimentalSnapshot parentVersion x)
         else (findLatestForParentExperimentalSnapshot parentVersion xs)
     findLatestForParentRevision = findLatestForParentExperimentalSnapshot
+    findAllSupportBranches [] = []
+    findAllSupportBranches (x:[]) = findAllSupportBranches x
+    findAllSupportBranches (x:xs) = findAllSupportBranches x ++ findAllSupportBranches xs
+    findAllSupportSnapshots [] = []
+    findAllSupportSnapshots (x:[]) = findAllSupportSnapshots x
+    findAllSupportSnapshots (x:xs) = findAllSupportSnapshots x ++ findAllSupportSnapshots xs
+    findAllReleaseBranches [] = []
+    findAllReleaseBranches (x:[]) = findAllReleaseBranches x
+    findAllReleaseBranches (x:xs) = findAllReleaseBranches x ++ findAllReleaseBranches xs
+    findAllReleaseSnapshots [] = []
+    findAllReleaseSnapshots (x:[]) = findAllReleaseSnapshots x
+    findAllReleaseSnapshots (x:xs) = findAllReleaseSnapshots x ++ findAllReleaseSnapshots xs
     
 class FindVersion a where 
     findParentVersion :: a -> Version -> Version
