@@ -107,12 +107,40 @@ showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) 
                     ++ (findAllRevisions repository))
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
-{-searchFunc :: RepositoryMapState -> String -> [Completion]-}
-{-searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion -}
-      {-$ filter (str `isPrefixOf`)-}
-      {-$ if null selectedRepository -}
-          {-then M.keys repositoryMapCommands ++ M.keys repositoryMap-}
-          {-else M.keys repositoryCommands-}
+newSupportBranchSearchFunc :: SearchFunc 
+newSupportBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllMainlines repository ) ) 
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+newReleaseBranchSearchFunc :: SearchFunc 
+newReleaseBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllMainlines repository ) ++ ( findAllSupportBranches repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+newSupportSnapshotSearchFunc :: SearchFunc 
+newSupportSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllSupportBranches repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+newReleaseSnapshotSearchFunc :: SearchFunc 
+newReleaseSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllReleaseBranches repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+newRevisionSearchFunc :: SearchFunc 
+newRevisionSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllMainlines repository ) ++ ( findAllSupportBranches repository ) ++ ( findAllReleaseBranches repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+reSnapshotSearchFunc :: SearchFunc 
+reSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllSupportSnapshots repository ) ++ ( findAllReleaseSnapshots repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+promoteSnapshotSearchFunc :: SearchFunc 
+promoteSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString ( ( findAllSupportSnapshots repository ) ++ ( findAllReleaseSnapshots repository ) )
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 mySettings :: Settings MS 
 mySettings = Settings { historyFile = Just "hist"
@@ -152,11 +180,11 @@ initCommand = do
           (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
           selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
-newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> InputT MS  ()
-newCommand newFunc message = do
+newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> SearchFunc -> InputT MS () 
+newCommand newFunc message searchFunc = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   timestamp <- liftIO $ getPOSIXTime
-  versionInput <- getInputLine message
+  versionInput <- local (\_ -> searchFunc) $ getInputLine message
   let timestampStr = timestampToString timestamp 
   case versionInput of
     Nothing -> put $ RepositoryMapState 
@@ -260,37 +288,37 @@ parseInput inp
   | inp =~ "^\\:show" = showCommand >> mainLoop 
 
   | inp =~ "^\\:newSupportBranch" = do
-    newCommand newSupportBranch "\tEnter version, which will be used to append new support branch to: "
+    newCommand newSupportBranch "\tEnter version, which will be used to append new support branch to: " newSupportBranchSearchFunc 
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseBranch" = do
-    newCommand newReleaseBranch "\tEnter version, which will be used to append new release branch to: "
+    newCommand newReleaseBranch "\tEnter version, which will be used to append new release branch to: " newReleaseBranchSearchFunc
     showCommand
     mainLoop
 
   | inp =~ "^\\:newSupportSnapshot" = do
-    newCommand newSupportSnapshot "\tEnter version, which will be used to append new support snapshot to: "
+    newCommand newSupportSnapshot "\tEnter version, which will be used to append new support snapshot to: " newSupportSnapshotSearchFunc
     showCommand
     mainLoop
 
   | inp =~ "^\\:newReleaseSnapshot" = do
-    newCommand newReleaseSnapshot "\tEnter version, which will be used to append new release snapshot to: "
+    newCommand newReleaseSnapshot "\tEnter version, which will be used to append new release snapshot to: " newReleaseSnapshotSearchFunc
     showCommand
     mainLoop
 
   | inp =~ "^\\:newRevision" = do
-    newCommand newRevision "\tEnter version, which will be used to append new revision to: "
+    newCommand newRevision "\tEnter version, which will be used to append new revision to: " newRevisionSearchFunc 
     showCommand
     mainLoop
 
   | inp =~ "^\\:reSnapshot" = do
-    newCommand reSnapshot "\tEnter version of the snapshot you want to be re-created with the same maturity level: "
+    newCommand reSnapshot "\tEnter version of the snapshot you want to be re-created with the same maturity level: " reSnapshotSearchFunc
     showCommand
     mainLoop
 
   | inp =~ "^\\:promoteSnapshot " = do
-    newCommand promoteSnapshot "\tEnter version of the snapshot you want to be promoted: "
+    newCommand promoteSnapshot "\tEnter version of the snapshot you want to be promoted: " promoteSnapshotSearchFunc
     showCommand
     mainLoop
 
