@@ -15,6 +15,7 @@ import Util
 import Text.Regex.PCRE
 import System.Console.Haskeline
 import System.IO
+import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Data.List 
 import qualified Data.Map as M
@@ -28,6 +29,10 @@ data RepositoryMapState = RepositoryMapState {
   displayMaturityLevelsFlag :: Bool
 }
 
+type SearchFunc = RepositoryMapState -> String -> [Completion]
+
+type MS = ReaderT SearchFunc (StateT RepositoryMapState IO)
+
 defaultDisplayRevisionsFlagValue :: Bool
 defaultDisplayRevisionsFlagValue = True
 
@@ -38,6 +43,10 @@ instance MonadState s m => MonadState s (InputT m) where
     get = lift get
     put = lift . put
     state = lift . state
+
+instance MonadReader s m => MonadReader s (InputT m) where
+    reader = lift . reader
+    local f = mapInputT (local f)
 
 repositoryMapCommands = M.fromList [
             (":help","displays this help"), 
@@ -73,32 +82,58 @@ repositoryCommands = M.fromList [
             (":reSnapshot","recreates snapshot with the same maturity level")
           ]
 
-searchFunc :: RepositoryMapState -> String -> [Completion]
-searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion 
+topLevelSearchFunc :: SearchFunc
+topLevelSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion 
       $ filter (str `isPrefixOf`)
       $ if null selectedRepository 
-          then M.keys repositoryMapCommands ++ M.keys repositoryMap
+          then M.keys repositoryMapCommands 
           else M.keys repositoryCommands
 
-mySettings :: Settings (StateT RepositoryMapState IO)
+editSearchFunc :: SearchFunc 
+editSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ M.keys repositoryMap
+
+editBranchSearchFunc :: SearchFunc 
+editBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString (( findAllSupportBranches repository  ) ++ (findAllReleaseBranches repository))
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+showContentSearchFunc :: SearchFunc 
+showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+      $ map toString (( findAllSupportBranches repository  ) 
+                    ++ (findAllReleaseBranches repository) 
+                    ++ (findAllSupportSnapshots repository) 
+                    ++ (findAllReleaseSnapshots repository) 
+                    ++ (findAllRevisions repository))
+        where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
+
+{-searchFunc :: RepositoryMapState -> String -> [Completion]-}
+{-searchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion -}
+      {-$ filter (str `isPrefixOf`)-}
+      {-$ if null selectedRepository -}
+          {-then M.keys repositoryMapCommands ++ M.keys repositoryMap-}
+          {-else M.keys repositoryCommands-}
+
+mySettings :: Settings MS 
 mySettings = Settings { historyFile = Just "hist"
                       , complete = completeWord Nothing "\t" $ \str -> do 
                           data_ <- get
+                          searchFunc <- ask
                           return $ searchFunc data_ str
                       , autoAddHistory = True
                       }
 
-help :: InputT (StateT RepositoryMapState IO)()
+help :: InputT MS ()
 help = commands
        
-commands :: InputT (StateT RepositoryMapState IO)()
+commands :: InputT MS ()
 commands = do 
         (RepositoryMapState _ selectedRepository _ _ ) <- get
         liftIO $ mapM_ putStrLn $ if null selectedRepository 
             then M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryMapCommands
             else M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryCommands
        
-showCommand :: InputT (StateT RepositoryMapState IO)()
+showCommand :: InputT MS ()
 showCommand = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   if null selectedRepository 
@@ -107,7 +142,7 @@ showCommand = do
       do putStrLn $ show selectedRepository ++ " => "
          displayRepository repository displayRevisionsFlag displayMaturityLevelsFlag
 
-initCommand :: InputT (StateT RepositoryMapState IO) ()
+initCommand :: InputT MS  ()
 initCommand = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
   if (null selectedRepository) then
@@ -117,7 +152,7 @@ initCommand = do
           (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
           selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
 
-newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> InputT (StateT RepositoryMapState IO) ()
+newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> InputT MS  ()
 newCommand newFunc message = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   timestamp <- liftIO $ getPOSIXTime
@@ -139,7 +174,7 @@ newCommand newFunc message = do
       displayRevisionsFlag 
       displayMaturityLevelsFlag
 
-parseInput :: String -> InputT (StateT RepositoryMapState IO)()
+parseInput :: String -> InputT MS ()
 parseInput inp
   | inp =~ "^\\:q" = do
     RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
@@ -152,7 +187,6 @@ parseInput inp
   | inp =~ "^\\:he"       = help >> mainLoop
                             
   | inp =~ "^\\:commands" = commands >> mainLoop
-  
 
   | inp =~ "^\\:init" = do
     initCommand 
@@ -182,7 +216,7 @@ parseInput inp
 
   | inp =~ "^\\:editBranch" = do
     RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    branchVersionInput <- getInputLine "\tEnter version of the branch to edit: "
+    branchVersionInput <- local (\_ -> editBranchSearchFunc) $ getInputLine "\tEnter version of the branch to edit: "
     case branchVersionInput of
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
       Just stringBranchVersion -> if (null stringBranchVersion) then do
@@ -211,7 +245,7 @@ parseInput inp
 
   | inp =~ "^\\:showContent" = do
     RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    versionInput <- getInputLine "\tEnter version of the node to show: "
+    versionInput <- local (\_ -> showContentSearchFunc ) $ getInputLine "\tEnter version of the node to show: "
     case versionInput of 
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
@@ -284,7 +318,7 @@ parseInput inp
 
   | inp =~ "^\\:edit" = do
     RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    selectedRepositoryInput <- getInputLine "\tEnter name of the repository to edit: "
+    selectedRepositoryInput <- local (\_ -> editSearchFunc) $ getInputLine "\tEnter name of the repository to edit: "
     case selectedRepositoryInput of
       Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
       Just selectedRepositoryName ->
@@ -343,10 +377,10 @@ parseInput inp
    
   | otherwise = handleInput inp
 
-handleInput :: String -> InputT (StateT RepositoryMapState IO)()
+handleInput :: String -> InputT MS ()
 handleInput inp = mainLoop
 
-mainLoop :: InputT (StateT RepositoryMapState IO)()
+mainLoop :: InputT MS ()
 mainLoop = do
   inp <- getInputLine "% "
   maybe (return ()) parseInput inp
@@ -363,5 +397,6 @@ greet = mapM_ putStrLn
 main :: IO ((), RepositoryMapState)
 main = do 
     greet 
-    runStateT (runInputT mySettings mainLoop) $ RepositoryMapState initialRepositoryMap "" defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
+    runStateT (runReaderT (runInputT mySettings mainLoop) topLevelSearchFunc) 
+        $ RepositoryMapState initialRepositoryMap "" defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
    
