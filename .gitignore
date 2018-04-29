@@ -9,3 +9,9 @@
 *.swo
 dist
 support
+data
+data.txt
+tags
+TAGS
+hist
+myhist
