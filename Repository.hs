@@ -113,6 +113,7 @@ class Find a where
     findAllReleaseBranches :: a -> [Version]
     findAllReleaseSnapshots :: a -> [Version]
     findAllRevisions :: a -> [Version]
+    findAllMainlines :: a -> [Version]
 
 instance Find Repository where    
     findLatestVersion ( RoseTree (RepositoryNode version _ _)  [] ) = version
@@ -158,6 +159,8 @@ instance Find Repository where
     findAllReleaseSnapshots (RoseTree (RepositoryNode version _ _) list) = if isReleaseSnapshot version then [version] ++ findAllReleaseSnapshots list else findAllReleaseSnapshots list
     findAllRevisions (RoseTree (RepositoryNode version _ _) []) = if isRevision version then [version] else []
     findAllRevisions (RoseTree (RepositoryNode version _ _) list) = if isRevision version then [version] ++ findAllRevisions list else findAllRevisions list
+    findAllMainlines (RoseTree (RepositoryNode version _ _) []) = if isInitial version then [version] else []
+    findAllMainlines (RoseTree (RepositoryNode version _ _) list) = if isInitial version then [version] ++ findAllMainlines list else findAllMainlines list
 
 instance Find RepositoryList where
     findLatestVersion [] = Version $ createVersionNumberByNumberOfDimensions 0
@@ -236,6 +239,9 @@ instance Find RepositoryList where
     findAllRevisions [] = []
     findAllRevisions (x:[]) = findAllRevisions x
     findAllRevisions (x:xs) = findAllRevisions x ++ findAllRevisions xs
+    findAllMainlines [] = []
+    findAllMainlines (x:[]) = findAllMainlines x
+    findAllMainlines (x:xs) = findAllMainlines x ++ findAllMainlines xs
     
 class FindVersion a where 
     findParentVersion :: a -> Version -> Version
