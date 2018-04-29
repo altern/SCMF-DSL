@@ -24,6 +24,9 @@ import qualified Data.ByteString.Lazy as B
 import Data.Maybe
 import System.IO.Unsafe
 
+dataDir :: FilePath
+dataDir = "data/"
+
 repositoryMapFile :: FilePath
 repositoryMapFile = "repositoryMap.json"
 
@@ -44,13 +47,13 @@ deploymentRulesFile = "deploymentRules.json"
 
 {-# NOINLINE loadRepositoryFromFile #-} 
 loadRepositoryFromFile :: Repository
-loadRepositoryFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile repositoryFile 
+loadRepositoryFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile ( dataDir ++ repositoryFile ) 
 
 loadRepositoryMapFromFile :: RepositoryMap
-loadRepositoryMapFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile repositoryMapFile
+loadRepositoryMapFromFile = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile ( dataDir ++ repositoryMapFile )
 
 loadRepositoryFromFileWithName :: String -> Repository
-loadRepositoryFromFileWithName filename = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile filename
+loadRepositoryFromFileWithName filename = unsafePerformIO $ fmap (fromJust . JSON.decode) $ B.readFile ( dataDir ++ filename )
 
 {-loadVersionTreeFromFile :: VersionTree-}
 {-loadVersionTreeFromFile = fromJust $ JSON.decode [litFile|versionTree.json|]-}
@@ -64,9 +67,9 @@ class SaveToFile a where
     
 instance SaveToFile RepositoryMap where
     saveToFile repositoryMap = do
-      withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
+      withFile ( dataDir ++ repositoryMapFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
     saveToFileWithName repositoryMapFile repositoryMap = do
-      withFile repositoryMapFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
+      withFile ( dataDir ++ repositoryMapFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repositoryMap)
 
 {-instance SaveToFile ArtifactTree where-}
     {-saveToFile aTree = do-}
@@ -74,21 +77,21 @@ instance SaveToFile RepositoryMap where
 
 instance SaveToFile VersionTree where
     saveToFile vTree = do
-      withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)
+      withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)
     saveToFileWithName versionTreeFile versionTree = do
-      withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON versionTree)
+      withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON versionTree)
 
 instance SaveToFile Repository where
     saveToFile vDocTree = do
-      withFile versionTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vDocTree)
+      withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vDocTree)
     saveToFileWithName repositoryFile repository = do
-      withFile repositoryFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repository)
+      withFile ( dataDir ++ repositoryFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repository)
 
 instance SaveToFile PlatformDB where
     saveToFile db = do
-      withFile platformDBFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
+      withFile ( dataDir ++ platformDBFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
     saveToFileWithName dbFile db = do
-      withFile dbFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
+      withFile ( dataDir ++ dbFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
 
 
 {-instance SaveToFile DeploymentRules where-}
