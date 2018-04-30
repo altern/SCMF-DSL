@@ -561,7 +561,7 @@ displayTreeWithSelected selectedVersion t = putStrLn $ drawVerticalTree $ versio
 
 displayRepository :: Repository -> Version -> Bool -> Bool -> IO ()
 displayRepository repository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag = do
-  if isInitial selectedVersion 
+  if isZero selectedVersion 
     then if displayRevisionsFlag 
       then if displayMaturityLevelsFlag 
         then displayTree $ fmap toMaturityNode repository
