@@ -231,3 +231,6 @@ stringToVersionNumber str = case (parseOnly parseVersionNumber $ BS.pack str) of
 
 initialVersionNumber :: VersionNumber
 initialVersionNumber = VersionNumber [Nothing]
+
+zeroVersionNumber :: VersionNumber
+zeroVersionNumber = VersionNumber [Just 0]

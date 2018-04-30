@@ -179,6 +179,9 @@ stringToVersion str = case (parseOnly parseVersion $ BS.pack str) of
 initialVersion :: Version
 initialVersion = Version $ initialVersionNumber
 
+zeroVersion :: Version
+zeroVersion = Version $ zeroVersionNumber
+
 toMaturityVersion :: Version -> Version
 toMaturityVersion (Version v) = MaturityVersion Dev v
 toMaturityVersion (MaturityVersion ml v) = MaturityVersion ml v
