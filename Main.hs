@@ -49,10 +49,23 @@ instance MonadReader s m => MonadReader s (InputT m) where
     reader = lift . reader
     local f = mapInputT (local f)
 
+helpCommand                 = (":help","displays this help")
+commandsCommand             = (":commands","displays the list of available commands")
+editBranchCommand           = (":editBranch","edits contents of the specific branch")
+showContentCommand          = (":showContent","shows contents of the specific node")
+newSupportBranchCommand     = (":newSupportBranch","adds new support branch to the version tree")
+newReleaseBranchCommand     = (":newReleaseBranch","adds new release branch to the version tree")
+newRevisionCommand          = (":newRevision","adds new revision to the version tree")
+promoteSnapshotCommand      = (":promoteSnapshot","promotes specific snapshot to the next maturity level")
+newSupportSnapshotCommand   = (":newSupportSnapshot","adds new support snapshot to the version tree")
+newReleaseSnapshotCommand   = (":newReleaseSnapshot","adds new release snapshot to the version tree")
+reSnapshotCommand           = (":reSnapshot","recreates snapshot with the same maturity level")
+selectVersionCommand        = (":selectVersion","selects version to be currently selected")
+
 repositoryMapCommands = M.fromList [
-            (":help","displays this help"), 
+            helpCommand,
             (":q","quits the application"),
-            (":commands","displays the list of available commands"), 
+            commandsCommand, 
             (":show","shows the list of repositories with their version trees"), 
             (":init","initializes repository map from scratch"),
             (":save","saves repository map to a file"),
@@ -64,20 +77,10 @@ repositoryMapCommands = M.fromList [
             (":toggleMaturityLevels","turns on/off display of maturity levels for version trees")
   ]
 
-editBranchCommand           = (":editBranch","edits contents of the specific branch")
-showContentCommand          = (":showContent","shows contents of the specific branch")
-newSupportBranchCommand     = (":newSupportBranch","adds new support branch to the version tree")
-newReleaseBranchCommand     = (":newReleaseBranch","adds new release branch to the version tree")
-newRevisionCommand          = (":newRevision","adds new revision to the version tree")
-promoteSnapshotCommand      = (":promoteSnapshot","promotes specific snapshot to the next maturity level")
-newSupportSnapshotCommand   = (":newSupportSnapshot","adds new support snapshot to the version tree")
-newReleaseSnapshotCommand   = (":newReleaseSnapshot","adds new release snapshot to the version tree")
-reSnapshotCommand           = (":reSnapshot","recreates snapshot with the same maturity level")
-
 repositoryCommands = M.fromList [
-            (":help","displays this help"), 
+            helpCommand, 
             (":q","quits repository editing mode"), 
-            (":commands","displays the list of available commands"), 
+            commandsCommand,
             (":init", "initializes repository with an initial"),
             (":show", "displays version tree of the currently selected repository"),
             (":save", "saves version tree of the currently selected repository into a JSON file with repository name"),
@@ -92,11 +95,14 @@ repositoryCommands = M.fromList [
             newSupportSnapshotCommand, 
             newReleaseSnapshotCommand,
             reSnapshotCommand,
-            (":selectVersion","selects version to be currently selected")
+            selectVersionCommand
   ]
 
 versionCommands = M.fromList [
-            (":q", "quits version selection mode")
+            helpCommand,
+            (":q", "quits version selection mode"),
+            commandsCommand,
+            selectVersionCommand
   ]
 
 mainlineBranchCommands = M.fromList [
@@ -151,9 +157,9 @@ topLevelSearchFunc (RepositoryMapState repositoryMap selectedRepository selected
       $ filter (str `isPrefixOf`)
       $ if null selectedRepository 
           then M.keys repositoryMapCommands 
-          else if isInitial selectedVersion 
+          else if isZero selectedVersion 
                then M.keys repositoryCommands
-               else M.keys $ versionToCommands selectedVersion
+               else M.keys $ M.union versionCommands $ versionToCommands selectedVersion
 
 editSearchFunc :: SearchFunc 
 editSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
@@ -166,7 +172,8 @@ editBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository select
 
 showContentSearchFunc :: SearchFunc 
 showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
-      $ map toString (( findAllSupportBranches repository  ) 
+      $ map toString ( (findAllMainlines repository)  
+                    ++ (findAllSupportBranches repository) 
                     ++ (findAllReleaseBranches repository) 
                     ++ (findAllSupportSnapshots repository) 
                     ++ (findAllReleaseSnapshots repository) 
@@ -225,7 +232,9 @@ commands = do
         (RepositoryMapState _ selectedRepository selectedVersion _ _ ) <- get
         liftIO $ mapM_ putStrLn $ if null selectedRepository 
             then M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryMapCommands
-            else M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryCommands
+            else if isZero selectedVersion 
+              then M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryCommands
+              else M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) $ M.union versionCommands $ versionToCommands selectedVersion 
        
 showCommand :: InputT MS ()
 showCommand = do
@@ -276,8 +285,11 @@ parseInput inp
     RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     if null selectedRepository 
       then return () 
-      else do 
+      else if isZero selectedVersion then do 
         put $ RepositoryMapState repositoryMap "" selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
+        mainLoop
+      else do 
+        put $ RepositoryMapState repositoryMap selectedRepository zeroVersion displayRevisionsFlag displayMaturityLevelsFlag
         mainLoop
                             
   | inp =~ "^\\:he"       = help >> mainLoop
@@ -509,5 +521,4 @@ main :: IO ((), RepositoryMapState)
 main = do 
     greet 
     runStateT (runReaderT (runInputT mySettings mainLoop) topLevelSearchFunc) 
-        $ RepositoryMapState initialRepositoryMap "" initialVersion defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
-   
+        $ RepositoryMapState initialRepositoryMap "" zeroVersion defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
