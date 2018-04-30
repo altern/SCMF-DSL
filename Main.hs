@@ -184,7 +184,7 @@ newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> Se
 newCommand newFunc message searchFunc = do
   RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
   timestamp <- liftIO $ getPOSIXTime
-  versionInput <- local (\_ -> searchFunc) $ getInputLine message
+  versionInput <- if null message then liftIO $ return $ Just $ toString initialVersion else local (\_ -> searchFunc) $ getInputLine message
   let timestampStr = timestampToString timestamp 
   case versionInput of
     Nothing -> put $ RepositoryMapState 
@@ -288,7 +288,7 @@ parseInput inp
   | inp =~ "^\\:show" = showCommand >> mainLoop 
 
   | inp =~ "^\\:newSupportBranch" = do
-    newCommand newSupportBranch "\tEnter version, which will be used to append new support branch to: " newSupportBranchSearchFunc 
+    newCommand newSupportBranch "" newSupportBranchSearchFunc 
     showCommand
     mainLoop
 
