@@ -61,6 +61,7 @@ versionTests = test [
     "test J03"    ~: "3 == 3"                                    ~: True                                                        ~=? ( stringToVersion "3" == stringToVersion "3" ),
     "test J04"    ~: "1.0 == 1.1"                                ~: False                                                    ~=? ( stringToVersion "1.0" == stringToVersion "1.1" ),
     "test J05"    ~: "1.0 == Dev/1.0"                            ~: True                                                        ~=? ( stringToVersion "1.0" == stringToVersion "Dev/1.0" ),
+    "test J06"    ~: "1.0 == User/1.0"                           ~: False                                                       ~=? ( stringToVersion "1.0" == stringToVersion "User/1.0" ),
     "test K01"    ~: "promoteVersion 1.0"                        ~: (MaturityVersion Test $ VersionNumber [Just 1, Just 1])       ~=? ( promoteVersion $ stringToVersion "1.0") ,
     "test K02"    ~: "promoteVersion Test/1.0.0"                 ~: (MaturityVersion User $ VersionNumber [Just 1, Just 0, Just 1]) ~=? ( promoteVersion $ stringToVersion "Test/1.0.0") ,
     "test K03"    ~: "promoteVersion Prod/1.0.10"                ~: (MaturityVersion Prod $ VersionNumber [Just 1, Just 0, Just 11]) ~=? ( promoteVersion $ stringToVersion "Prod/1.0.10") ,

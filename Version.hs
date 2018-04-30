@@ -133,9 +133,9 @@ selectLatestVersion (x:xs) = max x (selectLatestVersion xs)
 
 instance Eq Version where
     (Version vn1) == (Version vn2) = (vn1 == vn2)
-    (Version vn1) == (MaturityVersion ml vn2) = vn1 == vn2
-    (MaturityVersion ml vn1) == (Version vn2) = vn1 == vn2
-    (MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2) = (vn1 == vn2)
+    (Version vn1) == (MaturityVersion ml vn2) = Dev == ml && vn1 == vn2
+    (MaturityVersion ml vn1) == (Version vn2) = ml == Dev && vn1 == vn2
+    (MaturityVersion ml1 vn1) == (MaturityVersion ml2 vn2) = (ml1 == ml2) && (vn1 == vn2)
     
 instance Ord Version where
     (MaturityVersion ml1 vn1) `compare` (MaturityVersion ml2 vn2) = case vn1 == vn2 of 
