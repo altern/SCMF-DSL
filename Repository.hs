@@ -92,6 +92,25 @@ versionDocumentTreeToStringTree (RoseTree num []) = Node (toString num) []
 versionDocumentTreeToStringTree (RoseTree num (x:[])) = Node (toString num) [ versionDocumentTreeToStringTree x ]
 versionDocumentTreeToStringTree (RoseTree num (x:xs)) = Node (toString num) ( (versionDocumentTreeToStringTree x) : (versionListToStringTreeList xs) )
 
+versionListToStringTreeListWithSelected :: Version -> RepositoryList -> StringTreeList
+versionListToStringTreeListWithSelected _ [] = []
+versionListToStringTreeListWithSelected selectedVersion (x:[]) = [versionDocumentTreeToStringTreeWithSelected selectedVersion x]
+versionListToStringTreeListWithSelected selectedVersion (x:xs) = (versionDocumentTreeToStringTreeWithSelected selectedVersion x):(versionListToStringTreeListWithSelected selectedVersion xs) 
+
+versionDocumentTreeToStringTreeWithSelected :: Version -> Repository -> StringTree
+versionDocumentTreeToStringTreeWithSelected selectedVersion (RoseTree num []) = 
+      if hasVersion selectedVersion num 
+      then Node ("[" ++ toString num ++ "]") [] 
+      else Node (toString num) []
+versionDocumentTreeToStringTreeWithSelected selectedVersion (RoseTree num (x:[])) = 
+      if hasVersion selectedVersion num 
+      then Node ("[" ++ toString num ++ "]") [ versionDocumentTreeToStringTreeWithSelected selectedVersion x ]
+      else Node (toString num) [ versionDocumentTreeToStringTreeWithSelected selectedVersion x ]
+versionDocumentTreeToStringTreeWithSelected selectedVersion (RoseTree num (x:xs)) = 
+      if hasVersion selectedVersion num 
+      then Node ("[" ++ toString num ++ "]") ( (versionDocumentTreeToStringTreeWithSelected selectedVersion x) : (versionListToStringTreeListWithSelected selectedVersion xs) )
+      else Node (toString num) ( (versionDocumentTreeToStringTreeWithSelected selectedVersion x) : (versionListToStringTreeListWithSelected selectedVersion xs) )
+
 class Find a where 
     findLatestVersion :: a -> Version
     findLatestSupportBranch :: a -> Version
@@ -536,13 +555,24 @@ reSnapshot promotedVersion vTree timestamp =
 instance DisplayTree Repository where 
     displayTree t = putStrLn $ drawVerticalTree (versionDocumentTreeToStringTree t)
 
-displayRepository :: Repository -> Bool -> Bool -> IO ()
-displayRepository repository displayRevisionsFlag displayMaturityLevelsFlag = do
-  if displayRevisionsFlag 
-  then if displayMaturityLevelsFlag 
-    then displayTree $ fmap toMaturityNode repository
-    else displayTree $ fmap toNode repository
-  else if displayMaturityLevelsFlag 
-    then displayTree $ filterTree isRevision $ fmap toMaturityNode repository
-    else displayTree $ filterTree isRevision $ fmap toNode repository
+displayTreeWithSelected :: Version -> Repository -> IO ()
+displayTreeWithSelected selectedVersion t = putStrLn $ drawVerticalTree $ versionDocumentTreeToStringTreeWithSelected selectedVersion t
+
+displayRepository :: Repository -> Version -> Bool -> Bool -> IO ()
+displayRepository repository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag = do
+  if isInitial selectedVersion 
+    then if displayRevisionsFlag 
+      then if displayMaturityLevelsFlag 
+        then displayTree $ fmap toMaturityNode repository
+        else displayTree $ fmap toNode repository
+      else if displayMaturityLevelsFlag 
+        then displayTree $ filterTree isRevision $ fmap toMaturityNode repository
+        else displayTree $ filterTree isRevision $ fmap toNode repository
+  else if displayRevisionsFlag 
+    then if displayMaturityLevelsFlag 
+      then displayTreeWithSelected selectedVersion $ fmap toMaturityNode repository
+      else displayTreeWithSelected selectedVersion $ fmap toNode repository
+    else if displayMaturityLevelsFlag 
+      then displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toMaturityNode repository
+      else displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toNode repository
 

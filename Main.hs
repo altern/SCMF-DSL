@@ -231,10 +231,10 @@ showCommand :: InputT MS ()
 showCommand = do
   RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
   if null selectedRepository 
-    then liftIO $ displayRepositoryMap repositoryMap displayRevisionsFlag displayMaturityLevelsFlag 
+    then liftIO $ displayRepositoryMap repositoryMap selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
     else liftIO $ let repository = (fromJust $ M.lookup selectedRepository repositoryMap) in
       do putStrLn $ show selectedRepository ++ " => "
-         displayRepository repository displayRevisionsFlag displayMaturityLevelsFlag
+         displayRepository repository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
 
 initCommand :: InputT MS  ()
 initCommand = do
@@ -362,9 +362,9 @@ parseInput inp
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
         in ( do 
-          outputStrLn $ "Selected version: " ++ toString version
-          put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
+          put $ RepositoryMapState repositoryMap selectedRepository version displayRevisionsFlag displayMaturityLevelsFlag 
         ) 
+    showCommand
     mainLoop
 
   | inp =~ "^\\:show" = showCommand >> mainLoop 
