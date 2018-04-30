@@ -25,6 +25,7 @@ import Data.Time.Clock.POSIX
 data RepositoryMapState = RepositoryMapState {
   repositoryMap :: RepositoryMap,
   selectedRepository :: String,
+  selectedVersion :: Version,
   displayRevisionsFlag :: Bool,
   displayMaturityLevelsFlag :: Bool
 }
@@ -61,7 +62,18 @@ repositoryMapCommands = M.fromList [
             (":new","adds new empty repository to the list"), 
             (":toggleRevisions","turns on/off display of revisions for version trees"), 
             (":toggleMaturityLevels","turns on/off display of maturity levels for version trees")
-          ]
+  ]
+
+editBranchCommand           = (":editBranch","edits contents of the specific branch")
+showContentCommand          = (":showContent","shows contents of the specific branch")
+newSupportBranchCommand     = (":newSupportBranch","adds new support branch to the version tree")
+newReleaseBranchCommand     = (":newReleaseBranch","adds new release branch to the version tree")
+newRevisionCommand          = (":newRevision","adds new revision to the version tree")
+promoteSnapshotCommand      = (":promoteSnapshot","promotes specific snapshot to the next maturity level")
+newSupportSnapshotCommand   = (":newSupportSnapshot","adds new support snapshot to the version tree")
+newReleaseSnapshotCommand   = (":newReleaseSnapshot","adds new release snapshot to the version tree")
+reSnapshotCommand           = (":reSnapshot","recreates snapshot with the same maturity level")
+
 repositoryCommands = M.fromList [
             (":help","displays this help"), 
             (":q","quits repository editing mode"), 
@@ -71,35 +83,89 @@ repositoryCommands = M.fromList [
             (":save", "saves version tree of the currently selected repository into a JSON file with repository name"),
             (":load", "loads repository from JSON file with repository name"),
             (":print", "prints repository as a valid Haskell code"),
-            (":editBranch","edits contents of the specific branch"), 
-            (":showContent","shows contents of the specific branch"), 
-            (":newSupportBranch","adds new support branch to the version tree"), 
-            (":newReleaseBranch","adds new release branch to the version tree"), 
-            (":newRevision","adds new revision to the version tree"), 
-            (":promoteSnapshot","promotes specific snapshot to the next maturity level"),
-            (":newSupportSnapshot","adds new support snapshot to the version tree"), 
-            (":newReleaseSnapshot","adds new release snapshot to the version tree"),
-            (":reSnapshot","recreates snapshot with the same maturity level")
-          ]
+            editBranchCommand,
+            showContentCommand,
+            newSupportBranchCommand, 
+            newReleaseBranchCommand, 
+            newRevisionCommand, 
+            promoteSnapshotCommand,
+            newSupportSnapshotCommand, 
+            newReleaseSnapshotCommand,
+            reSnapshotCommand,
+            (":selectVersion","selects version to be currently selected")
+  ]
+
+versionCommands = M.fromList [
+            (":q", "quits version selection mode")
+  ]
+
+mainlineBranchCommands = M.fromList [
+            editBranchCommand,
+            showContentCommand,
+            newSupportBranchCommand
+  ]
+
+supportBranchCommands = M.fromList [
+            editBranchCommand,
+            showContentCommand,
+            newReleaseBranchCommand,
+            newRevisionCommand,
+            newSupportSnapshotCommand
+  ]
+
+releaseBranchCommands = M.fromList [
+            editBranchCommand,
+            showContentCommand,
+            newRevisionCommand,
+            newReleaseSnapshotCommand
+  ]
+
+supportSnapshotCommands = M.fromList [
+            showContentCommand,
+            promoteSnapshotCommand,
+            reSnapshotCommand
+  ]
+
+releaseSnapshotCommands = M.fromList [
+            showContentCommand,
+            promoteSnapshotCommand,
+            reSnapshotCommand
+  ]
+
+revisionCommands = M.fromList [
+            showContentCommand
+  ]
+
+versionToCommands :: Version -> M.Map String String
+versionToCommands version = 
+      if isInitial version then mainlineBranchCommands
+      else if isSupportBranch version then supportBranchCommands
+      else if isReleaseBranch version then releaseBranchCommands
+      else if isSupportSnapshot version then supportSnapshotCommands
+      else if isReleaseSnapshot version then releaseSnapshotCommands
+      else if isRevision version then revisionCommands
+      else M.fromList []
 
 topLevelSearchFunc :: SearchFunc
-topLevelSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion 
+topLevelSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion 
       $ filter (str `isPrefixOf`)
       $ if null selectedRepository 
           then M.keys repositoryMapCommands 
-          else M.keys repositoryCommands
+          else if isInitial selectedVersion 
+               then M.keys repositoryCommands
+               else M.keys $ versionToCommands selectedVersion
 
 editSearchFunc :: SearchFunc 
-editSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+editSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ M.keys repositoryMap
 
 editBranchSearchFunc :: SearchFunc 
-editBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+editBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString (( findAllSupportBranches repository  ) ++ (findAllReleaseBranches repository))
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 showContentSearchFunc :: SearchFunc 
-showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString (( findAllSupportBranches repository  ) 
                     ++ (findAllReleaseBranches repository) 
                     ++ (findAllSupportSnapshots repository) 
@@ -108,37 +174,37 @@ showContentSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) 
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 newSupportBranchSearchFunc :: SearchFunc 
-newSupportBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+newSupportBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllMainlines repository ) ) 
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 newReleaseBranchSearchFunc :: SearchFunc 
-newReleaseBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+newReleaseBranchSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllMainlines repository ) ++ ( findAllSupportBranches repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 newSupportSnapshotSearchFunc :: SearchFunc 
-newSupportSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+newSupportSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllSupportBranches repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 newReleaseSnapshotSearchFunc :: SearchFunc 
-newReleaseSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+newReleaseSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllReleaseBranches repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 newRevisionSearchFunc :: SearchFunc 
-newRevisionSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+newRevisionSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllMainlines repository ) ++ ( findAllSupportBranches repository ) ++ ( findAllReleaseBranches repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 reSnapshotSearchFunc :: SearchFunc 
-reSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+reSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllSupportSnapshots repository ) ++ ( findAllReleaseSnapshots repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
 promoteSnapshotSearchFunc :: SearchFunc 
-promoteSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
+promoteSnapshotSearchFunc (RepositoryMapState repositoryMap selectedRepository selectedVersion _ _) str = map simpleCompletion $ filter (str `isPrefixOf`)
       $ map toString ( ( findAllSupportSnapshots repository ) ++ ( findAllReleaseSnapshots repository ) )
         where repository = (fromJust $ M.lookup selectedRepository repositoryMap)
 
@@ -156,14 +222,14 @@ help = commands
        
 commands :: InputT MS ()
 commands = do 
-        (RepositoryMapState _ selectedRepository _ _ ) <- get
+        (RepositoryMapState _ selectedRepository selectedVersion _ _ ) <- get
         liftIO $ mapM_ putStrLn $ if null selectedRepository 
             then M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryMapCommands
             else M.elems $ M.mapWithKey (\k v -> k ++ "\t - " ++ v) repositoryCommands
        
 showCommand :: InputT MS ()
 showCommand = do
-  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+  RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
   if null selectedRepository 
     then liftIO $ displayRepositoryMap repositoryMap displayRevisionsFlag displayMaturityLevelsFlag 
     else liftIO $ let repository = (fromJust $ M.lookup selectedRepository repositoryMap) in
@@ -172,17 +238,17 @@ showCommand = do
 
 initCommand :: InputT MS  ()
 initCommand = do
-  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <-get
+  RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <-get
   if (null selectedRepository) then
-    put $ RepositoryMapState initialRepositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag
+    put $ RepositoryMapState initialRepositoryMap "" initialVersion displayRevisionsFlag displayMaturityLevelsFlag
   else
     put $ RepositoryMapState 
           (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
-          selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+          selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
 
 newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> SearchFunc -> InputT MS () 
 newCommand newFunc message searchFunc = do
-  RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+  RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
   timestamp <- liftIO $ getPOSIXTime
   versionInput <- if null message then liftIO $ return $ Just $ toString initialVersion else local (\_ -> searchFunc) $ getInputLine message
   let timestampStr = timestampToString timestamp 
@@ -192,6 +258,7 @@ newCommand newFunc message searchFunc = do
                  (newFunc initialVersion (fromJust $ M.lookup selectedRepository repositoryMap ) timestampStr) 
                  repositoryMap)
       selectedRepository 
+      selectedVersion
       displayRevisionsFlag 
       displayMaturityLevelsFlag
     Just stringVersion -> put $ RepositoryMapState 
@@ -199,17 +266,18 @@ newCommand newFunc message searchFunc = do
                  (newFunc (stringToVersion stringVersion) (fromJust $ M.lookup selectedRepository repositoryMap ) timestampStr)
                  repositoryMap) 
       selectedRepository 
+      selectedVersion
       displayRevisionsFlag 
       displayMaturityLevelsFlag
 
 parseInput :: String -> InputT MS ()
 parseInput inp
   | inp =~ "^\\:q" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     if null selectedRepository 
       then return () 
       else do 
-        put $ RepositoryMapState repositoryMap "" displayRevisionsFlag displayMaturityLevelsFlag 
+        put $ RepositoryMapState repositoryMap "" selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
         mainLoop
                             
   | inp =~ "^\\:he"       = help >> mainLoop
@@ -222,7 +290,7 @@ parseInput inp
     mainLoop 
 
   | inp =~ "^\\:save" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get 
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get 
     if (null selectedRepository) then do
       liftIO $ saveToFile repositoryMap
       outputStrLn $ "Saved repository map to file"
@@ -232,57 +300,71 @@ parseInput inp
     mainLoop
     
   | inp =~ "^\\:load" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     if (null selectedRepository) then
-      put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+      put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
     else
       put $ RepositoryMapState
             (M.adjust (\x->loadRepositoryFromFileWithName $ selectedRepository ++ ".json") selectedRepository repositoryMap)
-            selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+            selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:editBranch" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     branchVersionInput <- local (\_ -> editBranchSearchFunc) $ getInputLine "\tEnter version of the branch to edit: "
     case branchVersionInput of
-      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
       Just stringBranchVersion -> if (null stringBranchVersion) then do
         outputStrLn $ "Version cannot be empty. Aborting operation"
-        put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+        put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
         else 
           let branchVersion = stringToVersion stringBranchVersion in 
           if (isRevision branchVersion) then do 
             outputStrLn $ "You should enter branch version. Aborting operation"
-            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag
+            put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
           else do 
             newContentInput <- getInputLineWithInitial 
               "\tEnter new contents of the branch: " 
               ( getRepositoryNodeContentByVersion branchVersion (fromJust $ M.lookup selectedRepository repositoryMap), "" )
             case newContentInput of
-              Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag  
+              Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag  
               Just newContent -> put $ RepositoryMapState 
                   (M.insert selectedRepository 
                             (editBranch branchVersion newContent (fromJust $ M.lookup selectedRepository repositoryMap ))
                             repositoryMap ) 
                   selectedRepository 
+                  selectedVersion
                   displayRevisionsFlag 
                   displayMaturityLevelsFlag
           {-showContentsCommand-}
     mainLoop
 
   | inp =~ "^\\:showContent" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     versionInput <- local (\_ -> showContentSearchFunc ) $ getInputLine "\tEnter version of the node to show: "
     case versionInput of 
-      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
       Just stringVersion -> let 
         version = stringToVersion stringVersion 
         content = getRepositoryNodeContentByVersion version (fromJust $ M.lookup selectedRepository repositoryMap ) 
         in ( do
           outputStrLn $ show content
-          put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+          put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
         )
+    mainLoop
+
+  | inp =~ "^\\:selectVersion" = do
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
+    versionInput <- local (\_ -> showContentSearchFunc ) $ getInputLine "\tEnter version: "
+    case versionInput of 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
+      Just stringVersion -> let 
+        version = stringToVersion stringVersion 
+        in ( do 
+          outputStrLn $ "Selected version: " ++ toString version
+          put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
+        ) 
     mainLoop
 
   | inp =~ "^\\:show" = showCommand >> mainLoop 
@@ -323,61 +405,61 @@ parseInput inp
     mainLoop
 
   | inp =~ "^\\:toggleRevisions" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState repositoryMap selectedRepository (not displayRevisionsFlag) displayMaturityLevelsFlag
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryMapState repositoryMap selectedRepository selectedVersion (not displayRevisionsFlag) displayMaturityLevelsFlag
     showCommand
     mainLoop
 
   | inp =~ "^\\:toggleMaturityLevels" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
-    put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag ( not displayMaturityLevelsFlag )
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
+    put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag ( not displayMaturityLevelsFlag )
     showCommand
     mainLoop
 
   | inp =~ "^\\:new" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     repositoryNameInput <- getInputLine "\tEnter name of the repository to create: "
     case repositoryNameInput of 
-      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
       Just repositoryName -> 
-        put $ RepositoryMapState ( M.insert repositoryName initialRepository repositoryMap ) selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+        put $ RepositoryMapState ( M.insert repositoryName initialRepository repositoryMap ) selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
     showCommand
     mainLoop
 
   | inp =~ "^\\:edit" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     selectedRepositoryInput <- local (\_ -> editSearchFunc) $ getInputLine "\tEnter name of the repository to edit: "
     case selectedRepositoryInput of
-      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+      Nothing -> put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
       Just selectedRepositoryName ->
         let selectedRepositoryNameTrimmed = trim selectedRepositoryName in
         if elem selectedRepositoryNameTrimmed (M.keys repositoryMap)
-          then put $ RepositoryMapState repositoryMap selectedRepositoryNameTrimmed displayRevisionsFlag displayMaturityLevelsFlag 
+          then put $ RepositoryMapState repositoryMap selectedRepositoryNameTrimmed selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
           else do 
             liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryNameTrimmed ++ "' found in repositories map"
-            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+            put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
     mainLoop
   
   | inp =~ "^\\:rename" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     selectedRepositoryInput <- getInputLine "\tEnter name of the repository to rename: "
     case selectedRepositoryInput of
       Nothing -> do
-        put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+        put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
         mainLoop
       Just selectedRepositoryName -> 
         let selectedRepositoryNameTrimmed = trim selectedRepositoryName in
         if not $ elem selectedRepositoryNameTrimmed (M.keys repositoryMap)
           then do
             liftIO $ putStrLn $ "No repository with the name '" ++ selectedRepositoryNameTrimmed ++ "' found in repositories map"
-            put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+            put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
             mainLoop
           else do
             newRepositoryNameInput <- getInputLine "\tEnter new name of the repository: "
             case newRepositoryNameInput of
               Nothing -> do
                 liftIO $ putStrLn $ "Repository name has not been changed"
-                put $ RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag 
+                put $ RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag 
                 mainLoop
               Just newRepositoryName -> 
                 let newRepositoryNameTrimmed = trim newRepositoryName 
@@ -390,12 +472,13 @@ parseInput inp
                    put $ RepositoryMapState 
                          (M.insert newRepositoryNameTrimmed renamedRecord mapWithoutRenamedRecord)
                          newSelectedRepository
+                         selectedVersion
                          displayRevisionsFlag 
                          displayMaturityLevelsFlag 
                    mainLoop
 
   | inp =~ ":print" = do
-    RepositoryMapState repositoryMap selectedRepository displayRevisionsFlag displayMaturityLevelsFlag <- get
+    RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
     liftIO $ print (fromJust $ M.lookup selectedRepository repositoryMap)
     mainLoop
    
@@ -426,5 +509,5 @@ main :: IO ((), RepositoryMapState)
 main = do 
     greet 
     runStateT (runReaderT (runInputT mySettings mainLoop) topLevelSearchFunc) 
-        $ RepositoryMapState initialRepositoryMap "" defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
+        $ RepositoryMapState initialRepositoryMap "" initialVersion defaultDisplayRevisionsFlagValue defaultDisplayMaturityLevelsFlagValue
    
