@@ -71,6 +71,8 @@ instance DimensionOperations Version where
 instance VersionDetection Version where
         isInitial (Version v) = isInitial v
         isInitial (MaturityVersion _ v) = isInitial v
+        isZero (Version v) = isZero v
+        isZero (MaturityVersion _ v) = isZero v
         isExperimentalBranch (Version v) = isExperimentalBranch v
         isExperimentalBranch (MaturityVersion _ v) = isExperimentalBranch v
         isReleaseBranch (Version v) = isReleaseBranch v

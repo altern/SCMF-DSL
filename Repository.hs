@@ -65,6 +65,7 @@ instance ToString RepositoryNode where
 
 instance VersionDetection RepositoryNode where
     isInitial (RepositoryNode version _ _) = isInitial version
+    isZero (RepositoryNode version _ _) = isZero version
     isExperimentalBranch (RepositoryNode version _ _) = isExperimentalBranch version
     isReleaseBranch (RepositoryNode version _ _) = isReleaseBranch version
     isSupportBranch (RepositoryNode version _ _) = isSupportBranch version

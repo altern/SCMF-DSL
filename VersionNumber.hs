@@ -122,6 +122,7 @@ instance MakeDimensional VersionNumber where
 
 class VersionDetection a where
         isInitial :: a -> Bool 
+        isZero :: a -> Bool 
         isExperimentalBranch :: a -> Bool
         isReleaseBranch :: a -> Bool
         isSupportBranch :: a -> Bool
@@ -131,10 +132,16 @@ class VersionDetection a where
         isRevision :: a -> Bool 
 
 applyListOfBoolFunctions :: [VersionCompound -> Bool] -> [VersionCompound] -> Bool
-applyListOfBoolFunctions listOfBoolFunctions xs = all (==True) $ zipWith ($) listOfBoolFunctions $ makeNDimensional (length listOfBoolFunctions) $ lastN (length listOfBoolFunctions) $ dropWhile (==Nothing) xs
+applyListOfBoolFunctions listOfBoolFunctions xs = 
+        all (==True) 
+        $ zipWith ($) listOfBoolFunctions 
+        $ makeNDimensional (length listOfBoolFunctions) 
+        $ lastN (length listOfBoolFunctions) 
+        $ dropWhile (==Nothing) xs
 
 instance VersionDetection VersionNumber where
         isInitial (VersionNumber vn) = all (==Nothing) vn
+        isZero (VersionNumber vn) = dropWhile (==Nothing) vn == [Just 0] 
         isExperimentalBranch vn = isInitial vn 
         isReleaseBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isJust, isNothing] vn || applyListOfBoolFunctions [isJust, isNothing] vn
         isSupportBranch (VersionNumber vn) = applyListOfBoolFunctions [isJust, isNothing, isNothing] vn
