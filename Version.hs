@@ -157,7 +157,7 @@ instance MakeDimensional Version where
 
 instance GetParent Version where
     getParent (Version version) = Version (getParent version)
-    getParent (MaturityVersion ml version) = MaturityVersion ml (getParent version)
+    getParent (MaturityVersion ml version) = Version (getParent version)
 
 parseVersion :: Parser Version
 parseVersion = do { 
