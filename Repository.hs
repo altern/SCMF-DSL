@@ -9,7 +9,6 @@ import RoseTree
 import VersionNumber
 import MaturityLevel
 import Version
-import Document 
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as AT
 import qualified Data.Text as T
@@ -322,7 +321,8 @@ newRevision searchVersion vTree timestamp = let
     in if (isInitial searchVersion || isSupportBranch searchVersion || isReleaseBranch searchVersion) then
         (treeInsert 
           vTree 
-          (RepositoryNode searchVersion document timestamp) 
+          {-(RepositoryNode searchVersion document timestamp) -}
+          (fromJust $ searchTree (hasVersion searchVersion) vTree)
           (RepositoryNode (generateNewRevision (findLatestRevision vTree)) document timestamp)
         )
     else 
@@ -569,11 +569,11 @@ displayRepository repository selectedVersion displayRevisionsFlag displayMaturit
       else if displayMaturityLevelsFlag 
         then displayTree $ filterTree isRevision $ fmap toMaturityNode repository
         else displayTree $ filterTree isRevision $ fmap toNode repository
-  else if displayRevisionsFlag 
-    then if displayMaturityLevelsFlag 
-      then displayTreeWithSelected selectedVersion $ fmap toMaturityNode repository
-      else displayTreeWithSelected selectedVersion $ fmap toNode repository
-    else if displayMaturityLevelsFlag 
-      then displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toMaturityNode repository
-      else displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toNode repository
+    else if displayRevisionsFlag 
+      then if displayMaturityLevelsFlag 
+        then displayTreeWithSelected selectedVersion $ fmap toMaturityNode repository
+        else displayTreeWithSelected selectedVersion $ fmap toNode repository
+      else if displayMaturityLevelsFlag 
+        then displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toMaturityNode repository
+        else displayTreeWithSelected selectedVersion $ filterTree isRevision $ fmap toNode repository
 
