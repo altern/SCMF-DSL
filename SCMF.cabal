@@ -37,12 +37,14 @@ Test-Suite test-scmf
 
 executable SCMF
   main-is            : Main.hs
+  --ghc-prof-options   : auto-all
   -- other-modules:       
   build-depends:      base == 4.* ,
                       containers == 0.5.*,
                       bytestring,
                       keys,
                       ghc,
+                      HUnit,
                       text,
                       aeson,
                       time,
@@ -55,5 +57,7 @@ executable SCMF
                       transformers,
                       regex-posix,
                       haskeline,
-                      regex-pcre
+                      regex-pcre,
+                      lens,
+                      mtl
 
