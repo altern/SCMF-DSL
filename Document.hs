@@ -73,15 +73,15 @@ instance JSON.ToJSON DocumentOrDirectory where
           {-parser _           = mzero-}
   {-parseJSON _          = mzero-}
 
-instance JSON.FromJSON Directory where
-  parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "directory" v
-    where parser (JSON.Object v') = Directory <$> v' JSON..: "name"
-                                         <*> v' JSON..: "content"
-          parser _           = mzero
-  parseJSON _          = mzero
+{-instance JSON.FromJSON Directory where-}
+  {-parseJSON (JSON.Object v) = maybe mzero parser $ HashMap.lookup "directory" v-}
+    {-where parser (JSON.Object v') = Directory <$> v' JSON..: "name"-}
+                                         {-<*> v' JSON..: "content"-}
+          {-parser _           = mzero-}
+  {-parseJSON _          = mzero-}
 
-instance JSON.FromJSON DocumentOrDirectory where
-  parseJSON json = (liftDocument <$> JSON.parseJSON json) <|> (liftDirectory <$> JSON.parseJSON json)
+{-instance JSON.FromJSON DocumentOrDirectory where-}
+  {-parseJSON json = (liftDocument <$> JSON.parseJSON json) <|> (liftDirectory <$> JSON.parseJSON json)-}
 
 -- EXAMPLES --
 doc1 :: Document
