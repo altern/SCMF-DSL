@@ -6,7 +6,7 @@ import ArtifactTree
 import Repository
 import RepositoryMap
 import VersionTree
-import Platform
+-- import Platform
 
 import Data.Aeson.Text (encodeToTextBuilder)
 import Data.Text.Lazy.Builder (toLazyText)
@@ -87,11 +87,11 @@ instance SaveToFile Repository where
     saveToFileWithName repositoryFile repository = do
       withFile ( dataDir ++ repositoryFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON repository)
 
-instance SaveToFile PlatformDB where
-    saveToFile db = do
-      withFile ( dataDir ++ platformDBFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
-    saveToFileWithName dbFile db = do
-      withFile ( dataDir ++ dbFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)
+{-instance SaveToFile PlatformDB where-}
+    {-saveToFile db = do-}
+      {-withFile ( dataDir ++ platformDBFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)-}
+    {-saveToFileWithName dbFile db = do-}
+      {-withFile ( dataDir ++ dbFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON db)-}
 
 
 {-instance SaveToFile DeploymentRules where-}
