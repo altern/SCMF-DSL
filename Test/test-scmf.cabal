@@ -1,0 +1,10 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: db07f1dfc7f0330c017f3aab134c35870c435758db4ceb1a673ade758fa97c6a
+
+name:           test-scmf
+version:        3.0.0
+build-type:     Simple
+cabal-version:  >= 1.10
