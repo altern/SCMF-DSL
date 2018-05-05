@@ -4,10 +4,10 @@ module Platform where
 
 import Version
 import VersionNumber
-import Artifact
-import ArtifactTree 
+-- import Artifact
+-- import ArtifactTree 
 import RoseTree
-import Document
+-- import Document
 
 import Data.Tree
 import Data.Tree.Pretty

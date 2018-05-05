@@ -2,10 +2,10 @@
 
 module FileOperation where
 
-import ArtifactTree
+-- import ArtifactTree
 import Repository
 import RepositoryMap
-import VersionTree
+-- import VersionTree
 -- import Platform
 
 import Data.Aeson.Text (encodeToTextBuilder)
@@ -75,11 +75,11 @@ instance SaveToFile RepositoryMap where
     {-saveToFile aTree = do-}
       {-withFile artifactTreeFile WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON aTree)-}
 
-instance SaveToFile VersionTree where
-    saveToFile vTree = do
-      withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)
-    saveToFileWithName versionTreeFile versionTree = do
-      withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON versionTree)
+{-instance SaveToFile VersionTree where-}
+    {-saveToFile vTree = do-}
+      {-withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON vTree)-}
+    {-saveToFileWithName versionTreeFile versionTree = do-}
+      {-withFile ( dataDir ++ versionTreeFile ) WriteMode $ \h -> System.IO.hPutStr h (v2s $ JSON.toJSON versionTree)-}
 
 instance SaveToFile Repository where
     saveToFile vDocTree = do

@@ -3,10 +3,10 @@
 module UserOperation where
 
 import Artifact
-import ArtifactTree
+-- import ArtifactTree
 import RoseTree
 import Version
-import VersionTree
+-- import VersionTree
 import Repository
 -- import Platform
 import FileOperation
