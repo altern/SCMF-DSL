@@ -8,9 +8,8 @@ import RoseTree
 import Version
 import VersionTree
 import Repository
-import Platform
+-- import Platform
 import FileOperation
-import Document 
 
 data UserOperation = LoadHistoryFromFile
                    | SaveHistoryToFile
@@ -107,16 +106,16 @@ instance Action VersionTree ( IO () ) where
     action List aTree = displayTree aTree 
     action Explain aTree = displayTree aTree
     
-instance Action PlatformDB ( IO () ) where
-    action Save db = saveToFile db
-    action Store db = saveToFile db
+{-instance Action PlatformDB ( IO () ) where-}
+    {-action Save db = saveToFile db-}
+    {-action Store db = saveToFile db-}
 
-    action Describe db = displayPlatformDB db 
-    action Display db = displayPlatformDB db 
-    action Show db = displayPlatformDB db 
-    action Output db = displayPlatformDB db 
-    action List db = displayPlatformDB db 
-    action Explain db = displayPlatformDB db  
+    {-action Describe db = displayPlatformDB db -}
+    {-action Display db = displayPlatformDB db -}
+    {-action Show db = displayPlatformDB db -}
+    {-action Output db = displayPlatformDB db -}
+    {-action List db = displayPlatformDB db -}
+    {-action Explain db = displayPlatformDB db  -}
     
 instance Action DeploymentRules ( IO () ) where
     {-action Save rules = saveToFile rules-}
