@@ -6,9 +6,8 @@ import Version
 import VersionNumber
 import Repository
 import RepositoryMap
-import Platform
 import FileOperation
-import UserOperation
+-- import UserOperation
 import MaturityLevel
 import Util
 
@@ -248,10 +247,9 @@ showCommand = do
 initCommand :: InputT MS  ()
 initCommand = do
   RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <-get
-  if (null selectedRepository) then
-    put $ RepositoryMapState initialRepositoryMap "" initialVersion displayRevisionsFlag displayMaturityLevelsFlag
-  else
-    put $ RepositoryMapState 
+  if (null selectedRepository) 
+    then put $ RepositoryMapState initialRepositoryMap "" initialVersion displayRevisionsFlag displayMaturityLevelsFlag
+    else put $ RepositoryMapState 
           (M.adjust (\x->initialRepository) selectedRepository repositoryMap)
           selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
 
@@ -259,7 +257,13 @@ newCommand :: (Version -> Repository -> Timestamp -> Repository) -> String -> Se
 newCommand newFunc message searchFunc = do
   RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
   timestamp <- liftIO $ getPOSIXTime
-  versionInput <- if null message then liftIO $ return $ Just $ toString initialVersion else local (\_ -> searchFunc) $ getInputLine message
+  versionInput <- if null message 
+    then if isZero selectedVersion 
+      then liftIO $ return $ Just $ toString initialVersion 
+      else liftIO $ return $ Just $ toString selectedVersion
+    else if isZero selectedVersion 
+      then local (\_ -> searchFunc) $ getInputLine message
+      else liftIO $ return $ Just $ toString selectedVersion
   let timestampStr = timestampToString timestamp 
   case versionInput of
     Nothing -> put $ RepositoryMapState 
@@ -303,20 +307,20 @@ parseInput inp
 
   | inp =~ "^\\:save" = do
     RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get 
-    if (null selectedRepository) then do
-      liftIO $ saveToFile repositoryMap
-      outputStrLn $ "Saved repository map to file"
-    else do
-      liftIO $ saveToFileWithName (selectedRepository ++ ".json") (fromJust $ M.lookup selectedRepository repositoryMap)
-      outputStrLn $ "Saved repository file " ++ (show (selectedRepository ++ ".json"))
+    if (null selectedRepository) 
+      then do
+        liftIO $ saveToFile repositoryMap
+        outputStrLn $ "Saved repository map to file"
+      else do
+        liftIO $ saveToFileWithName (selectedRepository ++ ".json") (fromJust $ M.lookup selectedRepository repositoryMap)
+        outputStrLn $ "Saved repository file " ++ (show (selectedRepository ++ ".json"))
     mainLoop
     
   | inp =~ "^\\:load" = do
     RepositoryMapState repositoryMap selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag <- get
-    if (null selectedRepository) then
-      put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
-    else
-      put $ RepositoryMapState
+    if (null selectedRepository) 
+      then put $ RepositoryMapState ( loadRepositoryMapFromFile ) selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
+      else put $ RepositoryMapState
             (M.adjust (\x->loadRepositoryFromFileWithName $ selectedRepository ++ ".json") selectedRepository repositoryMap)
             selectedRepository selectedVersion displayRevisionsFlag displayMaturityLevelsFlag
     showCommand
